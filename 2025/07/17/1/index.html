@@ -1,0 +1,224 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>镜像烧录+ssh远程登录 | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1.系统安装1.1启动设置选择SD卡启动，首先需要将启动拨码开关配置成SD卡启动模式，配置方法如下图：  1.2镜像下载**下载地址：**通过如下百度云盘链接或者联系销售获取到镜像，镜像链接：https:&#x2F;&#x2F;pan.baidu.com&#x2F;s&#x2F;1pStiyqohrB3SxHAFFk8R6Q 提取码：dzdv &#x3D;&#x3D;注意：&#x3D;&#x3D;镜像需下载对应内存大小的版本，目前 4G">
+<meta property="og:type" content="article">
+<meta property="og:title" content="镜像烧录+ssh远程登录">
+<meta property="og:url" content="http://example.com/2025/07/17/1/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="1.系统安装1.1启动设置选择SD卡启动，首先需要将启动拨码开关配置成SD卡启动模式，配置方法如下图：  1.2镜像下载**下载地址：**通过如下百度云盘链接或者联系销售获取到镜像，镜像链接：https:&#x2F;&#x2F;pan.baidu.com&#x2F;s&#x2F;1pStiyqohrB3SxHAFFk8R6Q 提取码：dzdv &#x3D;&#x3D;注意：&#x3D;&#x3D;镜像需下载对应内存大小的版本，目前 4G">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/1/cover.jpg">
+<meta property="article:published_time" content="2025-07-17T14:33:00.000Z">
+<meta property="article:modified_time" content="2025-07-17T14:33:44.775Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="飞腾杯">
+<meta property="article:tag" content="集创赛">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/1/cover.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "镜像烧录+ssh远程登录",
+  "url": "http://example.com/2025/07/17/1/",
+  "image": "http://example.com/1/cover.jpg",
+  "datePublished": "2025-07-17T14:33:00.000Z",
+  "dateModified": "2025-07-17T14:33:44.775Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/07/17/1/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '镜像烧录+ssh远程登录',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/1/cover.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">镜像烧录+ssh远程登录</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">镜像烧录+ssh远程登录</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-07-17T14:33:44.775Z" title="更新于 2025-07-17 22:33:44">2025-07-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E8%B7%B5/">项目实践</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="1-系统安装"><a href="#1-系统安装" class="headerlink" title="1.系统安装"></a>1.系统安装</h1><h2 id="1-1启动设置"><a href="#1-1启动设置" class="headerlink" title="1.1启动设置"></a>1.1启动设置</h2><p>选择SD卡启动，首先需要将启动拨码开关配置成SD卡启动模式，配置方法如下图：</p>
+<p><img src="image-20250422160605564.png" alt="image-20250422160605564"></p>
+<h2 id="1-2镜像下载"><a href="#1-2镜像下载" class="headerlink" title="1.2镜像下载"></a>1.2镜像下载</h2><p>**下载地址：**通过如下百度云盘链接或者联系销售获取到镜像，镜像链接：<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1pStiyqohrB3SxHAFFk8R6Q">https://pan.baidu.com/s/1pStiyqohrB3SxHAFFk8R6Q</a> 提取码：dzdv</p>
+<p>&#x3D;&#x3D;注意：&#x3D;&#x3D;镜像需下载对应内存大小的版本，目前 4GB DDR使用长鑫存储（ CXMT）的颗粒 ，2GB DDR使用兆易创新（ GigaDevice）的颗粒，如果不清楚开发板是哪个容量的 DDR，可通过DDR颗粒的上丝印字样来判断。我们拿到的是最拉的板子4GB的V2.2版本的开发板。</p>
+<p><strong>4GB-V2.2可以选择的镜像：</strong>(按照更新的时间来排序的)</p>
+<p>xfce_v2.1_4GB_231116.tar.gz</p>
+<p>xfce_v2.1_4GB_240123.tar.gz</p>
+<p>飞腾派v2.1_4GB_240517.tar.gz</p>
+<p>本次项目选择的是<code>xfce_v2.1_4GB_240123.tar.gz</code>，不新不老。</p>
+<h2 id="1-3镜像烧录"><a href="#1-3镜像烧录" class="headerlink" title="1.3镜像烧录"></a>1.3镜像烧录</h2><p>准备一张存储空间 32G以上的 SD卡（如果需要使用Anaconda配置虚拟环境的话建议越大越好）、一个 USB读卡器</p>
+<img src="4105a88d98069eb20bfd0291bab1777.jpg" alt="4105a88d98069eb20bfd0291bab1777" style="zoom:33%;">
+
+<p>①插入电脑之后需要先格式化磁盘</p>
+<img src="image-20250422163723719.png" alt="image-20250422163723719" style="zoom:50%;">
+
+<p>②安装烧录软件<code>Win32DiskImager2.0.1.8.exe</code></p>
+<p>③选择磁盘，选择要烧录的镜像</p>
+<img src="image-20250422164119840.png" alt="image-20250422164119840" style="zoom: 67%;">
+
+<p>④烧录镜像</p>
+<img src="image-20250422164143940.png" alt="image-20250422164143940" style="zoom: 67%;">
+
+<p>⑤烧录完成</p>
+<img src="image-20250422164238680.png" alt="image-20250422164238680" style="zoom:33%;">
+
+<p>⑥校验烧录（无关）</p>
+<p>烧录完点击“仅校验”确认烧录正确，若校验成功，可进行下一步</p>
+<img src="image-20250422164314932.png" alt="image-20250422164314932" style="zoom:50%;">
+
+<p>⑦安装 SD卡</p>
+<p>烧录完成后安装到 SD卡槽即可上电启动，注意要将启动模式设置为 SD卡启动。</p>
+<h1 id="2-SSH登录"><a href="#2-SSH登录" class="headerlink" title="2. SSH登录"></a>2. SSH登录</h1><h2 id="2-1软件安装"><a href="#2-1软件安装" class="headerlink" title="2.1软件安装"></a>2.1软件安装</h2><p>本项目使用的为：MobaXterm，是免费的网络上随便安装一个就行</p>
+<p><img src="image-20250422164622875.png" alt="image-20250422164622875"></p>
+<h2 id="2-2开发板wifi连接"><a href="#2-2开发板wifi连接" class="headerlink" title="2.2开发板wifi连接"></a>2.2开发板wifi连接</h2><p>飞腾派烧录sd启动之后，连接一个显示器，找到wifi连接的地方打开连接一个wifi，最好自己开个热点，不要选教研室的wifi。</p>
+<img src="image-20250422164930685.png" alt="image-20250422164930685" style="zoom:50%;">
+
+<center>连接wifi</center>
+
+<p>查看飞腾派ip地址</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig</span><br></pre></td></tr></table></figure>
+
+<img src="image-20250422165450106.png" alt="image-20250422165450106" style="zoom:50%;">
+
+<center>开发板ip地址</center>
+
+<h2 id="2-3主机端ssh连接"><a href="#2-3主机端ssh连接" class="headerlink" title="2.3主机端ssh连接"></a>2.3主机端ssh连接</h2><p><strong>主机端的wifi需要和飞腾派的wifi一致</strong></p>
+<h3 id="2-3-1打开MobaXterm"><a href="#2-3-1打开MobaXterm" class="headerlink" title="2.3.1打开MobaXterm"></a>2.3.1打开MobaXterm</h3><p>建立一个ssh的应用界面，</p>
+<p><code>Remote host</code>输入飞腾派的ip地址，</p>
+<p><code>Specify username</code>输入你自己安装镜像的用户名（官方提供的镜像ubuntu系统用户名为：user，密码为:user；openkylin系统用户名是：kylin，密码为：自己去查）</p>
+<p><code>Port</code>默认是22</p>
+<p><img src="image-20250422170114056.png" alt="image-20250422170114056"></p>
+<center>mobaxterm配置</center>
+
+<p> 首次使用会弹窗要求设置<code>master password</code>，即打开会话的密码。为了方便输入镜像的用户名和密码即可</p>
+<p><img src="image-20250422172312673.png" alt="image-20250422172312673"></p>
+<p>成功配置!</p>
+<p><img src="image-20250422171015023.png" alt="image-20250422171015023"></p>
+<h2 id="2-4文件传输"><a href="#2-4文件传输" class="headerlink" title="2.4文件传输"></a>2.4文件传输</h2><p>**上传：**主机端直接拖拽文件到你想要放的地方即可</p>
+<p><img src="image-20250422171242911.png" alt="image-20250422171242911"></p>
+<p>**下载：**点击对应的文件右键选择Download即可</p>
+<p><img src="image-20250422171331433.png" alt="image-20250422171331433"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/07/17/1/">http://example.com/2025/07/17/1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E9%A3%9E%E8%85%BE%E6%9D%AF/">飞腾杯</a><a class="post-meta__tags" href="/tags/%E9%9B%86%E5%88%9B%E8%B5%9B/">集创赛</a></div><div class="post-share"><div class="social-share" data-image="/1/cover.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">1</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-%E7%B3%BB%E7%BB%9F%E5%AE%89%E8%A3%85"><span class="toc-number">1.</span> <span class="toc-text">1.系统安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1%E5%90%AF%E5%8A%A8%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.1.</span> <span class="toc-text">1.1启动设置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2%E9%95%9C%E5%83%8F%E4%B8%8B%E8%BD%BD"><span class="toc-number">1.2.</span> <span class="toc-text">1.2镜像下载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3%E9%95%9C%E5%83%8F%E7%83%A7%E5%BD%95"><span class="toc-number">1.3.</span> <span class="toc-text">1.3镜像烧录</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-SSH%E7%99%BB%E5%BD%95"><span class="toc-number">2.</span> <span class="toc-text">2. SSH登录</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85"><span class="toc-number">2.1.</span> <span class="toc-text">2.1软件安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2%E5%BC%80%E5%8F%91%E6%9D%BFwifi%E8%BF%9E%E6%8E%A5"><span class="toc-number">2.2.</span> <span class="toc-text">2.2开发板wifi连接</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3%E4%B8%BB%E6%9C%BA%E7%AB%AFssh%E8%BF%9E%E6%8E%A5"><span class="toc-number">2.3.</span> <span class="toc-text">2.3主机端ssh连接</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-1%E6%89%93%E5%BC%80MobaXterm"><span class="toc-number">2.3.1.</span> <span class="toc-text">2.3.1打开MobaXterm</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93"><span class="toc-number">2.4.</span> <span class="toc-text">2.4文件传输</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/1/cover.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.2</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
