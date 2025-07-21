@@ -1,0 +1,827 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>开发环境配置 | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="环境配置本项目使用的是飞腾官方提供的镜像xfce_v2.1_4GB_240123.tar.gz，系统是ubuntu20.04，python3.9.5 建议使用Anaconda3配置一个虚拟环境，如果出错可以轻松从头再来，但本次为了懒得再安装一次系统本身自带的配置，于是没有采用该方法。但在最后讲了应该如何在飞腾派中安装anaconda3并配置虚拟环境，有兴趣的话可以试一下。 Python3.9安装飞">
+<meta property="og:type" content="article">
+<meta property="og:title" content="开发环境配置">
+<meta property="og:url" content="https://leonardo272.github.io/2025/07/17/3/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="环境配置本项目使用的是飞腾官方提供的镜像xfce_v2.1_4GB_240123.tar.gz，系统是ubuntu20.04，python3.9.5 建议使用Anaconda3配置一个虚拟环境，如果出错可以轻松从头再来，但本次为了懒得再安装一次系统本身自带的配置，于是没有采用该方法。但在最后讲了应该如何在飞腾派中安装anaconda3并配置虚拟环境，有兴趣的话可以试一下。 Python3.9安装飞">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/1.jpg">
+<meta property="article:published_time" content="2025-07-17T14:33:00.000Z">
+<meta property="article:modified_time" content="2025-07-21T08:02:28.510Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="飞腾杯">
+<meta property="article:tag" content="集创赛">
+<meta property="article:tag" content="YOLOv5">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/1.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "开发环境配置",
+  "url": "https://leonardo272.github.io/2025/07/17/3/",
+  "image": "https://leonardo272.github.io/page_images/1.jpg",
+  "datePublished": "2025-07-17T14:33:00.000Z",
+  "dateModified": "2025-07-21T08:02:28.510Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://leonardo272.github.io/2025/07/17/3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '开发环境配置',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/1.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">开发环境配置</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">开发环境配置</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-07-21T08:02:28.510Z" title="更新于 2025-07-21 16:02:28">2025-07-21</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%A1%B9%E7%9B%AE%E5%AE%9E%E8%B7%B5/">项目实践</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><p>本项目使用的是飞腾官方提供的镜像xfce_v2.1_4GB_240123.tar.gz，系统是ubuntu20.04，python3.9.5</p>
+<p>建议使用Anaconda3配置一个虚拟环境，如果出错可以轻松从头再来，但本次为了懒得再安装一次系统本身自带的配置，于是没有采用该方法。但在最后讲了应该如何在飞腾派中安装anaconda3并配置虚拟环境，有兴趣的话可以试一下。</p>
+<h1 id="Python3-9安装"><a href="#Python3-9安装" class="headerlink" title="Python3.9安装"></a>Python3.9安装</h1><p>飞腾派镜像默认下载了python3.8，但是本次项目拟采用python3.9，固需要升级</p>
+<h2 id="1-通过系统包管理器安装"><a href="#1-通过系统包管理器安装" class="headerlink" title="1.通过系统包管理器安装"></a>1.通过系统包管理器安装</h2><p>在 Ubuntu 20.04 上，可以通过以下步骤安装 Python 3.9：</p>
+<ol>
+<li><p><strong>更新包管理器索引</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>安装 Python 3.9</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install python3.9 python3.9-distutils</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>验证安装</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3.9 --version</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="2-设置默认-Python-版本（可选）"><a href="#2-设置默认-Python-版本（可选）" class="headerlink" title="2.设置默认 Python 版本（可选）"></a>2.设置默认 Python 版本（可选）</h2><p>如果你想让 <code>python3</code> 命令默认指向 Python 3.9，可以创建一个符号链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1</span><br><span class="line"><span class="built_in">sudo</span> update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 2</span><br><span class="line"><span class="built_in">sudo</span> update-alternatives --config python3</span><br></pre></td></tr></table></figure>
+<p>在提示中选择 <code>python3.9</code>。</p>
+<hr>
+<h2 id="3-安装-pip-以支持-Python-3-9"><a href="#3-安装-pip-以支持-Python-3-9" class="headerlink" title="3. 安装 pip 以支持 Python 3.9"></a>3. <strong>安装 pip 以支持 Python 3.9</strong></h2><p>安装完 Python 3.9 后，需要为其安装 <code>pip</code>：</p>
+<ol>
+<li><p>下载 <code>get-pip.py</code> 脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://bootstrap.pypa.io/get-pip.py</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 Python 3.9 运行脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3.9 get-pip.py</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>验证 <code>pip</code> 安装是否成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3.9 -m pip --version</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="4-测试是否安装成功"><a href="#4-测试是否安装成功" class="headerlink" title="4.测试是否安装成功"></a>4.测试是否安装成功</h2><p>随便编写一个脚本在终端中运行 <code>python test.py</code> </p>
+<p>如果出现 <code>-bash: python：未找到命令</code> 的错误，说明系统中没有找到默认的 <code>python</code> 命令。这可能是因为：</p>
+<ol>
+<li>系统中没有安装 Python。</li>
+<li>系统中安装了 Python，但没有创建 <code>python</code> 或 <code>python3</code> 的符号链接。</li>
+<li>当前环境中使用的 Python 版本不是默认版本。</li>
+</ol>
+<p>以下是解决方法：</p>
+<hr>
+<h3 id="方法-1：检查是否安装了-Python"><a href="#方法-1：检查是否安装了-Python" class="headerlink" title="方法 1：检查是否安装了 Python"></a>方法 1：检查是否安装了 Python</h3><p>运行以下命令，检查系统中是否有 Python 安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 --version</span><br></pre></td></tr></table></figure>
+
+<p>如果返回类似以下内容，则说明 Python 已安装：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Python 3.8.10</span><br></pre></td></tr></table></figure>
+
+<p>如果没有安装，可以按照以下步骤安装 Python。</p>
+<h4 id="安装-Python-3（适用于-Ubuntu-20-04）"><a href="#安装-Python-3（适用于-Ubuntu-20-04）" class="headerlink" title="安装 Python 3（适用于 Ubuntu 20.04）"></a>安装 Python 3（适用于 Ubuntu 20.04）</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="built_in">sudo</span> apt install python3 python3-pip</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="方法-2：创建-python-到-python3-的符号链接"><a href="#方法-2：创建-python-到-python3-的符号链接" class="headerlink" title="方法 2：创建 python 到 python3 的符号链接"></a>方法 2：创建 <code>python</code> 到 <code>python3</code> 的符号链接</h3><p>在某些系统中，默认的 <code>python</code> 命令可能被移除，只保留了 <code>python3</code>。你可以通过创建符号链接来解决这个问题。</p>
+<p><strong>创建符号链接</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -s /usr/bin/python3 /usr/bin/python</span><br></pre></td></tr></table></figure>
+
+<p><strong>验证：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python --version</span><br></pre></td></tr></table></figure>
+
+<p>如果输出显示 Python 的版本号（例如 <code>Python 3.9.5</code>），则说明问题已解决。</p>
+<hr>
+<h3 id="方法-3：直接使用-python3-运行脚本"><a href="#方法-3：直接使用-python3-运行脚本" class="headerlink" title="方法 3：直接使用 python3 运行脚本"></a>方法 3：直接使用 <code>python3</code> 运行脚本</h3><p>如果你不想创建符号链接，可以直接使用 <code>python3</code> 命令运行脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 test.py</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="方法-4：检查虚拟环境"><a href="#方法-4：检查虚拟环境" class="headerlink" title="方法 4：检查虚拟环境"></a>方法 4：检查虚拟环境</h3><p>如果你正在使用虚拟环境（例如通过 <code>venv</code> 或 <code>conda</code> 创建的环境），需要确保虚拟环境中已激活并正确配置。</p>
+<h4 id="激活虚拟环境："><a href="#激活虚拟环境：" class="headerlink" title="激活虚拟环境："></a>激活虚拟环境：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> /path/to/venv/bin/activate</span><br></pre></td></tr></table></figure>
+
+<h4 id="验证："><a href="#验证：" class="headerlink" title="验证："></a>验证：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">which</span> python</span><br></pre></td></tr></table></figure>
+
+<p>如果输出类似于 <code>/path/to/venv/bin/python</code>，说明虚拟环境中的 Python 正常工作。</p>
+<hr>
+<h3 id="方法-5：修复-PATH-环境变量"><a href="#方法-5：修复-PATH-环境变量" class="headerlink" title="方法 5：修复 PATH 环境变量"></a>方法 5：修复 PATH 环境变量</h3><p>如果系统中确实安装了 Python，但仍然无法找到 <code>python</code> 或 <code>python3</code> 命令，可能是 <code>PATH</code> 环境变量配置有问题。</p>
+<h4 id="检查-PATH："><a href="#检查-PATH：" class="headerlink" title="检查 PATH："></a>检查 PATH：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="variable">$PATH</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="手动添加-Python-路径："><a href="#手动添加-Python-路径：" class="headerlink" title="手动添加 Python 路径："></a>手动添加 Python 路径：</h4><p>编辑 <code>~/.bashrc</code> 文件，添加以下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> PATH=<span class="variable">$PATH</span>:/usr/bin</span><br></pre></td></tr></table></figure>
+
+<p>保存后使更改生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<h1 id="Cmake3-20-0-安装"><a href="#Cmake3-20-0-安装" class="headerlink" title="Cmake3.20.0+安装"></a>Cmake3.20.0+安装</h1><p>本次项目采用的是cmake-3.28.3，已经在官网上下载了安装包，要在飞腾派开发板上安装 <code>cmake-3.28.3-linux-aarch64.tar.gz</code>，可以按照以下步骤进行操作。以下是详细的说明：</p>
+<hr>
+<h2 id="1-解压文件"><a href="#1-解压文件" class="headerlink" title="1. 解压文件"></a>1. <strong>解压文件</strong></h2><p>首先，通过 SSH 登录到开发板，并确保你已经将 <code>cmake-3.28.3-linux-aarch64.tar.gz</code> 文件传输到了开发板的某个目录（例如 <code>/home/user/</code> 或 <code>/tmp/</code>）。</p>
+<p>使用以下命令解压 <code>.tar.gz</code> 文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -xvzf cmake-3.28.3-linux-aarch64.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p>解压后会生成一个目录，通常命名为 <code>cmake-3.28.3-linux-aarch64</code>。</p>
+<hr>
+<h2 id="2-移动到合适的位置"><a href="#2-移动到合适的位置" class="headerlink" title="2. 移动到合适的位置"></a>2. <strong>移动到合适的位置</strong></h2><p>为了方便管理，建议将解压后的 CMake 移动到系统的标准路径，例如 <code>/usr/local/</code>。</p>
+<p>执行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">mv</span> cmake-3.28.3-linux-aarch64 /usr/local/cmake-3.28.3</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="3-配置环境变量"><a href="#3-配置环境变量" class="headerlink" title="3. 配置环境变量"></a>3. <strong>配置环境变量</strong></h2><p>为了让系统能够识别新安装的 CMake，需要将其二进制文件路径添加到 <code>PATH</code> 环境变量中。</p>
+<p>编辑 <code>~/.bashrc</code> 文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nano ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>在文件末尾添加以下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> PATH=/usr/local/cmake-3.28.3/bin:<span class="variable">$PATH</span></span><br></pre></td></tr></table></figure>
+
+<p>保存并退出编辑器后，使更改生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>**问题：**如果显示：<strong>nano ~&#x2F;.bashrc -bash： nano：未找到命令</strong></p>
+<p>解决方案：安装<code>nano</code></p>
+<ol>
+<li><p><strong>更新包管理器索引</strong> ：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>安装 nano</strong> ：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install nano</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>安装完成后，再次尝试编辑 文件：<code>.bashrc</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nano ~/.bashrc</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="4-验证安装"><a href="#4-验证安装" class="headerlink" title="4. 验证安装"></a>4. <strong>验证安装</strong></h2><p>验证 CMake 是否安装成功以及版本是否正确：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake --version</span><br></pre></td></tr></table></figure>
+
+<p>如果安装成功，你应该会看到类似以下的输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cmake version 3.28.3</span><br><span class="line">CMake suite maintained and supported by Kitware (kitware.com/cmake).</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="5-可选：创建符号链接（如果需要全局使用）"><a href="#5-可选：创建符号链接（如果需要全局使用）" class="headerlink" title="5. 可选：创建符号链接（如果需要全局使用）"></a>5. <strong>可选：创建符号链接（如果需要全局使用）</strong></h2><p>如果你希望所有用户都能直接使用这个版本的 CMake，可以创建一个符号链接到 <code>/usr/bin/</code>。</p>
+<p>执行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">ln</span> -sf /usr/local/cmake-3.28.3/bin/cmake /usr/bin/cmake</span><br></pre></td></tr></table></figure>
+
+<p>再次验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">which</span> cmake</span><br><span class="line">cmake --version</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><ol>
+<li><strong>权限问题</strong>：在执行 <code>sudo</code> 命令时，确保你有足够的权限。</li>
+<li><strong>依赖项</strong>：虽然 CMake 是独立的工具包，但某些功能可能依赖于系统中的其他库。如果遇到问题，请检查是否有缺失的依赖项。</li>
+<li><strong>卸载旧版本</strong>：如果系统中已存在旧版本的 CMake，可以通过包管理器卸载（例如 <code>apt remove cmake</code>），然后替换为新版本。</li>
+</ol>
+<p>完成以上步骤后，你应该能够在飞腾派开发板上成功安装并使用 CMake 3.28.3。</p>
+<h1 id="YOLOv5项目环境配置及运行"><a href="#YOLOv5项目环境配置及运行" class="headerlink" title="YOLOv5项目环境配置及运行"></a>YOLOv5项目环境配置及运行</h1><p>&#x3D;&#x3D;注意：&#x3D;&#x3D;项目需要的torch版本不要大于2.5否则会出错!!!因此不能直接使用命令<code>pip install -r requirements.txt</code>直接进行安装，否则大概率会安装最新的版本。</p>
+<h2 id="1-torch1-8-1-torchversion0-9-1"><a href="#1-torch1-8-1-torchversion0-9-1" class="headerlink" title="1.torch1.8.1+torchversion0.9.1"></a>1.torch1.8.1+torchversion0.9.1</h2><h3 id="1-1安装包下载"><a href="#1-1安装包下载" class="headerlink" title="1.1安装包下载"></a>1.1安装包下载</h3><p>为了节省时间，用开发板直接下载会很慢，可以使用其它的源，如阿里、清华源等。</p>
+<p>本项目已经在官网上下载了torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl和torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl文件</p>
+<p>&#x3D;&#x3D;注意：&#x3D;&#x3D;下载的版本需要和你的环境匹配！！！要满足以下三点！！！</p>
+<ul>
+<li><strong>架构匹配</strong>：文件名中的 <code>aarch64</code> 表示这是为 <strong>ARM 64位架构</strong> 编译的包，而飞腾派（Phytium-Pi）使用的是 <strong>Phytium ARM v8 架构（aarch64）</strong>，因此兼容。</li>
+<li><strong>Python 版本匹配</strong>：文件名中的 <code>cp39</code> 表示包是为 <strong>Python 3.9</strong> 编译的，与本次的环境（Python 3.9.8）完全兼容。</li>
+<li><strong>系统兼容性</strong>：<code>manylinux2014</code> 是 Linux 平台的二进制兼容性标签，适用于主流 Linux 发行版（包括飞腾派的操作系统）。</li>
+</ul>
+<p>以 <code>torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</code> 为例：</p>
+<ul>
+<li><code>torch-1.8.1</code>: PyTorch 库的版本号（1.8.1）。</li>
+<li><code>cp39</code>: 表示该包适用于 <strong>Python 3.9</strong>（<code>cp</code> 是 “C Python” 的缩写，后接 Python 主版本号）。</li>
+<li><code>manylinux2014</code>: 表示该包兼容符合 <code>manylinux2014</code> 标准的 Linux 系统（支持 CentOS 7+、Ubuntu 16.04+ 等）。</li>
+<li><code>aarch64</code>: 表示该包是为 <strong>ARM 64位架构</strong> 编译的。</li>
+</ul>
+<p>同理，<code>torchvision-0.9.1</code> 的命名规则与 PyTorch 一致。</p>
+<p><strong>官网：</strong><a target="_blank" rel="noopener" href="https://download.pytorch.org/whl/torch_stable.html">download.pytorch.org&#x2F;whl&#x2F;torch_stable.html</a>（CPU版本）</p>
+<hr>
+<h3 id="1-2检查当前的-pip-版本"><a href="#1-2检查当前的-pip-版本" class="headerlink" title="1.2检查当前的 pip 版本"></a>1.2<strong>检查当前的 pip 版本</strong></h3><p>首先，确认你的 <code>pip</code> 是否为最新版本。YOLOv5 和其他深度学习框架可能需要较新的 <code>pip</code> 版本来支持 <code>.whl</code> 文件的安装。</p>
+<p>运行以下命令检查 <code>pip</code> 版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip --version</span><br></pre></td></tr></table></figure>
+
+<p>如果版本较低（例如低于 20.x），建议升级 <code>pip</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install --upgrade pip</span><br></pre></td></tr></table></figure>
+
+<p>验证升级是否成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip --version</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="1-3-安装-torch-和-torchvision"><a href="#1-3-安装-torch-和-torchvision" class="headerlink" title="1.3 安装 torch 和 torchvision"></a>1.3 <strong>安装 torch 和 torchvision</strong></h3><p>已经下载了 <code>torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</code> 和 <code>torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl</code> 文件。接下来可以通过 <code>pip</code> 安装这些文件。</p>
+<h4 id="方法-1：直接使用-pip-安装-whl-文件"><a href="#方法-1：直接使用-pip-安装-whl-文件" class="headerlink" title="方法 1：直接使用 pip 安装 .whl 文件"></a>方法 1：直接使用 <code>pip</code> 安装 <code>.whl</code> 文件</h4><p>假设 <code>.whl</code> 文件位于 <code>/path/to/wheel/</code> 目录下，执行以下命令：</p>
+<p>安装 PyTorch：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /path/to/torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<p>安装 TorchVision：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /path/to/torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<h4 id="方法-2：将-whl-文件上传到开发板并安装"><a href="#方法-2：将-whl-文件上传到开发板并安装" class="headerlink" title="方法 2：将 .whl 文件上传到开发板并安装"></a>方法 2：将 <code>.whl</code> 文件上传到开发板并安装</h4><p>如果你是通过 SSH 将 <code>.whl</code> 文件上传到开发板的某个目录（例如 <code>/home/user/</code>），可以直接在该目录下运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/user/</span><br><span class="line">pip install torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</span><br><span class="line">pip install torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="1-4-验证安装是否成功"><a href="#1-4-验证安装是否成功" class="headerlink" title="1.4 验证安装是否成功"></a>1.4 <strong>验证安装是否成功</strong></h3><p>安装完成后，验证 <code>torch</code> 和 <code>torchvision</code> 是否正常工作：</p>
+<p>运行以下 Python 脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torchvision</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;PyTorch version:&quot;</span>, torch.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;TorchVision version:&quot;</span>, torchvision.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;CUDA available:&quot;</span>, torch.cuda.is_available())</span><br></pre></td></tr></table></figure>
+
+<p>输出应该类似于：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PyTorch version: 1.8.1</span><br><span class="line">TorchVision version: 0.9.1</span><br><span class="line">CUDA available: False</span><br></pre></td></tr></table></figure>
+
+<p>注意：飞腾派开发板通常不支持 CUDA，因此 <code>torch.cuda.is_available()</code> 应该返回 <code>False</code>。</p>
+<h2 id="2-numpy-1-26-4"><a href="#2-numpy-1-26-4" class="headerlink" title="2.numpy 1.26.4"></a>2.numpy 1.26.4</h2><p>当你在安装 时，如果需要下载依赖项（例如 ），但网络速度很慢，可以通过以下方法手动下载并安装这些依赖项。</p>
+<p>官网：<a target="_blank" rel="noopener" href="https://pypi.org/project/numpy/?spm=a2ty_o01.29997173.0.0.44613981spsgZ1">numpy ·PyPI</a></p>
+<p>在文件列表中找到适合你环境的 文件，例如 ：</p>
+<p><code>numpy-1.26.4-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</code> </p>
+<p>&#x3D;&#x3D;注意：&#x3D;&#x3D;当在开发板上使用默认安装的时候会下载2.0.0+的版本与torch1.8.1不匹配，因此本项目选择1.26.4</p>
+<p>将文件上传到开发板后，使用 手动安装。<code>.whl``pip</code></p>
+<p>假设文件位于目录下，运行以下命令安装：<code>.whl``/home/user/</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /home/user/numpy-2.0.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后，继续安装其他依赖项</p>
+<h4 id="检查-numpy-是否正常工作："><a href="#检查-numpy-是否正常工作：" class="headerlink" title="检查 numpy 是否正常工作："></a>检查 numpy 是否正常工作：</h4><p>运行以下命令：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;NumPy version:&quot;</span>, np.__version__)</span><br><span class="line">a = np.array([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>])</span><br><span class="line"><span class="built_in">print</span>(a)</span><br></pre></td></tr></table></figure>
+
+<p>如果输出正常，则说明 NumPy 安装没有问题。</p>
+<h4 id="如果出现问题："><a href="#如果出现问题：" class="headerlink" title="如果出现问题："></a>如果出现问题：</h4><p>可以尝试卸载当前的 NumPy 并重新安装稳定版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip uninstall numpy</span><br><span class="line">pip install numpy</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-opencv-python"><a href="#3-opencv-python" class="headerlink" title="3.opencv-python"></a>3.opencv-python</h2><p>如果你希望手动下载 文件以节省时间或避免网络问题，可以从以下地址获取：<code>.whl</code></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://pypi.org/project/opencv-python/?spm=a2ty_o01.29997173.0.0.44613981spsgZ1#files">OpenCV 官方 PyPI 页面</a></li>
+<li>直接下载链接（适用于 Python 3.9 和 aarch64 架构）：<ul>
+<li><a target="_blank" rel="noopener" href="https://files.pythonhosted.org/packages/0e/0b/8d0e0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d0b8d/opencv_python-4.5.5.62-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl">opencv_python-4.5.5.62-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</a></li>
+</ul>
+</li>
+</ul>
+<p>下载完成后，可以通过以下命令安装：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /path/to/opencv_python-4.5.5.62-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<p>验证是否安装成功：编写脚本运行</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torchvision</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> cv2</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;PyTorch version:&quot;</span>, torch.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;TorchVision version:&quot;</span>, torchvision.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;NumPy version:&quot;</span>, np.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;OpenCV version:&quot;</span>, cv2.__version__)</span><br></pre></td></tr></table></figure>
+
+<p>输出类似：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PyTorch version: 1.8.1</span><br><span class="line">TorchVision version: 0.9.1</span><br><span class="line">NumPy version: 1.26.4</span><br><span class="line">OpenCV version: 4.5.5</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-matplotlib3-7-1"><a href="#4-matplotlib3-7-1" class="headerlink" title="4.matplotlib3.7.1"></a>4.matplotlib3.7.1</h2><p>为了安装 <code>matplotlib</code> 并确保版本号大于 3.2.2，你可以通过以下方法进行下载和安装。以下是详细的步骤和链接地址：</p>
+<h3 id="通过-pip-安装指定版本的-matplotlib"><a href="#通过-pip-安装指定版本的-matplotlib" class="headerlink" title="通过 pip 安装指定版本的 matplotlib"></a><strong>通过 <code>pip</code> 安装指定版本的 <code>matplotlib</code></strong></h3><p>你可以直接使用 <code>pip</code> 安装一个大于 3.2.2 的稳定版本。例如，安装最新版本（或某个特定版本）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install matplotlib&gt;=3.2.2</span><br></pre></td></tr></table></figure>
+
+<p>如果你想安装一个具体的版本（例如 3.7.1），可以运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install matplotlib==3.7.1</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="手动下载-whl-文件"><a href="#手动下载-whl-文件" class="headerlink" title="手动下载 .whl 文件"></a><strong>手动下载 <code>.whl</code> 文件</strong></h3><p>如果你希望通过手动下载 <code>.whl</code> 文件来安装 <code>matplotlib</code>，可以从 <a target="_blank" rel="noopener" href="https://pypi.org/project/matplotlib/#files">PyPI 官方页面</a> 获取适合你环境的文件。</p>
+<p>具体步骤：</p>
+<ol>
+<li>打开 <a target="_blank" rel="noopener" href="https://pypi.org/project/matplotlib/#files">matplotlib PyPI 页面</a>。</li>
+<li>在文件列表中找到适合你 Python 版本（例如 <code>cp39</code> 对应 Python 3.9）和系统架构（<code>manylinux_2_17_aarch64.manylinux2014_aarch64</code> 对应 ARM 架构）的 <code>.whl</code> 文件。<ul>
+<li>示例文件名：<code>matplotlib-3.7.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</code></li>
+</ul>
+</li>
+<li>下载该文件到本地计算机。</li>
+</ol>
+<p>下载链接示例：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://files.pythonhosted.org/packages/3b/5d/3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d3b5d/matplotlib-3.7.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl">matplotlib-3.7.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</a></li>
+</ul>
+<p><strong>将 <code>.whl</code> 文件传输到开发板并安装</strong></p>
+<p>下载完成后，将 <code>.whl</code> 文件传输到飞腾派开发板，并使用 <code>pip</code> 安装。</p>
+<p>在开发板上安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /home/user/matplotlib-3.7.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<p><strong>验证安装是否成功</strong></p>
+<p>安装完成后，可以通过以下脚本验证 <code>matplotlib</code> 是否正常工作：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> matplotlib</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Matplotlib version:&quot;</span>, matplotlib.__version__)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试绘图功能</span></span><br><span class="line">plt.plot([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>])</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+
+<p>如果输出显示 Matplotlib 的版本号（例如 <code>3.7.1</code>），并且能够正常绘制图形，则说明安装成功。</p>
+<h2 id="5-其余的环境安装"><a href="#5-其余的环境安装" class="headerlink" title="5.其余的环境安装"></a>5.其余的环境安装</h2><p>进入到项目的文件路径下，打开requirements.txt文件，将已经安装好的四个配置注释掉，</p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># YOLOv5 requirements</span><br><span class="line"># Usage: pip install -r requirements.txt</span><br><span class="line"></span><br><span class="line"># Base ------------------------------------------------------------------------</span><br><span class="line">gitpython&gt;=3.1.30</span><br><span class="line">#matplotlib&gt;=3.2.2/*注释*/</span><br><span class="line">#numpy&gt;=1.18.5/*注释*/</span><br><span class="line">#opencv-python&gt;=4.1.1/*注释*/</span><br><span class="line">Pillow&gt;=7.1.2</span><br><span class="line">psutil  # system resources</span><br><span class="line">PyYAML&gt;=5.3.1</span><br><span class="line">requests&gt;=2.23.0</span><br><span class="line">scipy&gt;=1.4.1</span><br><span class="line">thop&gt;=0.1.1  # FLOPs computation</span><br><span class="line">#torch&gt;=1.7.0  # see https://pytorch.org/get-started/locally (recommended)/*注释*/</span><br><span class="line">#torchvision&gt;=0.8.1/*注释*/</span><br><span class="line">tqdm&gt;=4.64.0</span><br><span class="line"># protobuf&lt;=3.20.1  # https://github.com/ultralytics/yolov5/issues/8012</span><br></pre></td></tr></table></figure>
+
+<p>随后运行进行安装其余的代码(时间比较久)：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+
+<h3 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a><strong>遇到的问题</strong></h3><h4 id="1-pip下载缓慢"><a href="#1-pip下载缓慢" class="headerlink" title="1.pip下载缓慢"></a>1.pip下载缓慢</h4><p>如果你没有换成国内源话，下载速度有时候会很慢，甚至直接报错 Read timed out</p>
+<p>解决办法： 使用国内源去下载</p>
+<p>国内源：</p>
+<p>阿里云：<a target="_blank" rel="noopener" href="https://mirrors.aliyun.com/pypi/simple/">https://mirrors.aliyun.com/pypi/simple/</a></p>
+<p>清华：<a target="_blank" rel="noopener" href="https://pypi.tuna.tsinghua.edu.cn/simple">https://pypi.tuna.tsinghua.edu.cn/simple</a></p>
+<p>中国科技大学 <a target="_blank" rel="noopener" href="https://pypi.mirrors.ustc.edu.cn/simple/">https://pypi.mirrors.ustc.edu.cn/simple/</a></p>
+<p>华中理工大学：<a target="_blank" rel="noopener" href="https://pypi.hustunique.com/">https://pypi.hustunique.com/</a></p>
+<p>山东理工大学：<a target="_blank" rel="noopener" href="https://pypi.sdutlinux.org/">https://pypi.sdutlinux.org/</a></p>
+<p>豆瓣：<a target="_blank" rel="noopener" href="https://pypi.douban.com/simple/">https://pypi.douban.com/simple/</a></p>
+<p>bfsu：<a target="_blank" rel="noopener" href="https://mirrors.bfsu.edu.cn/pypi/web/simple/">https://mirrors.bfsu.edu.cn/pypi/web/simple/</a></p>
+<p>终端输入格式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/</span><br><span class="line">pip install 单个包名 -i https://mirrors.aliyun.com/pypi/simple/</span><br></pre></td></tr></table></figure>
+
+<h2 id="代码运行"><a href="#代码运行" class="headerlink" title="代码运行"></a>代码运行</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 detect.py --weights ./weights/best.pt --<span class="built_in">source</span> ./demo/</span><br></pre></td></tr></table></figure>
+
+<p>说明：</p>
+<p>.&#x2F;weights&#x2F;best.pt :当前目录下weights文件夹下训练好的网络模型</p>
+<p>.&#x2F;demo&#x2F;：需要检测的图像或者视频放在此文件夹下</p>
+<p>.&#x2F;runs&#x2F;detect&#x2F;:生成的检测结果</p>
+<h1 id="QT5项目配置及运行"><a href="#QT5项目配置及运行" class="headerlink" title="QT5项目配置及运行"></a>QT5项目配置及运行</h1><p>系统镜像默认安装了QT5，固我们只需要安装程序所需要的相关包即可。</p>
+<h2 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h2><p>在飞腾派上确保已安装以下依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt-get install build-essential cmake qt5-default qtmultimedia5-dev libqt5multimedia5-plugins</span><br></pre></td></tr></table></figure>
+
+<p>如果视频无法播放，可能需要安装GStreamer编解码器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt-get install gstreamer1.0-plugins-good gstreamer1.0-libav</span><br></pre></td></tr></table></figure>
+
+<h2 id="Qt5Multimedia"><a href="#Qt5Multimedia" class="headerlink" title="Qt5Multimedia"></a><code>Qt5Multimedia</code></h2><p>确保系统中已安装 <code>Qt5Multimedia</code> 模块。</p>
+<p><strong>步骤：</strong></p>
+<p>更新包管理器索引：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br></pre></td></tr></table></figure>
+
+<p>安装 <code>Qt5Multimedia</code> 及相关依赖：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install qt5-default libqt5multimedia5 libqt5multimediawidgets5 qtbase5-dev qtdeclarative5-dev</span><br></pre></td></tr></table></figure>
+
+<p>验证安装是否成功：</p>
+<p>检查是否存在 <code>Qt5MultimediaConfig.cmake</code> 文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find /usr/ -name &quot;Qt5MultimediaConfig.cmake&quot;</span><br></pre></td></tr></table></figure>
+
+<p>&#x3D;&#x3D;如果找到了该文件，说明模块已正确安装。直接跳到编译运行代码即可！！后面的都不用管&#x3D;&#x3D;</p>
+<p>如果显示没有找到：</p>
+<p><strong>方法0：</strong></p>
+<p>如果 编译代码的时候，CMake 报错 <code>Could NOT find Qt5Multimedia</code>可以手动指定路径：</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>(Qt5_DIR <span class="string">&quot;/usr/lib/aarch64-linux-gnu/cmake/Qt5&quot;</span>)</span><br><span class="line"><span class="keyword">find_package</span>(Qt5 COMPONENTS Multimedia REQUIRED)</span><br></pre></td></tr></table></figure>
+
+<p><strong>方法1：</strong></p>
+<p>重新安装所有必要的 Qt5 开发包</p>
+<p>确保系统中已安装所有与 <code>Qt5Multimedia</code> 相关的开发包。</p>
+<p>步骤：</p>
+<ol>
+<li><p>更新包管理器索引：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt update</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>安装完整的 Qt5 开发包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install qtbase5-dev libqt5multimedia5 libqt5multimediawidgets5 qtdeclarative5-dev qttools5-dev-tools</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>验证是否包含 CMake 配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find /usr/ -name <span class="string">&quot;Qt5MultimediaConfig.cmake&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果仍然没有输出，说明开发包未正确安装。</p>
+</li>
+<li><p>强制重新安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt --reinstall install qtbase5-dev libqt5multimedia5 libqt5multimediawidgets5 qtdeclarative5-dev</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>**方法 2：**手动指定 <code>CMAKE_PREFIX_PATH</code></p>
+<p>如果 <code>Qt5Multimedia</code> 已安装但路径不在默认搜索范围内，可以通过手动设置 <code>CMAKE_PREFIX_PATH</code> 来指定路径。</p>
+<p>步骤：</p>
+<ol>
+<li><p>找到 Qt5 的安装路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> /usr/lib/aarch64-linux-gnu/cmake/Qt5/</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设置 <code>CMAKE_PREFIX_PATH</code>：<br>在运行 CMake 时，指定 Qt5 的安装路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake .. -DCMAKE_PREFIX_PATH=/usr/lib/aarch64-linux-gnu/cmake/Qt5</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果路径不同，请根据实际情况调整。</p>
+</li>
+</ol>
+<p><strong>方法 3：检查 Qt5 的安装完整性</strong></p>
+<p>如果重新安装后仍未解决问题，可能是 Qt5 的安装不完整或损坏。</p>
+<p>步骤：</p>
+<ol>
+<li><p>卸载现有的 Qt5 相关包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt remove --purge qt5-default qtbase5-dev libqt5multimedia5 libqt5multimediawidgets5 qttools5-dev-tools</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>清理残留文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt autoremove</span><br><span class="line"><span class="built_in">sudo</span> apt autoclean</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重新安装 Qt5：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install qt5-default qtbase5-dev libqt5multimedia5 libqt5multimediawidgets5 qttools5-dev-tools</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>验证安装是否成功：</p>
+<ul>
+<li>检查是否存在 <code>Qt5MultimediaConfig.cmake</code> 文件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find /usr/ -name <span class="string">&quot;Qt5MultimediaConfig.cmake&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>重新运行CMake：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake ..</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>**方法 4：**手动下载并放置缺失文件</p>
+<p>如果系统中确实缺少 <code>Qt5MultimediaConfig.cmake</code> 文件，可以尝试从官方源或其他可信来源获取。</p>
+<p>步骤：</p>
+<ol>
+<li><p>下载 <code>Qt5MultimediaConfig.cmake</code> 文件：</p>
+<ul>
+<li>可以从 <a target="_blank" rel="noopener" href="https://www.qt.io/">Qt 官方网站</a> 下载对应版本的 Qt5 源代码包。</li>
+<li>或者从其他 Ubuntu 镜像站点下载 <code>qtbase5-dev</code> 的 <code>.deb</code> 包并提取文件。</li>
+</ul>
+</li>
+<li><p>将文件放置到正确位置：</p>
+<ul>
+<li>目标路径通常是 <code>/usr/lib/aarch64-linux-gnu/cmake/Qt5Multimedia/</code>。</li>
+<li>如果该目录不存在，可以手动创建：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /usr/lib/aarch64-linux-gnu/cmake/Qt5Multimedia/</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">cp</span> /path/to/Qt5MultimediaConfig.cmake /usr/lib/aarch64-linux-gnu/cmake/Qt5Multimedia/</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>确保权限正确：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">chmod</span> 644 /usr/lib/aarch64-linux-gnu/cmake/Qt5Multimedia/Qt5MultimediaConfig.cmake</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>再次运行 CMake：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake ..</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>**方法 6：**验证 Qt5 版本兼容性</p>
+<p>确保你的项目使用的 Qt5 版本与系统中安装的版本兼容。</p>
+<p>步骤：</p>
+<ol>
+<li><p>检查 Qt5 版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qmake --version</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果版本过旧或过新，可能导致模块不可用。尝试安装匹配的版本。</p>
+</li>
+</ol>
+<p>&#x3D;&#x3D;总结：&#x3D;&#x3D;问题千千万，不如叫上师兄去唱歌。</p>
+<h2 id="编译并运行该Qt5项目的步骤"><a href="#编译并运行该Qt5项目的步骤" class="headerlink" title="编译并运行该Qt5项目的步骤"></a>编译并运行该Qt5项目的步骤</h2><h3 id="创建构建目录"><a href="#创建构建目录" class="headerlink" title="创建构建目录"></a>创建构建目录</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> build</span><br><span class="line"><span class="built_in">cd</span> build</span><br></pre></td></tr></table></figure>
+
+<h3 id="生成构建系统"><a href="#生成构建系统" class="headerlink" title="生成构建系统"></a>生成构建系统</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cmake .. -DCMAKE_BUILD_TYPE=Release</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译项目"><a href="#编译项目" class="headerlink" title="编译项目"></a>编译项目</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make -j$(<span class="built_in">nproc</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="运行程序"><a href="#运行程序" class="headerlink" title="运行程序"></a>运行程序</h3><p>编译完成后，可执行文件会生成在项目根目录的<code>bin</code>文件夹中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">../bin/ui</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="目录结构参考"><a href="#目录结构参考" class="headerlink" title="目录结构参考"></a>目录结构参考</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">项目根目录/</span><br><span class="line">├── CMakeLists.txt</span><br><span class="line">├── bin/          # 可执行文件输出目录</span><br><span class="line">├── build/        # 编译目录</span><br><span class="line">├── include/</span><br><span class="line">│   └── mainwindow.h</span><br><span class="line">└── src/</span><br><span class="line">    ├── main.cpp</span><br><span class="line">    └── mainwindow.cpp</span><br></pre></td></tr></table></figure>
+
+<h3 id="代码运行说明"><a href="#代码运行说明" class="headerlink" title="代码运行说明"></a>代码运行说明</h3><ol>
+<li><strong>视频加载与播放</strong>：<ul>
+<li>用户点击“原视频”按钮选择文件 → <code>player1</code> 加载并播放。</li>
+<li>用户点击“低照度处理”或“裂缝检测”按钮 → 调用外部程序处理视频 → 处理完成后<strong>手动</strong>选择结果视频 （运行完成会跳出一个窗口界面手动进行选择处理后的视频）→ <code>player2</code> 加载并播放。</li>
+</ul>
+</li>
+<li><strong>双视频窗口控制</strong>：<ul>
+<li>两个独立的 <code>QMediaPlayer</code> 实例（<code>player1</code> 和 <code>player2</code>）分别控制原视频和处理后视频。</li>
+<li>每个播放器关联独立的 <code>QVideoWidget</code> 和 <code>QSlider</code>，实现并行播放和进度控制。</li>
+</ul>
+</li>
+<li><strong>外部程序调用</strong>：<ul>
+<li><strong>低照度处理</strong>：直接执行编译后的C++程序。</li>
+<li><strong>裂缝检测</strong>：调用Python脚本运行YOLOv5模型，需确保Python环境和依赖正确配置。</li>
+</ul>
+</li>
+</ol>
+<h1 id="LIME项目环境配置"><a href="#LIME项目环境配置" class="headerlink" title="LIME项目环境配置"></a>LIME项目环境配置</h1><p>以下是在针对飞腾派上运行该项目的完整步骤说明：</p>
+<hr>
+<h3 id="飞腾派环境配置"><a href="#飞腾派环境配置" class="headerlink" title="飞腾派环境配置"></a><strong>飞腾派环境配置</strong></h3><h4 id="1-安装依赖项"><a href="#1-安装依赖项" class="headerlink" title="1. 安装依赖项"></a>1. <strong>安装依赖项</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 更新系统</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get update &amp;&amp; <span class="built_in">sudo</span> apt-get upgrade -y</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装编译工具和基础依赖</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get install build-essential cmake git libgtk-3-dev pkg-config</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装OpenCV依赖（需包含视频编解码支持）</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get install libopencv-dev libopencv-contrib-dev libavcodec-dev libavformat-dev libswscale-dev</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装FFmpeg（视频处理）</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get install ffmpeg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装多线程开发库（可选）</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get install libomp-dev</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-验证OpenCV安装"><a href="#2-验证OpenCV安装" class="headerlink" title="2. 验证OpenCV安装"></a>2. <strong>验证OpenCV安装</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 检查OpenCV版本及是否包含视频模块</span></span><br><span class="line">pkg-config --modversion opencv4</span><br><span class="line"><span class="comment"># 输出应包含：4.x.x（如4.5.4）</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-配置NEON支持"><a href="#3-配置NEON支持" class="headerlink" title="3. 配置NEON支持"></a>3. <strong>配置NEON支持</strong></h4><ul>
+<li>飞腾派基于ARM架构，默认支持NEON指令集。在CMake中启用优化：<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在CMakeLists.txt中添加以下内容</span></span><br><span class="line"><span class="keyword">set</span>(CMAKE_CXX_FLAGS <span class="string">&quot;$&#123;CMAKE_CXX_FLAGS&#125; -O3 -mfpu=neon&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="编译与运行"><a href="#编译与运行" class="headerlink" title="编译与运行"></a><strong>编译与运行</strong></h3><h4 id="1-调整项目结构"><a href="#1-调整项目结构" class="headerlink" title="1. 调整项目结构"></a>1. <strong>调整项目结构</strong></h4><p>确保目录结构如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">项目根目录/</span><br><span class="line">├── CMakeLists.txt</span><br><span class="line">├── include/</span><br><span class="line">│   └── lime.h</span><br><span class="line">├── src/</span><br><span class="line">│   ├── main.cpp</span><br><span class="line">│   └── lime.cpp</span><br><span class="line">└── bin/          # 可执行文件输出目录</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-构建项目"><a href="#2-构建项目" class="headerlink" title="2. 构建项目"></a>2. <strong>构建项目</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> build</span><br><span class="line"><span class="built_in">cd</span> build</span><br><span class="line">cmake .. -DCMAKE_BUILD_TYPE=Release</span><br><span class="line">make -j$(<span class="built_in">nproc</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-运行程序"><a href="#3-运行程序" class="headerlink" title="3. 运行程序"></a>3. <strong>运行程序</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 确保输入视频文件存在（如/home/phytium/data/video/source.mp4）</span></span><br><span class="line"><span class="comment">#查看lime文件夹中的main.cpp文件查看输入视频的路径</span></span><br><span class="line"><span class="comment">#							   输出视频的路径</span></span><br><span class="line"><span class="comment">#							   输出图片的路径</span></span><br><span class="line">../bin/main</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="关键依赖安装包来源"><a href="#关键依赖安装包来源" class="headerlink" title="关键依赖安装包来源"></a><strong>关键依赖安装包来源</strong></h3><ol>
+<li><p><strong>OpenCV</strong>  </p>
+<ul>
+<li>官网源码：<a target="_blank" rel="noopener" href="https://opencv.org/releases/">https://opencv.org/releases/</a>  </li>
+<li>Debian包：<code>sudo apt-get install libopencv-dev</code></li>
+</ul>
+</li>
+<li><p><strong>FFmpeg</strong>  </p>
+<ul>
+<li>官网源码：<a target="_blank" rel="noopener" href="https://ffmpeg.org/download.html">https://ffmpeg.org/download.html</a>  </li>
+<li>Debian包：<code>sudo apt-get install ffmpeg</code></li>
+</ul>
+</li>
+<li><p><strong>CMake</strong>  </p>
+<ul>
+<li>官网：<a target="_blank" rel="noopener" href="https://cmake.org/download/">https://cmake.org/download/</a></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="常见问题解决"><a href="#常见问题解决" class="headerlink" title="常见问题解决"></a><strong>常见问题解决</strong></h3><ol>
+<li><p><strong>OpenCV未找到</strong>  </p>
+<ul>
+<li>在<code>CMakeLists.txt</code>中显式指定OpenCV路径：<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">find_package</span>(OpenCV REQUIRED PATHS /usr/local/opencv4)</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>NEON指令编译错误</strong>  </p>
+<ul>
+<li>确保CMake中启用了ARM优化标志：<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">set</span>(CMAKE_CXX_FLAGS <span class="string">&quot;$&#123;CMAKE_CXX_FLAGS&#125; -mcpu=native -O3&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>视频无法读取&#x2F;写入</strong>  </p>
+<ul>
+<li>安装GStreamer插件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt-get install gstreamer1.0-plugins-good gstreamer1.0-libav</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+<h1 id="Anaconda3"><a href="#Anaconda3" class="headerlink" title="Anaconda3"></a>Anaconda3</h1><h2 id="Anaconda下载"><a href="#Anaconda下载" class="headerlink" title="Anaconda下载"></a>Anaconda下载</h2><p><strong>官网下载</strong></p>
+<p>官网首页:<a target="_blank" rel="noopener" href="https://www.anaconda.com/">https://www.anaconda.com/</a></p>
+<p><img src="image-20250423164635088.png" alt="image-20250423164635088"></p>
+<p><img src="image-20250423164651649.png" alt="image-20250423164651649"></p>
+<p><img src="image-20250423164706927.png" alt="image-20250423164706927"></p>
+<h2 id="Anaconda安装"><a href="#Anaconda安装" class="headerlink" title="Anaconda安装"></a>Anaconda安装</h2><p>打开一个终端窗口</p>
+<p>安装命令</p>
+<p><img src="image-20250423164811886.png" alt="image-20250423164811886"></p>
+<p>运行安装脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash /home/user/Desktop/Anaconda3-2024.02-1-Linux-aarch64.sh</span><br></pre></td></tr></table></figure>
+
+<p>&#x3D;&#x3D;注意：&#x3D;&#x3D;&#x2F;home&#x2F;user&#x2F;Desktop&#x2F;Anaconda3-2024.02-1-Linux-aarch64.sh替换成自己的路径</p>
+<p><img src="image-20250423164834279.png" alt="image-20250423164834279"></p>
+<p>这里需要阅读并同意它才能继续安装。直接按q跳过。发送yes同意许可协议。</p>
+<p><img src="image-20250423164910568.png" alt="image-20250423164910568"></p>
+<p>这里可以修改自定义安装位置。</p>
+<p>安装完成，如图所示。</p>
+<p><img src="image-20250423164926206.png" alt="image-20250423164926206"></p>
+<p>添加环境变量</p>
+<p>在终端窗口输入以下命令来编辑.bashrc文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nano ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>按回车进入环境变量编辑器</p>
+<p><img src="image-20250423165004624.png" alt="image-20250423165004624"></p>
+<p>在打开的编辑器中，将以下行添加到文件的末尾：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export PATH=&quot;/home/user/anaconda3/bin:$PATH&quot;</span><br></pre></td></tr></table></figure>
+
+
+<p>请确保将&#x2F;home&#x2F;user&#x2F;anaconda3&#x2F;bin替换为你的Anaconda安装路径。</p>
+<p>按下Ctrl+X退出编辑器，然后系统会询问您是否保存修改。按Y表示要保存，然后按Enter确认文件名并保存。保存并关闭编辑器。</p>
+<p>为了使更改生效，运行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>飞腾派上测试是否成功安装了Anaconda3</p>
+<p><img src="image-20250424125143393.png" alt="image-20250424125143393"></p>
+<p>打开终端并输入以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda --version</span><br></pre></td></tr></table></figure>
+
+<p>如果成功安装Anaconda3，这个命令将返回Anaconda的版本信息。<br>如果系统提示找不到命令，那么可能安装完后没有添加环境变量可以重复上个步骤添加环境变量或者没有成功安装Anaconda3也可以尝试重复上面的步骤。</p>
+<h2 id="新建Anaconda3虚拟环境"><a href="#新建Anaconda3虚拟环境" class="headerlink" title="新建Anaconda3虚拟环境"></a>新建Anaconda3虚拟环境</h2><h2 id="创建新虚拟环境"><a href="#创建新虚拟环境" class="headerlink" title="创建新虚拟环境"></a>创建新虚拟环境</h2><p><img src="image-20250424125219472.png" alt="image-20250424125219472"></p>
+<p><img src="image-20250424125245294.png" alt="image-20250424125245294"></p>
+<p>打开终端，创建新环境 - 使用conda命令创建新的Python环境，指定你想要的Python版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda create -n your_env_name python=3.9</span><br></pre></td></tr></table></figure>
+
+<p>&#x3D;&#x3D;注：&#x3D;&#x3D;这里your_env_name是你为新环境起的名字，python&#x3D;3.9是指定的Python版本。（环境名字和python可自行决定）</p>
+<p>装完虚拟环境，可以在命令行中输入以下命令查看Anaconda3中的虚拟环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda info --envs</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250423165430256.png" alt="image-20250423165430256"></p>
+<p>如果没有显示有当前激活的幻境标*，飞腾派中使能conda，终端中输入：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda init</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250424130019892.png" alt="image-20250424130019892"></p>
+<p>&#x3D;&#x3D;注：&#x3D;&#x3D;如果没有先使能conda，当你激活环境的时候会出现</p>
+<p><img src="image-20250424130054103.png" alt="image-20250424130054103"></p>
+<p>运行 <code>conda init</code> 后，需重新加载 <code>.bashrc</code> 文件以生效（或直接关闭当前终端窗口，重新打开一个新的终端。）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda activate base</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250424130331564.png" alt="image-20250424130331564"></p>
+<p>检查终端提示符前是否出现 <code>(base)</code> 字样，若出现则表示Conda已激活基础环境。</p>
+<p>创建了新的虚拟环境之后，使用以下命令激活该环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda activate your_env_name</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250424130546752.png" alt="image-20250424130546752"></p>
+<h1 id="YOLOv5项目环境配置及运行-1"><a href="#YOLOv5项目环境配置及运行-1" class="headerlink" title="YOLOv5项目环境配置及运行"></a>YOLOv5项目环境配置及运行</h1><p>&#x3D;&#x3D;注意：&#x3D;&#x3D;项目需要的torch版本不要大于2.5否则会出错!!!因此不能直接使用命令<code>pip install -r requirements.txt</code>直接进行安装，否则大概率会安装最新的版本。</p>
+<h2 id="1-torch1-8-1-torchversion0-9-1-1"><a href="#1-torch1-8-1-torchversion0-9-1-1" class="headerlink" title="1.torch1.8.1+torchversion0.9.1"></a>1.torch1.8.1+torchversion0.9.1</h2><h3 id="1-1安装包下载-1"><a href="#1-1安装包下载-1" class="headerlink" title="1.1安装包下载"></a>1.1安装包下载</h3><p>为了节省时间，用开发板直接下载会很慢，可以使用其它的源，如阿里、清华源等。</p>
+<p>本项目已经在官网上下载了torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl和torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl文件</p>
+<p>&#x3D;&#x3D;注意：&#x3D;&#x3D;下载的版本需要和你的环境匹配！！！要满足以下三点！！！</p>
+<ul>
+<li><strong>架构匹配</strong>：文件名中的 <code>aarch64</code> 表示这是为 <strong>ARM 64位架构</strong> 编译的包，而飞腾派（Phytium-Pi）使用的是 <strong>Phytium ARM v8 架构（aarch64）</strong>，因此兼容。</li>
+<li><strong>Python 版本匹配</strong>：文件名中的 <code>cp39</code> 表示包是为 <strong>Python 3.9</strong> 编译的，与本次的环境（Python 3.9.8）完全兼容。</li>
+<li><strong>系统兼容性</strong>：<code>manylinux2014</code> 是 Linux 平台的二进制兼容性标签，适用于主流 Linux 发行版（包括飞腾派的操作系统）。</li>
+</ul>
+<p>以 <code>torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</code> 为例：</p>
+<ul>
+<li><code>torch-1.8.1</code>: PyTorch 库的版本号（1.8.1）。</li>
+<li><code>cp39</code>: 表示该包适用于 <strong>Python 3.9</strong>（<code>cp</code> 是 “C Python” 的缩写，后接 Python 主版本号）。</li>
+<li><code>manylinux2014</code>: 表示该包兼容符合 <code>manylinux2014</code> 标准的 Linux 系统（支持 CentOS 7+、Ubuntu 16.04+ 等）。</li>
+<li><code>aarch64</code>: 表示该包是为 <strong>ARM 64位架构</strong> 编译的。</li>
+</ul>
+<p>同理，<code>torchvision-0.9.1</code> 的命名规则与 PyTorch 一致。</p>
+<p><strong>官网：</strong><a target="_blank" rel="noopener" href="https://download.pytorch.org/whl/torch_stable.html">download.pytorch.org&#x2F;whl&#x2F;torch_stable.html</a>（CPU版本）</p>
+<hr>
+<h3 id="1-2检查当前的-pip-版本-1"><a href="#1-2检查当前的-pip-版本-1" class="headerlink" title="1.2检查当前的 pip 版本"></a>1.2<strong>检查当前的 pip 版本</strong></h3><p>首先，确认你的 <code>pip</code> 是否为最新版本。YOLOv5 和其他深度学习框架可能需要较新的 <code>pip</code> 版本来支持 <code>.whl</code> 文件的安装。</p>
+<p>运行以下命令检查 <code>pip</code> 版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip --version</span><br></pre></td></tr></table></figure>
+
+<p>如果版本较低（例如低于 20.x），建议升级 <code>pip</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install --upgrade pip</span><br></pre></td></tr></table></figure>
+
+<p>验证升级是否成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip --version</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="1-3-安装-torch-和-torchvision-1"><a href="#1-3-安装-torch-和-torchvision-1" class="headerlink" title="1.3 安装 torch 和 torchvision"></a>1.3 <strong>安装 torch 和 torchvision</strong></h3><p>安装前环境配置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装基础依赖（通过 Conda 或 Apt）</span></span><br><span class="line">conda install numpy ninja pyyaml typing_extensions</span><br><span class="line"></span><br><span class="line"><span class="comment"># 安装图像处理依赖（Pillow 是 TorchVision 的必需依赖）</span></span><br><span class="line">pip install Pillow</span><br></pre></td></tr></table></figure>
+
+<p>已经下载了 <code>torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</code> 和 <code>torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl</code> 文件。接下来可以通过 <code>pip</code> 安装这些文件。</p>
+<h4 id="方法-1：直接使用-pip-安装-whl-文件-1"><a href="#方法-1：直接使用-pip-安装-whl-文件-1" class="headerlink" title="方法 1：直接使用 pip 安装 .whl 文件"></a>方法 1：直接使用 <code>pip</code> 安装 <code>.whl</code> 文件</h4><p>假设 <code>.whl</code> 文件位于 <code>/path/to/wheel/</code> 目录下，执行以下命令：</p>
+<p>安装 PyTorch：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /path/to/torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<p>安装 TorchVision：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install /path/to/torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<h4 id="方法-2：将-whl-文件上传到开发板并安装-1"><a href="#方法-2：将-whl-文件上传到开发板并安装-1" class="headerlink" title="方法 2：将 .whl 文件上传到开发板并安装"></a>方法 2：将 <code>.whl</code> 文件上传到开发板并安装</h4><p>如果你是通过 SSH 将 <code>.whl</code> 文件上传到开发板的某个目录（例如 <code>/home/user/</code>），可以直接在该目录下运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/user/</span><br><span class="line">pip install torch-1.8.1-cp39-cp39-manylinux2014_aarch64.whl</span><br><span class="line">pip install torchvision-0.9.1-cp39-cp39-manylinux2014_aarch64.whl</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="1-4-验证安装是否成功-1"><a href="#1-4-验证安装是否成功-1" class="headerlink" title="1.4 验证安装是否成功"></a>1.4 <strong>验证安装是否成功</strong></h3><p>安装完成后，验证 <code>torch</code> 和 <code>torchvision</code> 是否正常工作：</p>
+<p>运行以下 Python 脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torchvision</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;PyTorch version:&quot;</span>, torch.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;TorchVision version:&quot;</span>, torchvision.__version__)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;CUDA available:&quot;</span>, torch.cuda.is_available())</span><br></pre></td></tr></table></figure>
+
+<p>输出应该类似于：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PyTorch version: 1.8.1</span><br><span class="line">TorchVision version: 0.9.1</span><br><span class="line">CUDA available: False</span><br></pre></td></tr></table></figure>
+
+<p>注意：飞腾派开发板通常不支持 CUDA，因此 <code>torch.cuda.is_available()</code> 应该返回 <code>False</code>。</p>
+<h2 id="2-其余环境配置"><a href="#2-其余环境配置" class="headerlink" title="2.其余环境配置"></a>2.其余环境配置</h2><hr>
+<h3 id="步骤说明"><a href="#步骤说明" class="headerlink" title="步骤说明"></a><strong>步骤说明</strong></h3><p>根据你当前的Conda环境（<code>fly</code>）中已安装的包，需调整原 <code>requirements.txt</code> 文件以 <strong>避免版本冲突</strong> 和 <strong>重复安装</strong>。以下是具体操作指南：</p>
+<hr>
+<h3 id="1-分析已安装包与需求文件的差异"><a href="#1-分析已安装包与需求文件的差异" class="headerlink" title="1. 分析已安装包与需求文件的差异"></a><strong>1. 分析已安装包与需求文件的差异</strong></h3><p>当前环境中已安装的关键包版本：</p>
+<table>
+<thead>
+<tr>
+<th>包名</th>
+<th>当前版本</th>
+<th>原<code>requirements.txt</code>要求</th>
+<th>是否需调整？</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>numpy</code></td>
+<td>2.0.2</td>
+<td><code>numpy</code>（未指定）</td>
+<td><strong>需降级</strong> → 1.19.5（YOLOv5需要低版本兼容）</td>
+</tr>
+<tr>
+<td><code>Pillow</code></td>
+<td>11.2.1</td>
+<td><code>Pillow==9.0.1</code></td>
+<td><strong>需降级</strong> → 9.0.1（TorchVision 0.9.1依赖）</td>
+</tr>
+<tr>
+<td><code>PyYAML</code></td>
+<td>6.0.2</td>
+<td><code>PyYAML==5.4.1</code></td>
+<td><strong>需降级</strong> → 5.4.1（YOLOv5代码可能不兼容高版本）</td>
+</tr>
+<tr>
+<td><code>torch</code></td>
+<td>1.8.1</td>
+<td><code>torch==1.5.1</code></td>
+<td><strong>保留当前版本</strong>（已适配ARM）</td>
+</tr>
+<tr>
+<td><code>torchvision</code></td>
+<td>0.9.1</td>
+<td><code>torchvision==0.6.1</code></td>
+<td><strong>保留当前版本</strong>（与torch 1.8.1匹配）</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="2-调整后的-requirements-txt-文件"><a href="#2-调整后的-requirements-txt-文件" class="headerlink" title="2. 调整后的 requirements.txt 文件"></a><strong>2. 调整后的 <code>requirements.txt</code> 文件</strong></h3><p>将已满足的包注释掉，并明确需调整版本的包：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"># 已安装的包注释掉</span><br><span class="line"># numpy==1.19.5  # 需手动降级</span><br><span class="line"># Pillow==9.0.1   # 需手动降级</span><br><span class="line"># PyYAML==5.4.1   # 需手动降级</span><br><span class="line"># torch==1.8.1    # 已安装</span><br><span class="line"># torchvision==0.9.1  # 已安装</span><br><span class="line"></span><br><span class="line"># 需安装的其他依赖</span><br><span class="line">absl-py==0.12.0</span><br><span class="line">altgraph==0.17</span><br><span class="line">cachetools==4.2.1</span><br><span class="line">certifi==2020.12.5</span><br><span class="line">chardet==4.0.0</span><br><span class="line">cycler==0.10.0</span><br><span class="line">future==0.18.2</span><br><span class="line">google-auth==1.28.1</span><br><span class="line">google-auth-oauthlib==0.4.4</span><br><span class="line">GPUtil==1.4.0</span><br><span class="line">grpcio==1.37.0</span><br><span class="line">idna==2.10</span><br><span class="line">importlib-metadata==3.7.3</span><br><span class="line">kiwisolver==1.3.1</span><br><span class="line">Markdown==3.3.4</span><br><span class="line">matplotlib==3.4.3</span><br><span class="line">oauthlib==3.1.0</span><br><span class="line">olefile==0.46</span><br><span class="line">opencv-python-headless==4.5.1.48  # ARM兼容版本</span><br><span class="line">pefile==2019.4.18</span><br><span class="line">protobuf==3.15.8</span><br><span class="line">pyasn1==0.4.8</span><br><span class="line">pyasn1-modules==0.2.8</span><br><span class="line">pyinstaller==4.2</span><br><span class="line">pyinstaller-hooks-contrib==2021.1</span><br><span class="line">pyparsing==2.4.7</span><br><span class="line">python-dateutil==2.8.1</span><br><span class="line">requests==2.25.1</span><br><span class="line">requests-oauthlib==1.3.0</span><br><span class="line">rsa==4.7.2</span><br><span class="line">scipy==1.5.4  # ARM兼容版本</span><br><span class="line">six==1.15.0</span><br><span class="line">tensorboard==2.4.1</span><br><span class="line">tensorboard-plugin-wit==1.8.0</span><br><span class="line">tornado==6.1</span><br><span class="line">tqdm==4.59.0</span><br><span class="line">typing-extensions==3.7.4.3</span><br><span class="line">urllib3==1.26.5</span><br><span class="line">Werkzeug==1.0.1</span><br><span class="line">zipp==3.4.1</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-手动降级关键包"><a href="#3-手动降级关键包" class="headerlink" title="3. 手动降级关键包"></a><strong>3. 手动降级关键包</strong></h3><p>由于 <code>numpy</code>、<code>Pillow</code>、<code>PyYAML</code> 的版本冲突需手动处理：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 fly 环境中执行</span></span><br><span class="line">conda activate fly</span><br><span class="line"></span><br><span class="line"><span class="comment"># 降级 numpy 到 1.19.5（YOLOv5兼容版本）</span></span><br><span class="line">pip install numpy==1.19.5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 降级 Pillow 到 9.0.1（TorchVision依赖）</span></span><br><span class="line">pip install Pillow==9.0.1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 降级 PyYAML 到 5.4.1（YOLOv5代码兼容）</span></span><br><span class="line">pip install PyYAML==5.4.1</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-安装剩余依赖"><a href="#4-安装剩余依赖" class="headerlink" title="4. 安装剩余依赖"></a><strong>4. 安装剩余依赖</strong></h3><p>使用调整后的 <code>requirements.txt</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-验证环境"><a href="#5-验证环境" class="headerlink" title="5. 验证环境"></a><strong>5. 验证环境</strong></h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 检查关键包版本</span></span><br><span class="line">python -c <span class="string">&quot;import numpy; print(numpy.__version__)&quot;</span>  <span class="comment"># 应输出 1.19.5</span></span><br><span class="line">python -c <span class="string">&quot;import torch; print(torch.__version__)&quot;</span>  <span class="comment"># 应输出 1.8.1</span></span><br><span class="line">python -c <span class="string">&quot;import cv2; print(cv2.__version__)&quot;</span>      <span class="comment"># 应输出 4.5.1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行 YOLOv5 测试</span></span><br><span class="line">git <span class="built_in">clone</span> https://github.com/ultralytics/yolov5</span><br><span class="line"><span class="built_in">cd</span> yolov5</span><br><span class="line">python detect.py --weights yolov5s.pt --<span class="built_in">source</span> data/images/bus.jpg</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="关键问题说明"><a href="#关键问题说明" class="headerlink" title="关键问题说明"></a><strong>关键问题说明</strong></h3><ol>
+<li><strong>numpy 版本冲突</strong>：<ul>
+<li>YOLOv5 的某些代码（如张量操作）可能不兼容 <code>numpy&gt;=2.0</code>，必须降级到 <code>1.19.5</code>。</li>
+</ul>
+</li>
+<li><strong>Pillow 版本限制</strong>：<ul>
+<li><code>torchvision==0.9.1</code> 对 <code>Pillow</code> 有严格版本要求（通常 <code>&lt;=9.0.1</code>）。</li>
+</ul>
+</li>
+<li><strong>PyYAML 兼容性</strong>：<ul>
+<li>YOLOv5 的配置文件解析依赖 <code>PyYAML&lt;=5.4.1</code>，高版本可能引发语法错误。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="最终环境清理"><a href="#最终环境清理" class="headerlink" title="最终环境清理"></a><strong>最终环境清理</strong></h3><p>如果安装过程中出现依赖混乱，可重建环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">conda deactivate</span><br><span class="line">conda remove -n fly --all</span><br><span class="line">conda create -n fly python=3.9.21</span><br><span class="line">conda activate fly</span><br><span class="line"><span class="comment"># 重新按上述步骤安装</span></span><br></pre></td></tr></table></figure>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2025/07/17/3/">https://leonardo272.github.io/2025/07/17/3/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E9%A3%9E%E8%85%BE%E6%9D%AF/">飞腾杯</a><a class="post-meta__tags" href="/tags/%E9%9B%86%E5%88%9B%E8%B5%9B/">集创赛</a><a class="post-meta__tags" href="/tags/YOLOv5/">YOLOv5</a></div><div class="post-share"><div class="social-share" data-image="/page_images/1.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/07/17/2/" title="常见问题"><img class="cover" src="/page_images/1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">常见问题</div></div><div class="info-2"><div class="info-item-1">1.关机断电后无法进入桌面问题原因：烧录的镜像配置太拉跨 检查系统中实际安装的显示管理器，终端输入： 12# 列出所有显示管理器服务systemctl list-unit-files | grep -i display-manager  解决步骤1尝试修复原本的显示管理器当前默认的显示管理器是 sddmsddm（Simple Desktop Display Manager）。这表明系统使用的是 SDDM 1.1检查 SDDM 状态（如果 SDDM-pkg完整未损坏或丢失）终端中输入： 1sudo systemctl status sddm  如果 SDDM 没有运行尝试重新启动它：  SDDM显示dead  1sudo systemctl start sddm  如果 SDDM 启动失败，查看具体的错误信息： 1journalctl -xe | grep sddm  问题： 如果该服务禁用了  服务禁用   启动 sddm 时失败  要取消对 sddm.service 的 mask，执行以下命令： 1sudo systemctl unmask sddm  1sudo system...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img class="cover" src="/page_images/1.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-07-17</div><div class="info-item-2">镜像烧录+ssh远程登录</div></div><div class="info-2"><div class="info-item-1">1.系统安装1.1启动设置选择SD卡启动，首先需要将启动拨码开关配置成SD卡启动模式，配置方法如下图：  1.2镜像下载**下载地址：**通过如下百度云盘链接或者联系销售获取到镜像，镜像链接：https://pan.baidu.com/s/1pStiyqohrB3SxHAFFk8R6Q 提取码：dzdv &#x3D;&#x3D;注意：&#x3D;&#x3D;镜像需下载对应内存大小的版本，目前 4GB DDR使用长鑫存储（ CXMT）的颗粒 ，2GB DDR使用兆易创新（ GigaDevice）的颗粒，如果不清楚开发板是哪个容量的 DDR，可通过DDR颗粒的上丝印字样来判断。我们拿到的是最拉的板子4GB的V2.2版本的开发板。 4GB-V2.2可以选择的镜像：(按照更新的时间来排序的) xfce_v2.1_4GB_231116.tar.gz xfce_v2.1_4GB_240123.tar.gz 飞腾派v2.1_4GB_240517.tar.gz 本次项目选择的是xfce_v2.1_4GB_240123.tar.gz，不新不老。 1.3镜像烧录准备一张存储空间 32G以上的 SD卡...</div></div></div></a><a class="pagination-related" href="/2025/07/17/2/" title="常见问题"><img class="cover" src="/page_images/1.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-07-17</div><div class="info-item-2">常见问题</div></div><div class="info-2"><div class="info-item-1">1.关机断电后无法进入桌面问题原因：烧录的镜像配置太拉跨 检查系统中实际安装的显示管理器，终端输入： 12# 列出所有显示管理器服务systemctl list-unit-files | grep -i display-manager  解决步骤1尝试修复原本的显示管理器当前默认的显示管理器是 sddmsddm（Simple Desktop Display Manager）。这表明系统使用的是 SDDM 1.1检查 SDDM 状态（如果 SDDM-pkg完整未损坏或丢失）终端中输入： 1sudo systemctl status sddm  如果 SDDM 没有运行尝试重新启动它：  SDDM显示dead  1sudo systemctl start sddm  如果 SDDM 启动失败，查看具体的错误信息： 1journalctl -xe | grep sddm  问题： 如果该服务禁用了  服务禁用   启动 sddm 时失败  要取消对 sddm.service 的 mask，执行以下命令： 1sudo systemctl unmask sddm  1sudo system...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">环境配置</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Python3-9%E5%AE%89%E8%A3%85"><span class="toc-number">2.</span> <span class="toc-text">Python3.9安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%80%9A%E8%BF%87%E7%B3%BB%E7%BB%9F%E5%8C%85%E7%AE%A1%E7%90%86%E5%99%A8%E5%AE%89%E8%A3%85"><span class="toc-number">2.1.</span> <span class="toc-text">1.通过系统包管理器安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E8%AE%BE%E7%BD%AE%E9%BB%98%E8%AE%A4-Python-%E7%89%88%E6%9C%AC%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">2.设置默认 Python 版本（可选）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%AE%89%E8%A3%85-pip-%E4%BB%A5%E6%94%AF%E6%8C%81-Python-3-9"><span class="toc-number">2.3.</span> <span class="toc-text">3. 安装 pip 以支持 Python 3.9</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%B5%8B%E8%AF%95%E6%98%AF%E5%90%A6%E5%AE%89%E8%A3%85%E6%88%90%E5%8A%9F"><span class="toc-number">2.4.</span> <span class="toc-text">4.测试是否安装成功</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-1%EF%BC%9A%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E5%AE%89%E8%A3%85%E4%BA%86-Python"><span class="toc-number">2.4.1.</span> <span class="toc-text">方法 1：检查是否安装了 Python</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%89%E8%A3%85-Python-3%EF%BC%88%E9%80%82%E7%94%A8%E4%BA%8E-Ubuntu-20-04%EF%BC%89"><span class="toc-number">2.4.1.1.</span> <span class="toc-text">安装 Python 3（适用于 Ubuntu 20.04）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-2%EF%BC%9A%E5%88%9B%E5%BB%BA-python-%E5%88%B0-python3-%E7%9A%84%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5"><span class="toc-number">2.4.2.</span> <span class="toc-text">方法 2：创建 python 到 python3 的符号链接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-3%EF%BC%9A%E7%9B%B4%E6%8E%A5%E4%BD%BF%E7%94%A8-python3-%E8%BF%90%E8%A1%8C%E8%84%9A%E6%9C%AC"><span class="toc-number">2.4.3.</span> <span class="toc-text">方法 3：直接使用 python3 运行脚本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-4%EF%BC%9A%E6%A3%80%E6%9F%A5%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83"><span class="toc-number">2.4.4.</span> <span class="toc-text">方法 4：检查虚拟环境</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%BF%80%E6%B4%BB%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83%EF%BC%9A"><span class="toc-number">2.4.4.1.</span> <span class="toc-text">激活虚拟环境：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%AA%8C%E8%AF%81%EF%BC%9A"><span class="toc-number">2.4.4.2.</span> <span class="toc-text">验证：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-5%EF%BC%9A%E4%BF%AE%E5%A4%8D-PATH-%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-number">2.4.5.</span> <span class="toc-text">方法 5：修复 PATH 环境变量</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A3%80%E6%9F%A5-PATH%EF%BC%9A"><span class="toc-number">2.4.5.1.</span> <span class="toc-text">检查 PATH：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%8B%E5%8A%A8%E6%B7%BB%E5%8A%A0-Python-%E8%B7%AF%E5%BE%84%EF%BC%9A"><span class="toc-number">2.4.5.2.</span> <span class="toc-text">手动添加 Python 路径：</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Cmake3-20-0-%E5%AE%89%E8%A3%85"><span class="toc-number">3.</span> <span class="toc-text">Cmake3.20.0+安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E8%A7%A3%E5%8E%8B%E6%96%87%E4%BB%B6"><span class="toc-number">3.1.</span> <span class="toc-text">1. 解压文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E7%A7%BB%E5%8A%A8%E5%88%B0%E5%90%88%E9%80%82%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-number">3.2.</span> <span class="toc-text">2. 移动到合适的位置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-number">3.3.</span> <span class="toc-text">3. 配置环境变量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%AA%8C%E8%AF%81%E5%AE%89%E8%A3%85"><span class="toc-number">3.4.</span> <span class="toc-text">4. 验证安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%8F%AF%E9%80%89%EF%BC%9A%E5%88%9B%E5%BB%BA%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5%EF%BC%88%E5%A6%82%E6%9E%9C%E9%9C%80%E8%A6%81%E5%85%A8%E5%B1%80%E4%BD%BF%E7%94%A8%EF%BC%89"><span class="toc-number">3.5.</span> <span class="toc-text">5. 可选：创建符号链接（如果需要全局使用）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-number">3.6.</span> <span class="toc-text">注意事项</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YOLOv5%E9%A1%B9%E7%9B%AE%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%BF%90%E8%A1%8C"><span class="toc-number">4.</span> <span class="toc-text">YOLOv5项目环境配置及运行</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-torch1-8-1-torchversion0-9-1"><span class="toc-number">4.1.</span> <span class="toc-text">1.torch1.8.1+torchversion0.9.1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1%E5%AE%89%E8%A3%85%E5%8C%85%E4%B8%8B%E8%BD%BD"><span class="toc-number">4.1.1.</span> <span class="toc-text">1.1安装包下载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2%E6%A3%80%E6%9F%A5%E5%BD%93%E5%89%8D%E7%9A%84-pip-%E7%89%88%E6%9C%AC"><span class="toc-number">4.1.2.</span> <span class="toc-text">1.2检查当前的 pip 版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%AE%89%E8%A3%85-torch-%E5%92%8C-torchvision"><span class="toc-number">4.1.3.</span> <span class="toc-text">1.3 安装 torch 和 torchvision</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-1%EF%BC%9A%E7%9B%B4%E6%8E%A5%E4%BD%BF%E7%94%A8-pip-%E5%AE%89%E8%A3%85-whl-%E6%96%87%E4%BB%B6"><span class="toc-number">4.1.3.1.</span> <span class="toc-text">方法 1：直接使用 pip 安装 .whl 文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-2%EF%BC%9A%E5%B0%86-whl-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E5%88%B0%E5%BC%80%E5%8F%91%E6%9D%BF%E5%B9%B6%E5%AE%89%E8%A3%85"><span class="toc-number">4.1.3.2.</span> <span class="toc-text">方法 2：将 .whl 文件上传到开发板并安装</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%AA%8C%E8%AF%81%E5%AE%89%E8%A3%85%E6%98%AF%E5%90%A6%E6%88%90%E5%8A%9F"><span class="toc-number">4.1.4.</span> <span class="toc-text">1.4 验证安装是否成功</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-numpy-1-26-4"><span class="toc-number">4.2.</span> <span class="toc-text">2.numpy 1.26.4</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A3%80%E6%9F%A5-numpy-%E6%98%AF%E5%90%A6%E6%AD%A3%E5%B8%B8%E5%B7%A5%E4%BD%9C%EF%BC%9A"><span class="toc-number">4.2.0.1.</span> <span class="toc-text">检查 numpy 是否正常工作：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E5%87%BA%E7%8E%B0%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="toc-number">4.2.0.2.</span> <span class="toc-text">如果出现问题：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-opencv-python"><span class="toc-number">4.3.</span> <span class="toc-text">3.opencv-python</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-matplotlib3-7-1"><span class="toc-number">4.4.</span> <span class="toc-text">4.matplotlib3.7.1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E8%BF%87-pip-%E5%AE%89%E8%A3%85%E6%8C%87%E5%AE%9A%E7%89%88%E6%9C%AC%E7%9A%84-matplotlib"><span class="toc-number">4.4.1.</span> <span class="toc-text">通过 pip 安装指定版本的 matplotlib</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%8B%E5%8A%A8%E4%B8%8B%E8%BD%BD-whl-%E6%96%87%E4%BB%B6"><span class="toc-number">4.4.2.</span> <span class="toc-text">手动下载 .whl 文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%85%B6%E4%BD%99%E7%9A%84%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85"><span class="toc-number">4.5.</span> <span class="toc-text">5.其余的环境安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.5.1.</span> <span class="toc-text">遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-pip%E4%B8%8B%E8%BD%BD%E7%BC%93%E6%85%A2"><span class="toc-number">4.5.1.1.</span> <span class="toc-text">1.pip下载缓慢</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C"><span class="toc-number">4.6.</span> <span class="toc-text">代码运行</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#QT5%E9%A1%B9%E7%9B%AE%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%BF%90%E8%A1%8C"><span class="toc-number">5.</span> <span class="toc-text">QT5项目配置及运行</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="toc-number">5.1.</span> <span class="toc-text">安装依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Qt5Multimedia"><span class="toc-number">5.2.</span> <span class="toc-text">Qt5Multimedia</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E5%B9%B6%E8%BF%90%E8%A1%8C%E8%AF%A5Qt5%E9%A1%B9%E7%9B%AE%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="toc-number">5.3.</span> <span class="toc-text">编译并运行该Qt5项目的步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%9E%84%E5%BB%BA%E7%9B%AE%E5%BD%95"><span class="toc-number">5.3.1.</span> <span class="toc-text">创建构建目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E6%9E%84%E5%BB%BA%E7%B3%BB%E7%BB%9F"><span class="toc-number">5.3.2.</span> <span class="toc-text">生成构建系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E9%A1%B9%E7%9B%AE"><span class="toc-number">5.3.3.</span> <span class="toc-text">编译项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E7%A8%8B%E5%BA%8F"><span class="toc-number">5.3.4.</span> <span class="toc-text">运行程序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E5%8F%82%E8%80%83"><span class="toc-number">5.3.5.</span> <span class="toc-text">目录结构参考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C%E8%AF%B4%E6%98%8E"><span class="toc-number">5.3.6.</span> <span class="toc-text">代码运行说明</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#LIME%E9%A1%B9%E7%9B%AE%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="toc-number">6.</span> <span class="toc-text">LIME项目环境配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A3%9E%E8%85%BE%E6%B4%BE%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="toc-number">6.0.1.</span> <span class="toc-text">飞腾派环境配置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96%E9%A1%B9"><span class="toc-number">6.0.1.1.</span> <span class="toc-text">1. 安装依赖项</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E9%AA%8C%E8%AF%81OpenCV%E5%AE%89%E8%A3%85"><span class="toc-number">6.0.1.2.</span> <span class="toc-text">2. 验证OpenCV安装</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E9%85%8D%E7%BD%AENEON%E6%94%AF%E6%8C%81"><span class="toc-number">6.0.1.3.</span> <span class="toc-text">3. 配置NEON支持</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E4%B8%8E%E8%BF%90%E8%A1%8C"><span class="toc-number">6.0.2.</span> <span class="toc-text">编译与运行</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E8%B0%83%E6%95%B4%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84"><span class="toc-number">6.0.2.1.</span> <span class="toc-text">1. 调整项目结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E6%9E%84%E5%BB%BA%E9%A1%B9%E7%9B%AE"><span class="toc-number">6.0.2.2.</span> <span class="toc-text">2. 构建项目</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E8%BF%90%E8%A1%8C%E7%A8%8B%E5%BA%8F"><span class="toc-number">6.0.2.3.</span> <span class="toc-text">3. 运行程序</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E4%BE%9D%E8%B5%96%E5%AE%89%E8%A3%85%E5%8C%85%E6%9D%A5%E6%BA%90"><span class="toc-number">6.0.3.</span> <span class="toc-text">关键依赖安装包来源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3"><span class="toc-number">6.0.4.</span> <span class="toc-text">常见问题解决</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Anaconda3"><span class="toc-number">7.</span> <span class="toc-text">Anaconda3</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Anaconda%E4%B8%8B%E8%BD%BD"><span class="toc-number">7.1.</span> <span class="toc-text">Anaconda下载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Anaconda%E5%AE%89%E8%A3%85"><span class="toc-number">7.2.</span> <span class="toc-text">Anaconda安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B0%E5%BB%BAAnaconda3%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83"><span class="toc-number">7.3.</span> <span class="toc-text">新建Anaconda3虚拟环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%96%B0%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83"><span class="toc-number">7.4.</span> <span class="toc-text">创建新虚拟环境</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#YOLOv5%E9%A1%B9%E7%9B%AE%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%BF%90%E8%A1%8C-1"><span class="toc-number">8.</span> <span class="toc-text">YOLOv5项目环境配置及运行</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-torch1-8-1-torchversion0-9-1-1"><span class="toc-number">8.1.</span> <span class="toc-text">1.torch1.8.1+torchversion0.9.1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1%E5%AE%89%E8%A3%85%E5%8C%85%E4%B8%8B%E8%BD%BD-1"><span class="toc-number">8.1.1.</span> <span class="toc-text">1.1安装包下载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2%E6%A3%80%E6%9F%A5%E5%BD%93%E5%89%8D%E7%9A%84-pip-%E7%89%88%E6%9C%AC-1"><span class="toc-number">8.1.2.</span> <span class="toc-text">1.2检查当前的 pip 版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E5%AE%89%E8%A3%85-torch-%E5%92%8C-torchvision-1"><span class="toc-number">8.1.3.</span> <span class="toc-text">1.3 安装 torch 和 torchvision</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-1%EF%BC%9A%E7%9B%B4%E6%8E%A5%E4%BD%BF%E7%94%A8-pip-%E5%AE%89%E8%A3%85-whl-%E6%96%87%E4%BB%B6-1"><span class="toc-number">8.1.3.1.</span> <span class="toc-text">方法 1：直接使用 pip 安装 .whl 文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95-2%EF%BC%9A%E5%B0%86-whl-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E5%88%B0%E5%BC%80%E5%8F%91%E6%9D%BF%E5%B9%B6%E5%AE%89%E8%A3%85-1"><span class="toc-number">8.1.3.2.</span> <span class="toc-text">方法 2：将 .whl 文件上传到开发板并安装</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4-%E9%AA%8C%E8%AF%81%E5%AE%89%E8%A3%85%E6%98%AF%E5%90%A6%E6%88%90%E5%8A%9F-1"><span class="toc-number">8.1.4.</span> <span class="toc-text">1.4 验证安装是否成功</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%85%B6%E4%BD%99%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="toc-number">8.2.</span> <span class="toc-text">2.其余环境配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E8%AF%B4%E6%98%8E"><span class="toc-number">8.2.1.</span> <span class="toc-text">步骤说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%88%86%E6%9E%90%E5%B7%B2%E5%AE%89%E8%A3%85%E5%8C%85%E4%B8%8E%E9%9C%80%E6%B1%82%E6%96%87%E4%BB%B6%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">8.2.2.</span> <span class="toc-text">1. 分析已安装包与需求文件的差异</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E8%B0%83%E6%95%B4%E5%90%8E%E7%9A%84-requirements-txt-%E6%96%87%E4%BB%B6"><span class="toc-number">8.2.3.</span> <span class="toc-text">2. 调整后的 requirements.txt 文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%89%8B%E5%8A%A8%E9%99%8D%E7%BA%A7%E5%85%B3%E9%94%AE%E5%8C%85"><span class="toc-number">8.2.4.</span> <span class="toc-text">3. 手动降级关键包</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%AE%89%E8%A3%85%E5%89%A9%E4%BD%99%E4%BE%9D%E8%B5%96"><span class="toc-number">8.2.5.</span> <span class="toc-text">4. 安装剩余依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E9%AA%8C%E8%AF%81%E7%8E%AF%E5%A2%83"><span class="toc-number">8.2.6.</span> <span class="toc-text">5. 验证环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E9%97%AE%E9%A2%98%E8%AF%B4%E6%98%8E"><span class="toc-number">8.2.7.</span> <span class="toc-text">关键问题说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E7%BB%88%E7%8E%AF%E5%A2%83%E6%B8%85%E7%90%86"><span class="toc-number">8.2.8.</span> <span class="toc-text">最终环境清理</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
