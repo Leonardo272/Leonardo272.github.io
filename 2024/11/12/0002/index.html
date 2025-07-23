@@ -1,0 +1,645 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>基于GPIO的LED | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言本次实验是基于正点原子开发板I.MX6ULL开发板来学习的 硬件原理分析本次实验我们使用的是正点原子开发板上的led灯，我们查看开发板原理图可以看到led灯连接在GPIO_3引脚上的  我们打开芯片核心原理图可以找到GPIO_3对应的是IMX6ULL芯片的GPIO1_IO03引脚  我们本次实验使用的就是I&#x2F;O功能，因此我们打开arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;imx6ul-pinfunc.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于GPIO的LED">
+<meta property="og:url" content="https://leonardo272.github.io/2024/11/12/0002/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="前言本次实验是基于正点原子开发板I.MX6ULL开发板来学习的 硬件原理分析本次实验我们使用的是正点原子开发板上的led灯，我们查看开发板原理图可以看到led灯连接在GPIO_3引脚上的  我们打开芯片核心原理图可以找到GPIO_3对应的是IMX6ULL芯片的GPIO1_IO03引脚  我们本次实验使用的就是I&#x2F;O功能，因此我们打开arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;imx6ul-pinfunc.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/2.jpg">
+<meta property="article:published_time" content="2024-11-12T13:12:00.000Z">
+<meta property="article:modified_time" content="2025-07-23T14:15:02.089Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/2.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "基于GPIO的LED",
+  "url": "https://leonardo272.github.io/2024/11/12/0002/",
+  "image": "https://leonardo272.github.io/page_images/2.jpg",
+  "datePublished": "2024-11-12T13:12:00.000Z",
+  "dateModified": "2025-07-23T14:15:02.089Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://leonardo272.github.io/2024/11/12/0002/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '基于GPIO的LED',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/2.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">基于GPIO的LED</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">基于GPIO的LED</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-11-12T13:12:00.000Z" title="发表于 2024-11-12 21:12:00">2024-11-12</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-07-23T14:15:02.089Z" title="更新于 2025-07-23 22:15:02">2025-07-23</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%AD%A6%E4%B9%A0/">嵌入式学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>本次实验是基于正点原子开发板I.MX6ULL开发板来学习的</p>
+<h1 id="硬件原理分析"><a href="#硬件原理分析" class="headerlink" title="硬件原理分析"></a>硬件原理分析</h1><p>本次实验我们使用的是正点原子开发板上的<code>led</code>灯，我们查看开发板原理图可以看到<code>led</code>灯连接在<code>GPIO_3</code>引脚上的</p>
+<p><img src="image-20250723152040662.png" alt="image-20250723152040662"></p>
+<p>我们打开芯片核心原理图可以找到GPIO_3对应的是<code>IMX6ULL</code>芯片的<code>GPIO1_IO03</code>引脚</p>
+<p><img src="image-20250723152322983.png" alt="image-20250723152322983"></p>
+<p>我们本次实验使用的就是<code>I/O</code>功能，因此我们打开<code>arch/arm/boot/dts/imx6ul-pinfunc.h</code>文件找到对应的宏<code>MX6UL_PAD_GPIO1_IO03__GPIO1_IO03</code></p>
+<p><img src="image-20250723152558110.png" alt="image-20250723152558110"></p>
+<h1 id="设备树编写"><a href="#设备树编写" class="headerlink" title="设备树编写"></a>设备树编写</h1><p>dtbs文件：</p>
+<ul>
+<li><p>添加<code>pinctrl</code>节点</p>
+<p>在 <code>iomuxc</code> 节点的 <code>imx6ul-evk</code> 子节点下创建一个名为<code>pinctrl_led</code>的子节点,将 <code>GPIO1_IO03</code> 这个 PIN 复用为 <code>GPIO1_IO03</code>，电气属性值为 <code>0X10B0</code>。</p>
+<p>在<code>imx6ull-alientek-emmc.dts</code>文件中找到<code>&amp;iomuxc</code> 节点，添加对应的电气属性</p>
+<p>格式：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pinctrl_自定义名字: 自定义名字&#123;</span><br><span class="line">	fsl,pins = &lt;</span><br><span class="line">	引脚复用宏定义PAD（引脚）属性</span><br><span class="line">	引脚复用宏定义PAD（引脚）属性</span><br><span class="line">	&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20241006194740370.png" alt="image-20241006194740370"></p>
+<center>imx6ull-alientek-emmc.dts</center>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">pinctrl_gpioled: ledgrp&#123;</span><br><span class="line">			fsl,pins=&lt;</span><br><span class="line">				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	<span class="number">0x10b0</span> <span class="comment">/*0 0001 0000 1101 0000*/</span></span><br><span class="line">				<span class="comment">/* 3、配置GPIO1_IO03 的IO 属性(电气属性)</span></span><br><span class="line"><span class="comment">				*bit 16:0 HYS 关闭</span></span><br><span class="line"><span class="comment">				*bit [15:14]: 00 默认下拉</span></span><br><span class="line"><span class="comment">				*bit [13]: 0 kepper 功能</span></span><br><span class="line"><span class="comment">				*bit [12]: 1 pull/keeper 使能</span></span><br><span class="line"><span class="comment">				*bit [11]: 0 关闭开路输出</span></span><br><span class="line"><span class="comment">				*bit [7:6]: 10 速度100Mhz</span></span><br><span class="line"><span class="comment">				*bit [5:3]: 110 R0/6 驱动能力</span></span><br><span class="line"><span class="comment">				*bit [0]: 0 低转换率</span></span><br><span class="line"><span class="comment">				*/</span></span><br><span class="line">			&gt;;</span><br><span class="line">		&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="电气属性"><a href="#电气属性" class="headerlink" title="电气属性"></a>电气属性</h4><p><strong>常用到的配置电气属性</strong>包括：压摆率，速度，驱动能力，开漏，上下拉等。</p>
+<p><img src="f84ebdfe4938767296d0d092152abe55.png" alt="img"></p>
+<p><img src="6fb3217d93be1d2c4cf55f55e5e9785b.png" alt="img"></p>
+<p><strong>SRE(bit0)：</strong> 对应图中的 SRE，设置压摆率，当此位为 0 的时候是低压摆率，当为 1的时候是高压摆率。这里压摆率就是 IO 电平跳变所需要的时间，比如从 0 到 1 需要多少时间，时间越小波形就越陡，说明压摆率越高；时间越长波形就越缓，压摆率就越低。如果你的产品要过 EMC 的话那就可以使用小的压摆率，因为波形缓和，&#x3D;&#x3D;如果使用 IO做高速通信的话就可以使用高压摆率&#x3D;&#x3D;。（SPI通信）</p>
+<p>**DSE(bit5:3)：**对应图中的 DSE，当 IO 用作输出的时候用来设置 IO 的驱动能力，总共有 8 个可选选项，如下表：</p>
+<img src="image-20241101101438675.png" alt="驱动能力设置" style="zoom: 67%;">
+
+<center>驱动能力设置</center>
+
+<p><strong>SPEED(bit7:6)：</strong> 对应图中的 SPEED，当 IO 用作输出的时候，此位用来设置 IO 速度，设置如下表：</p>
+<img src="image-20241101102526320.png" alt="image-20241101102526320" style="zoom:50%;">
+
+<center>速度设置</center>
+
+<p>**ODE(bit11)：**对应图中的 ODE，当 IO 作为输出的时候，此位用来禁止或者使能开路输出，此位为 0 的时候禁止开路输出， 当此位为 1 的时候就使能开路输出功能。<br><strong>PKE(bit12)：</strong> 对应图中的 PKE，此位用来使能或者禁止上下拉&#x2F;状态保持器功能，为0 时禁止上下拉&#x2F;状态保持器，为 1 时使能上下拉和状态保持器。<br><strong>PUE(bit13)：</strong> 图中没有没有给出，当 IO 作为输入的时候，这个位用来设置 IO 使用上下拉还是状态保持器。当为 0 的时候使用状态保持器，当为 1 的时候使用上下拉。状态保持器在IO 作为输入的时候才有用，就是当外部电路断电以后此 IO 口可以保持住以前的状态。<br><strong>PUS(bit15:14)：</strong> 对应图中的 PUS，用来设置上下拉电阻的，一共有四种选项可以选择，如下表：</p>
+<p><img src="image-20241101102634248.png" alt="image-20241101102634248"></p>
+<center>上下拉设置</center>
+
+<p>**HYS(bit16)：**对应图中 HYS，用来使能迟滞比较器，当 IO 作为输入功能的时候有效，用于设置输入接收器的施密特触发器是否使能。如果需要对输入波形进行整形的话可以使能此位。此位为 0 的时候禁止迟滞比较器，为 1 的时候使能迟滞比较器。</p>
+</li>
+<li><p>添加led设备节点</p>
+<p>在根节点<code>/</code>下创建 <code>LED</code> 灯节点，节点名为<code>gpioled</code>，节点内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*gpio-led*/</span></span><br><span class="line">gpio_leds &#123;</span><br><span class="line">    <span class="comment">// 指定子节点的地址用1个u32数字表示（常用于reg属性的地址部分）</span></span><br><span class="line">    <span class="meta">#address-cells = <span class="string">&lt;1&gt;</span>;  </span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指定子节点的大小用1个u32数字表示（常用于reg属性的大小部分）</span></span><br><span class="line">    <span class="meta">#size-cells = <span class="string">&lt;1&gt;</span>;    </span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 声明设备兼容性，驱动通过此字符串匹配设备</span></span><br><span class="line">    compatible = <span class="string">&quot;gpio-leds&quot;</span>;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定义pinctrl状态名称，此处仅声明&quot;default&quot;状态</span></span><br><span class="line">    pinctrl-names = <span class="string">&quot;default&quot;</span>;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 绑定&quot;default&quot;状态到具体的PIN配置节点（来自pinctrl子系统）</span></span><br><span class="line">    <span class="comment">// &amp;表示引用，pinctrl_gpioled是PIN控制器中定义的节点</span></span><br><span class="line">    pinctrl<span class="number">-0</span> = &lt;&amp;pinctrl_gpioled&gt;;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 定义LED使用的GPIO引脚：</span></span><br><span class="line">    <span class="comment">// - &amp;gpio1：引用GPIO控制器1</span></span><br><span class="line">    <span class="comment">// - 3：使用该控制器的第3号引脚</span></span><br><span class="line">    <span class="comment">// - GPIO_ACTIVE_LOW：低电平有效（高电平熄灭，低电平点亮）</span></span><br><span class="line">    led-gpio = &lt;&amp;gpio1 <span class="number">3</span> GPIO_ACTIVE_LOW&gt;;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 节点状态标记为启用（若为&quot;disabled&quot;则表示禁用）</span></span><br><span class="line">    status = <span class="string">&quot;okay&quot;</span>;  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>进行检查：</p>
+<p>一个引脚一次只能实现一个功能，因此我们需要保证我们使用的引脚只被使用与pinctrl定义了一次。</p>
+<ul>
+<li>检查 <code>pinctrl</code> 设置</li>
+<li>检查这个 <code>GPIO</code> 有没有被别的外设使用</li>
+</ul>
+</li>
+<li><p>编译设备树</p>
+<p>我们在linux文件的根目录下编译设备树</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make dtbs</span><br></pre></td></tr></table></figure>
+
+<p>我们启动成功之后可以在”<code>/proc/device-tree</code>“目录中查看到我们设置的节点是否存在</p>
+<p><img src="image-20250723153934613.png" alt="image-20250723153934613"></p>
+</li>
+</ul>
+<h1 id="GPIO子系统"><a href="#GPIO子系统" class="headerlink" title="GPIO子系统"></a>GPIO子系统</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>GPIO名为”General Purpose Input&#x2F;Output”，通用目的输入&#x2F;输出，就是常用的引脚。</p>
+<p>GPIO可能是芯片自带的，也可能通过I2C、SPI接口扩展：</p>
+<p><img src="02_gpio_block-17514472011551.png" alt="02_gpio_block"></p>
+<h3 id="通用功能"><a href="#通用功能" class="headerlink" title="通用功能"></a>通用功能</h3><ul>
+<li>可以设为输出：让它输出高低电平；</li>
+<li>可以设为输入，读取引脚当前电平；</li>
+<li>可以用来触发中断</li>
+</ul>
+<h3 id="通用属性"><a href="#通用属性" class="headerlink" title="通用属性"></a>通用属性</h3><ul>
+<li><p><strong><code>Active-High</code></strong> and <strong><code>Active-Low</code></strong></p>
+<p>以LED为例，需要设置GPIO电平。但是有些电路可能是高电平点亮LED，有些是低电平点亮LED。</p>
+<p>可以使用如下代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gpiod_set_value(gpio, <span class="number">1</span>);  <span class="comment">// 输出高电平点亮LED</span></span><br><span class="line">gpiod_set_value(gpio, <span class="number">0</span>);  <span class="comment">// 输出低电平点亮LED</span></span><br></pre></td></tr></table></figure>
+
+<p>对应同一个目标：点亮LED，对于不同的LED，就需要不同的代码，原因在于上面的代码中1、0表示的是”物理值”。</p>
+<p>如果能使用”逻辑值”，同样的逻辑值在不同的配置下输出对应的物理值，就可以保持代码一致，比如：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gpiod_set_value(gpio, <span class="number">1</span>);  <span class="comment">// 输出逻辑1</span></span><br><span class="line">                           <span class="comment">// 在Active-High的情况下它会输出高电平</span></span><br><span class="line">                           <span class="comment">// 在Active-Low的情况下它会输出低电平</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<ul>
+<li><p>dtsi文件，设备树中的gpio控制节点：“GPIO组”就是一个GPIO Controller</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">gpio1: gpio@<span class="number">0209</span>c000 &#123;</span><br><span class="line">	compatible = <span class="string">&quot;fsl,imx6ul-gpio&quot;</span>, <span class="string">&quot;fsl,imx35-gpio&quot;</span>;</span><br><span class="line">	reg = &lt;<span class="number">0x0209c000</span> <span class="number">0x4000</span>&gt;;</span><br><span class="line">	interrupts = &lt;GIC_SPI <span class="number">66</span> IRQ_TYPE_LEVEL_HIGH&gt;,</span><br><span class="line">		     &lt;GIC_SPI <span class="number">67</span> IRQ_TYPE_LEVEL_HIGH&gt;;</span><br><span class="line">	gpio-controller;</span><br><span class="line">	<span class="meta">#gpio-cells = <span class="string">&lt;2&gt;</span>;</span></span><br><span class="line">	interrupt-controller;</span><br><span class="line">	<span class="meta">#interrupt-cells = <span class="string">&lt;2&gt;</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>针对gpio我们只关注两个属性：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gpio-controller;</span><br><span class="line"><span class="meta">#gpio-cells = <span class="string">&lt;2&gt;</span>;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>“gpio-controller”表示这个节点是一个GPIO Controller，它下面有很多引脚。</li>
+<li>“#gpio-cells &#x3D; &lt;2&gt;”表示这个控制器下每一个引脚要用2个32位的数(cell)来描述。比如可以用其中<strong>一个cell</strong>来表示那是哪一个<strong>引脚</strong>，用<strong>另一个cell</strong>来表示它是<strong>高电平有效还是低电平有效</strong>，甚至还可以用更多的cell来示其他特性。</li>
+</ul>
+<p>当我们在设备树中使用的时候的格式为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(diyname)-gpios = &lt;&amp;gpiox x xxxxx&gt;;</span><br></pre></td></tr></table></figure>
+
+<p>例如我们使用<code>GPIO1_IO03</code>的时候</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义LED使用的GPIO引脚：</span></span><br><span class="line">    <span class="comment">// - &amp;gpio1：引用GPIO控制器1</span></span><br><span class="line">    <span class="comment">// - 3：使用该控制器的第3号引脚</span></span><br><span class="line">    <span class="comment">// - GPIO_ACTIVE_LOW：低电平有效（高电平熄灭，低电平点亮）</span></span><br><span class="line">    led-gpio = &lt;&amp;gpio1 <span class="number">3</span> GPIO_ACTIVE_LOW&gt;;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="接口函数"><a href="#接口函数" class="headerlink" title="接口函数"></a>接口函数</h2><p>gpio子系统有两套接口函数，新版的是使用<code>struct gpio_desc</code>结构体来表示一个引脚，驱动中需要包含头文件</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio/consumer.h&gt;</span>  </span></span><br></pre></td></tr></table></figure>
+
+<h3 id="GPIO获取函数"><a href="#GPIO获取函数" class="headerlink" title="GPIO获取函数"></a>GPIO获取函数</h3><table>
+<thead>
+<tr>
+<th align="left"><strong>函数原型</strong></th>
+<th align="left"><strong>参数</strong></th>
+<th align="left"><strong>作用</strong></th>
+<th align="left"><strong>使用场景</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>struct gpio_desc *gpiod_get(struct device *dev, const char *con_id, enum gpiod_flags flags)</code></td>
+<td align="left"><code>dev</code>: 设备指针 <code>con_id</code>: GPIO标识符 <code>flags</code>: 配置标志</td>
+<td align="left">获取单个GPIO描述符</td>
+<td align="left">基础GPIO控制</td>
+</tr>
+<tr>
+<td align="left"><code>struct gpio_desc *gpiod_get_index(struct device *dev, const char *con_id, unsigned int idx, enum gpiod_flags flags)</code></td>
+<td align="left"><code>idx</code>: GPIO索引号</td>
+<td align="left">获取指定索引的GPIO</td>
+<td align="left">设备树中多个同名GPIO</td>
+</tr>
+<tr>
+<td align="left"><code>struct gpio_descs *gpiod_get_array(struct device *dev, const char *con_id, enum gpiod_flags flags)</code></td>
+<td align="left">参数同gpiod_get</td>
+<td align="left">获取GPIO数组</td>
+<td align="left">LED矩阵&#x2F;按键阵列</td>
+</tr>
+<tr>
+<td align="left"><code>struct gpio_desc *devm_gpiod_get(struct device *dev, const char *con_id, enum gpiod_flags flags)</code></td>
+<td align="left">参数同gpiod_get</td>
+<td align="left">自动管理资源的GPIO获取</td>
+<td align="left">设备驱动中推荐使用</td>
+</tr>
+<tr>
+<td align="left"><code>devm_gpiod_get_index(struct device *dev,const char *con_id,unsigned int idx,enum gpiod_flags flags)</code></td>
+<td align="left">-</td>
+<td align="left">自动管理的索引GPIO</td>
+<td align="left">多GPIO设备</td>
+</tr>
+<tr>
+<td align="left"><code>devm_gpiod_get_array(struct device *dev, const char *con_id, enum gpiod_flags flags)</code></td>
+<td align="left">-</td>
+<td align="left">自动管理的GPIO数组</td>
+<td align="left">资源敏感的复杂设备</td>
+</tr>
+</tbody></table>
+<p><strong>参数的意义：</strong></p>
+<ol>
+<li><p><strong><code>dev</code></strong></p>
+<ul>
+<li>类型：<code>struct device *</code></li>
+<li>含义：关联的设备指针，通常由平台驱动或设备树提供。</li>
+<li>作用：用于查找设备树中与该设备关联的 GPIO 资源。</li>
+<li>示例：<code>&amp;pdev-&gt;dev</code>（在平台驱动 <code>probe</code> 函数中）。</li>
+</ul>
+</li>
+<li><p><strong><code>con_id</code></strong></p>
+<ul>
+<li>类型：<code>const char *</code></li>
+<li>含义：GPIO 的连接标识符（名称），对应设备树中 <code>gpios</code> 属性的名称。</li>
+<li>作用：匹配设备树中 <code>gpios</code> 属性的 <code>name</code> 字段。</li>
+<li>示例：<ul>
+<li>设备树中定义：<code>gpios = &lt;&amp;gpio1 3 GPIO_ACTIVE_HIGH&gt;;</code></li>
+<li><code>con_id</code> 应为 <code>&quot;led&quot;</code>（若设备树中使用 <code>led-gpios</code> 或 <code>gpios</code>）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong><code>flags</code></strong></p>
+<ul>
+<li><p>类型：<code>enum gpiod_flags</code></p>
+</li>
+<li><p>含义：GPIO 的初始化标志，用于配置方向、上下拉、驱动能力等。</p>
+</li>
+<li><p>可选值：</p>
+<ul>
+<li><p>方向标志 </p>
+<ul>
+<li><code>GPIOD_IN</code>：配置为输入。</li>
+<li><code>GPIOD_OUT_LOW</code>：配置为输出，默认低电平。</li>
+<li><code>GPIOD_OUT_HIGH</code>：配置为输出，默认高电平。</li>
+</ul>
+</li>
+<li><p>其他标志 </p>
+<ul>
+<li><code>GPIOD_ACTIVE_LOW</code>：反转 GPIO 极性（低电平有效）。</li>
+<li><code>GPIOD_OPEN_DRAIN</code>：开漏输出模式。</li>
+<li><code>GPIOD_PULL_UP</code> &#x2F; <code>GPIOD_PULL_DOWN</code>：启用上拉&#x2F;下拉电阻（部分平台支持）。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code>返回值</code>：</p>
+<ul>
+<li><strong>成功</strong> ：返回指向 <code>struct gpio_desc</code> 的指针（GPIO 描述符）。</li>
+<li><strong>失败</strong> ：返回错误指针（需用<code>IS_ERR()</code>检查）。</li>
+</ul>
+</li>
+</ol>
+<h3 id="GPIO方向设置"><a href="#GPIO方向设置" class="headerlink" title="GPIO方向设置"></a>GPIO方向设置</h3><table>
+<thead>
+<tr>
+<th align="left"><strong>函数原型</strong></th>
+<th align="left"><strong>参数</strong></th>
+<th align="left"><strong>作用</strong></th>
+<th align="left"><strong>返回</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>int gpiod_direction_input(struct gpio_desc *desc)</code></td>
+<td align="left"><code>desc</code>: GPIO描述符</td>
+<td align="left">设为输入模式</td>
+<td align="left">0成功，负错误码</td>
+</tr>
+<tr>
+<td align="left"><code>int gpiod_direction_output(struct gpio_desc *desc, int value)</code></td>
+<td align="left"><code>value</code>: 初始输出值  <br><code>0</code>：低电平（对应物理上的 GND 电压）。 <br><code>1</code>：高电平（对应物理上的 VDD 电压，如 3.3V）。</td>
+<td align="left">设为输出模式</td>
+<td align="left">同上</td>
+</tr>
+</tbody></table>
+<h3 id="GPIO值读写"><a href="#GPIO值读写" class="headerlink" title="GPIO值读写"></a>GPIO值读写</h3><table>
+<thead>
+<tr>
+<th align="left"><strong>函数原型</strong></th>
+<th align="left"><strong>参数</strong></th>
+<th align="left"><strong>作用</strong></th>
+<th align="left"><strong>注意</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>int gpiod_get_value(const struct gpio_desc *desc)</code></td>
+<td align="left">-</td>
+<td align="left">读取GPIO值</td>
+<td align="left">返回0&#x2F;1或负错误</td>
+</tr>
+<tr>
+<td align="left"><code>void gpiod_set_value(struct gpio_desc *desc, int value)</code></td>
+<td align="left"><code>value</code>: 输出值  <br><code>0</code>：低电平（对应物理上的 GND 电压）。 <br><code>1</code>：高电平（对应物理上的 VDD 电压，如 3.3V）。</td>
+<td align="left">设置GPIO输出</td>
+<td align="left">需先设为输出</td>
+</tr>
+</tbody></table>
+<h3 id="GPIO释放函数"><a href="#GPIO释放函数" class="headerlink" title="GPIO释放函数"></a>GPIO释放函数</h3><table>
+<thead>
+<tr>
+<th align="left"><strong>函数原型</strong></th>
+<th align="left"><strong>参数</strong></th>
+<th align="left"><strong>作用</strong></th>
+<th align="left"><strong>适用对象</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>void gpiod_put(struct gpio_desc *desc)</code></td>
+<td align="left"><code>desc</code>: GPIO描述符</td>
+<td align="left">释放单个GPIO</td>
+<td align="left">gpiod_get获取的</td>
+</tr>
+<tr>
+<td align="left"><code>void gpio_free(unsigned gpio)</code></td>
+<td align="left"><code>gpio</code>: 全局编号</td>
+<td align="left">旧版释放方式</td>
+<td align="left">不推荐使用</td>
+</tr>
+<tr>
+<td align="left"><code>void gpiod_put_array(struct gpio_descs *descs)</code></td>
+<td align="left"><code>descs</code>: GPIO数组</td>
+<td align="left">释放整个数组</td>
+<td align="left">gpiod_get_array</td>
+</tr>
+<tr>
+<td align="left"><code>void devm_gpiod_put(struct device *dev, struct gpio_desc *desc)</code></td>
+<td align="left"><code>dev</code>: 关联设备</td>
+<td align="left">自动管理释放</td>
+<td align="left">devm_gpiod_get</td>
+</tr>
+<tr>
+<td align="left"><code>void devm_gpiod_put_array(struct device *dev, struct gpio_descs *descs)</code></td>
+<td align="left">-</td>
+<td align="left">自动释放数组</td>
+<td align="left">devm_gpiod_get_array</td>
+</tr>
+</tbody></table>
+<h1 id="驱动编写"><a href="#驱动编写" class="headerlink" title="驱动编写"></a>驱动编写</h1><p>我们编写驱动程序<code>leddrv.c</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/cdev.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/device.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of_address.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of_gpio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/mach/map.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/uaccess.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/io.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/platform_device.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/fs.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/miscdevice.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/major.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/mutex.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/proc_fs.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/seq_file.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/tty.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kmod.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gfp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio/consumer.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LEDDRV_CNT 1</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LEDDRV_NAME <span class="string">&quot;gpioled&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LED_OPEN 1</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LED_CLOSE 0</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">leddev_struct</span>&#123;</span></span><br><span class="line">    <span class="type">dev_t</span> devid;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> <span class="title">cdev</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> *<span class="keyword">class</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">device</span>;</span></span><br><span class="line">    <span class="type">int</span> major;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">gpio_desc</span> *<span class="title">leddes</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">leddev_struct</span> *<span class="title">leddev</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ledopen</span><span class="params">(<span class="keyword">struct</span> inode *node, <span class="keyword">struct</span> file *file)</span></span><br><span class="line">&#123;</span><br><span class="line">    file-&gt;private_data = leddev;</span><br><span class="line">    gpiod_direction_output(leddev-&gt;leddes,<span class="number">0</span>);</span><br><span class="line">    <span class="comment">//printk(&quot;led device open\n&quot;);</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ledrelease</span> <span class="params">(<span class="keyword">struct</span> inode *node, <span class="keyword">struct</span> file *file)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//printk(&quot;led device closed\n&quot;);</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">ledwrite</span> <span class="params">(<span class="keyword">struct</span> file *file, <span class="type">const</span> <span class="type">char</span> __user *buf, <span class="type">size_t</span> size, <span class="type">loff_t</span> *offset)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">leddev_struct</span> *<span class="title">leddev</span>=</span>(<span class="keyword">struct</span> leddev_struct *)file-&gt;private_data;</span><br><span class="line">    <span class="type">int</span> ret=<span class="number">0</span>;</span><br><span class="line">    <span class="type">char</span> receive;</span><br><span class="line">    <span class="keyword">if</span>(size!=<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;</span><br><span class="line">    ret=copy_from_user(&amp;receive,buf,size);</span><br><span class="line">    <span class="keyword">if</span>(ret&lt;<span class="number">0</span>)&#123;</span><br><span class="line">        <span class="keyword">return</span> -EFAULT;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(receive==LED_CLOSE)&#123;</span><br><span class="line">        <span class="comment">//printk(&quot;led close\n&quot;);</span></span><br><span class="line">        gpiod_set_value(leddev-&gt;leddes,<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(receive==LED_OPEN)&#123;</span><br><span class="line">        <span class="comment">//printk(&quot;led open\n&quot;);</span></span><br><span class="line">        gpiod_set_value(leddev-&gt;leddes,<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> size;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">led_fops</span>=</span>&#123;</span><br><span class="line">    .owner=THIS_MODULE,</span><br><span class="line">    .open=ledopen,</span><br><span class="line">    .write=ledwrite,</span><br><span class="line">    .release=ledrelease,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">leddrv_probe</span><span class="params">(<span class="keyword">struct</span> platform_device *pdev)</span>&#123;</span><br><span class="line">    <span class="type">int</span> ret=<span class="number">0</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">dev</span>=</span>&amp;pdev-&gt;dev;</span><br><span class="line">    printk(<span class="string">&quot;matched success!\n&quot;</span>);</span><br><span class="line">    leddev=devm_kzalloc(dev,<span class="keyword">sizeof</span>(<span class="keyword">struct</span> leddev_struct),GFP_KERNEL);</span><br><span class="line">    <span class="keyword">if</span>(!leddev)&#123;</span><br><span class="line">        printk(<span class="string">&quot;kzalloc failed!\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(leddev-&gt;major)</span><br><span class="line">    &#123;</span><br><span class="line">        leddev-&gt;devid=MKDEV(leddev-&gt;major,<span class="number">0</span>);</span><br><span class="line">        ret=register_chrdev_region(leddev-&gt;devid,LEDDRV_CNT,LEDDRV_NAME);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span>&#123;</span><br><span class="line">        ret=alloc_chrdev_region(&amp;leddev-&gt;devid,<span class="number">0</span>,LEDDRV_CNT,LEDDRV_NAME);</span><br><span class="line">        leddev-&gt;major=MAJOR(leddev-&gt;devid);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(ret&lt;<span class="number">0</span>)&#123;</span><br><span class="line">        printk(<span class="string">&quot;devid register failed!\n&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> chrdev_fail;</span><br><span class="line">    &#125;</span><br><span class="line">    printk(<span class="string">&quot;major is %d\n&quot;</span>,leddev-&gt;major);</span><br><span class="line"></span><br><span class="line">    cdev_init(&amp;leddev-&gt;cdev,&amp;led_fops);</span><br><span class="line">    ret=cdev_add(&amp;leddev-&gt;cdev,leddev-&gt;devid,LEDDRV_CNT);</span><br><span class="line">    <span class="keyword">if</span>(ret&lt;<span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        printk(<span class="string">&quot;cdev create error!\n&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> cdev_fail;        </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    leddev-&gt;<span class="class"><span class="keyword">class</span>=</span>class_create(THIS_MODULE,LEDDRV_NAME);</span><br><span class="line">    <span class="keyword">if</span>(IS_ERR(leddev-&gt;class))</span><br><span class="line">    &#123;</span><br><span class="line">        printk(<span class="string">&quot;class create error!\n&quot;</span>);</span><br><span class="line">        ret=PTR_ERR(leddev-&gt;class);</span><br><span class="line">        <span class="keyword">goto</span> class_fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    leddev-&gt;device=device_create(leddev-&gt;class,<span class="literal">NULL</span>,leddev-&gt;devid,<span class="literal">NULL</span>,LEDDRV_NAME);</span><br><span class="line">    <span class="keyword">if</span>(IS_ERR(leddev-&gt;device))</span><br><span class="line">    &#123;</span><br><span class="line">        printk(<span class="string">&quot;device create error!\n&quot;</span>);</span><br><span class="line">        ret=PTR_ERR(leddev-&gt;device);</span><br><span class="line">        <span class="keyword">goto</span> device_fail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    leddev-&gt;leddes=devm_gpiod_get(dev,<span class="string">&quot;led&quot;</span>,GPIOD_OUT_LOW);</span><br><span class="line">    <span class="keyword">if</span>(IS_ERR(leddev-&gt;leddes))</span><br><span class="line">    &#123;</span><br><span class="line">        printk(<span class="string">&quot;leddes get error!\n&quot;</span>);</span><br><span class="line">        ret=PTR_ERR(leddev-&gt;leddes);</span><br><span class="line">        <span class="keyword">goto</span> leddes_fail;</span><br><span class="line">    &#125;</span><br><span class="line">    platform_set_drvdata(pdev, leddev);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">leddes_fail:</span><br><span class="line">    device_destroy(leddev-&gt;class,leddev-&gt;devid);</span><br><span class="line">device_fail:</span><br><span class="line">    class_destroy(leddev-&gt;class);</span><br><span class="line">class_fail:</span><br><span class="line">    cdev_del(&amp;leddev-&gt;cdev);</span><br><span class="line">cdev_fail:</span><br><span class="line">    unregister_chrdev_region(leddev-&gt;devid,LEDDRV_CNT);</span><br><span class="line"> chrdev_fail:</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">leddev_resume</span><span class="params">(<span class="keyword">struct</span> platform_device *pdev)</span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">leddev_struct</span> *<span class="title">leddev</span> =</span> platform_get_drvdata(pdev);</span><br><span class="line"></span><br><span class="line">    device_destroy(leddev-&gt;class,leddev-&gt;devid);</span><br><span class="line">    class_destroy(leddev-&gt;class);</span><br><span class="line">    cdev_del(&amp;leddev-&gt;cdev);</span><br><span class="line">    unregister_chrdev_region(leddev-&gt;devid,LEDDRV_CNT);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">of_device_id</span> <span class="title">led_device_id</span>[]=</span>&#123;</span><br><span class="line">    &#123;.compatible=<span class="string">&quot;gpio-led&quot;</span>&#125;,</span><br><span class="line">    &#123;&#125;,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">platform_driver</span> <span class="title">led_dev_driver</span>=</span>&#123;</span><br><span class="line">    .probe=leddrv_probe,</span><br><span class="line">    .driver=&#123;</span><br><span class="line">        .of_match_table=led_device_id,</span><br><span class="line">        .name=<span class="string">&quot;gpioled&quot;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    .remove=leddev_resume,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">leddrv_init</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">    <span class="type">int</span> ret=<span class="number">0</span>;</span><br><span class="line">    platform_driver_register(&amp;led_dev_driver);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">leddrv_exit</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">    platform_driver_unregister(&amp;led_dev_driver);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">module_init(leddrv_init);</span><br><span class="line">module_exit(leddrv_exit);</span><br><span class="line"></span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;KEVIN&quot;</span>);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;GPIO LED Platform Driver&quot;</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h2><p>驱动流程图为：</p>
+<img src="image-20241016140835398.png" alt="image-20241016140835398" style="zoom: 67%;">
+
+<h1 id="应用程序"><a href="#应用程序" class="headerlink" title="应用程序"></a>应用程序</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="Qt编写"><a href="#Qt编写" class="headerlink" title="Qt编写"></a>Qt编写</h1><p><code>main.cpp</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QApplication&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;mainwindow.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span> </span>&#123;</span><br><span class="line">    <span class="function">QApplication <span class="title">app</span><span class="params">(argc, argv)</span></span>;</span><br><span class="line">    MainWindow window;</span><br><span class="line">    window.<span class="built_in">setWindowTitle</span>(<span class="string">&quot;GPIO LED 控制器&quot;</span>);</span><br><span class="line">    window.<span class="built_in">show</span>();</span><br><span class="line">    <span class="keyword">return</span> app.<span class="built_in">exec</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>mainwindow.cpp</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;mainwindow.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QFile&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QMessageBox&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QDebug&gt;</span></span></span><br><span class="line"></span><br><span class="line">MainWindow::<span class="built_in">MainWindow</span>(QWidget *parent)</span><br><span class="line">    : <span class="built_in">QWidget</span>(parent) &#123;</span><br><span class="line">    <span class="comment">// 初始化界面</span></span><br><span class="line">    btnOn = <span class="keyword">new</span> <span class="built_in">QPushButton</span>(<span class="string">&quot;LED ON&quot;</span>, <span class="keyword">this</span>);</span><br><span class="line">    btnOff = <span class="keyword">new</span> <span class="built_in">QPushButton</span>(<span class="string">&quot;LED OFF&quot;</span>, <span class="keyword">this</span>);</span><br><span class="line">    QVBoxLayout *layout = <span class="keyword">new</span> <span class="built_in">QVBoxLayout</span>(<span class="keyword">this</span>);</span><br><span class="line">    layout-&gt;<span class="built_in">addWidget</span>(btnOn);</span><br><span class="line">    layout-&gt;<span class="built_in">addWidget</span>(btnOff);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 连接信号与槽</span></span><br><span class="line">    <span class="built_in">connect</span>(btnOn, &amp;QPushButton::clicked, <span class="keyword">this</span>, &amp;MainWindow::turnOn);</span><br><span class="line">    <span class="built_in">connect</span>(btnOff, &amp;QPushButton::clicked, <span class="keyword">this</span>, &amp;MainWindow::turnOff);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">MainWindow::turnOn</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">writeLedStatus</span>(<span class="number">1</span>); <span class="comment">// 写入1打开LED</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">MainWindow::turnOff</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">writeLedStatus</span>(<span class="number">0</span>); <span class="comment">// 写入0关闭LED</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">MainWindow::writeLedStatus</span><span class="params">(<span class="type">int</span> status)</span> </span>&#123;</span><br><span class="line">    <span class="function">QFile <span class="title">device</span><span class="params">(<span class="string">&quot;/dev/gpioled&quot;</span>)</span></span>;</span><br><span class="line">    <span class="keyword">if</span> (!device.<span class="built_in">open</span>(QIODevice:: WriteOnly)) &#123;</span><br><span class="line">        QMessageBox::<span class="built_in">critical</span>(<span class="keyword">this</span>, <span class="string">&quot;Error&quot;</span>, <span class="string">&quot;无法打开设备: &quot;</span> + device.<span class="built_in">errorString</span>());</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> data = status; <span class="comment">// 0或1</span></span><br><span class="line">    <span class="keyword">if</span> (device.<span class="built_in">write</span>(&amp;data, <span class="number">1</span>) != <span class="number">1</span>) &#123;</span><br><span class="line">        QMessageBox::<span class="built_in">warning</span>(<span class="keyword">this</span>, <span class="string">&quot;警告&quot;</span>, <span class="string">&quot;写入设备失败&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    device.<span class="built_in">close</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>mainwindow.h</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span> MAINWINDOW_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MAINWINDOW_H</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QWidget&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QPushButton&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QVBoxLayout&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MainWindow</span> : <span class="keyword">public</span> QWidget &#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">MainWindow</span>(QWidget *parent = <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> slots:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">turnOn</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">turnOff</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">writeLedStatus</span><span class="params">(<span class="type">int</span> status)</span></span>;</span><br><span class="line"></span><br><span class="line">    QPushButton *btnOn;</span><br><span class="line">    QPushButton *btnOff;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">// MAINWINDOW_H</span></span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Qt-信号与槽"><a href="#Qt-信号与槽" class="headerlink" title="Qt 信号与槽"></a>Qt 信号与槽</h2><p>信号与槽（ Signal &amp; Slot ）是 Qt 编程的基础，也是 Qt 的一大创新。</p>
+<ul>
+<li><p><strong>信号（Signal）</strong></p>
+<ul>
+<li>就是在特定情况下<strong>被发射的事件</strong>，例如 PushButton 最常见的信号就是鼠标单击时发射的 clicked() 信号，一个 ComboBox</li>
+</ul>
+</li>
+<li><p><strong>槽（Slot ）</strong></p>
+<ul>
+<li><p>就是对<strong>信号响应的函数</strong>。槽就是一个函数，与一般的 C++ 函数是一样的，可以定义在类的任何部分（ public 、 private 或 protected ），可以具有任何参数，也可以被直接调用。</p>
+</li>
+<li><p>槽函数与一般的函数不同的是：槽函数可以与一个信号关联，当信号被发射时，关联的槽函数<br>被自动执行。</p>
+</li>
+<li><p>槽可以是任何成员函数、普通全局函数、静态函数</p>
+</li>
+</ul>
+</li>
+<li><p><strong>关联：</strong></p>
+<p>信号与槽关联是用<code>QObject::connect()</code> 函数实现的，其基本格式有两种：</p>
+<ul>
+<li><p>方式一：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">QObject::<span class="built_in">connect</span>(sender, <span class="built_in">SIGNAL</span>(<span class="built_in">signal</span>()), receiver, <span class="built_in">SLOT</span>(<span class="built_in">slot</span>()));</span><br></pre></td></tr></table></figure>
+
+<p>connect()是 QObject 类的一个静态函数，而 QObject 是所有 Qt 类的基类，在实际调用时可以忽略前面的限定符，所以可以直接写为：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">connect</span>(sender, <span class="built_in">SIGNAL</span>(<span class="built_in">signal</span>()), receiver, <span class="built_in">SLOT</span>(<span class="built_in">slot</span>()));</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">- sender是**发射信号的对象的名称**</span></span><br><span class="line"><span class="comment">- signal() 是**信号名称**。信号可以看做是特殊的函数，需要带括号，有参数时还需要指明参数。</span></span><br><span class="line"><span class="comment">- receiver 是**接收信号的对象名称**</span></span><br><span class="line"><span class="comment">- slot() 是**槽函数的名称**，需要带括号，有参数时还需要指明参数。</span></span><br><span class="line"><span class="comment">- SIGNAL和SLOT是 Qt 的宏，用于指明信号和槽，并将它们的参数转换为相应的字符</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>方式二(&#x3D;&#x3D;推荐&#x3D;&#x3D;)：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">connect</span>(sender,&amp;signal,receiver,&amp;slot)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">- sender是**发射信号的对象的名称**</span></span><br><span class="line"><span class="comment">- &amp;signal是**信号名称**。信号可以看做是特殊的函数，需要带括号，有参数时还需要指明参数。</span></span><br><span class="line"><span class="comment">- receiver 是**接收信号的对象名称**</span></span><br><span class="line"><span class="comment">- &amp;slot是**槽函数的名称**，需要带括号，有参数时还需要指明参数。</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>流程</strong>：</p>
+<p>当一个信号被发射时，与其关联的槽函数通常被<strong>立即执行</strong>，就像正常调用一个函数一样。只有当信号关联的所有槽函数执行完毕后，才会执行发射信号处后面的代码。</p>
+<img src="image-20250609212739315-17532767674291.png" alt="image-20250609212739315" style="zoom:50%;">
+</li>
+<li><p><strong>特点：</strong></p>
+<ul>
+<li><p>&#x3D;&#x3D;在使用信号与槽的类中，必须在类的定义中加入宏Q_OBJECT （特别重要） 。&#x3D;&#x3D;</p>
+</li>
+<li><p><strong>一个信号可以连接多个槽</strong>，例如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">connect</span>(pushButton,<span class="built_in">SIGNAL</span>(clickedO),<span class="keyword">this</span>,<span class="built_in">SLOT</span>(<span class="built_in">hide</span>();</span><br><span class="line"><span class="built_in">connect</span>(pushButton,<span class="built_in">SIGNAL</span>(<span class="built_in">clicked</span>(),<span class="keyword">this</span>,<span class="built_in">SLOT</span>(<span class="built_in">close</span>();</span><br></pre></td></tr></table></figure>
+
+<p>这是当一个对象pushButton 的 被单击 时，所在窗体有两个槽进行响应，一 个 hide() 用于隐藏主窗体，一个 close 用于关闭主窗体 </p>
+</li>
+<li><p>当<strong>信号</strong>和<strong>槽函数</strong> <strong>带有参数</strong>时，在<strong>connect() 函数里，要写明参数的类型</strong>，但可以不写参数名称。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">connect</span>(pushButton,<span class="built_in">SIGNAL</span>(<span class="built_in">objectNameChanged</span>(QString)),<span class="keyword">this</span>,<span class="built_in">SIGNAL</span>(window TitelChan</span><br><span class="line"><span class="built_in">ged</span>(QString)));</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>多个信号可以连接同一个槽</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">connect</span>( pushButton ,<span class="built_in">SIGNAL</span>(<span class="built_in">clicked</span>()),<span class="keyword">this</span>, <span class="built_in">close</span>()</span><br><span class="line"><span class="built_in">connect</span>( pushButton_2 ,<span class="built_in">SIGNAL</span>(<span class="built_in">clicked</span>()),<span class="keyword">this</span>, <span class="built_in">close</span>()</span><br><span class="line"><span class="built_in">connect</span>( pushButton_3 ,<span class="built_in">SIGNAL</span>(<span class="built_in">clicked</span>()),<span class="keyword">this</span>, <span class="built_in">close</span>()</span><br></pre></td></tr></table></figure>
+
+<p>当任何一个pushButton 被单击时，都会执行 close() 函 数，进而关闭或者退出程序。</p>
+</li>
+<li><p><strong>一个信号可以连接另外一个信号</strong>（说明了 connect 万物皆可连，非常好用！） ，例如：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">connect</span>(pushButton,<span class="built_in">SIGNAL</span>(<span class="built_in">objectNameChanged</span>(QString)),<span class="keyword">this</span>,<span class="built_in">SIGNAL</span>(window TitelChan</span><br><span class="line"><span class="built_in">ged</span>(QString)));</span><br></pre></td></tr></table></figure>
+
+<p>这样，当一个信号发射时，也会发射另外一个信号，实现某些特殊的功能。</p>
+</li>
+<li><p>严格的情况下，<strong>信号与槽的参数个数和类型需要一致</strong>，至少信号的参数不能少于槽的参数。如果不匹配，会出现编译错误或运行错误。例如：</p>
+<ul>
+<li>当你发送一个信号时，Qt 需要将这个信号携带的数据（参数）传递给连接的槽函数。</li>
+<li>如果槽函数期望接收某些参数，而信号没有提供足够的参数，就会导致数据缺失或类型不匹配。</li>
+<li>如果使用&#x3D;&#x3D;&amp;符号时&#x3D;&#x3D;，编译器会强制检查信号和槽的参数是否一致，否则无法通过编译。因此必须要参数保持一致。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//--------------------实例1--------------------------------</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QObject&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QDebug&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyClass</span> : <span class="keyword">public</span> QObject &#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> slots:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">receiveData</span><span class="params">(<span class="type">int</span> value, QString text)</span> </span>&#123;</span><br><span class="line">        <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;Received:&quot;</span> &lt;&lt; value &lt;&lt; text;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">QPushButton button;</span><br><span class="line">MyClass obj;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 错误：clicked(bool) 只有一个 bool 参数，而槽需要 int + QString</span></span><br><span class="line"><span class="built_in">connect</span>(&amp;button, &amp;QPushButton::clicked, &amp;obj, &amp;MyClass::receiveData);</span><br><span class="line"></span><br><span class="line"><span class="comment">//--------------------实例2--------------------------------</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyEmitter</span> : <span class="keyword">public</span> QObject &#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"></span><br><span class="line">signals:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">dataSent</span><span class="params">(<span class="type">int</span> value, QString text, <span class="type">double</span> extra)</span></span>;  <span class="comment">// 3 个参数</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyReceiver</span> : <span class="keyword">public</span> QObject &#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> slots:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">receiveData</span><span class="params">(<span class="type">int</span> value, QString text)</span> </span>&#123;  <span class="comment">// 2 个参数</span></span><br><span class="line">        <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;Received:&quot;</span> &lt;&lt; value &lt;&lt; text;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">MyEmitter emitter;</span><br><span class="line">MyReceiver receiver;</span><br><span class="line"></span><br><span class="line"><span class="built_in">connect</span>(&amp;emitter, &amp;MyEmitter::dataSent, &amp;receiver, &amp;MyReceiver::receiveData);</span><br><span class="line"><span class="comment">//合法：因为信号有 3 个参数，槽有 2 个参数，信号参数多于槽参数，多余参数被忽略。</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>信号只需声明无需定义，所以我们只需要在 mianwindow.h 里声明信号即可。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span> MAINWINDOW_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MAINWINDOW_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QMainWindow&gt;</span> </span></span><br><span class="line"><span class="comment">/* 引入QPushButton */</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;QPushButton&gt;</span></span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MainWindow</span> : <span class="keyword">public</span> QMainWindow</span><br><span class="line">&#123; </span><br><span class="line">    Q_OBJECT</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">MainWindow</span>(QWidget *parent = <span class="literal">nullptr</span>);</span><br><span class="line">    ~<span class="built_in">MainWindow</span>();</span><br><span class="line">   </span><br><span class="line">signals:</span><br><span class="line">    <span class="comment">/* 声明一个信号，只需声明，无需定义 */</span></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">pushButtonTextChanged</span><span class="params">()</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">// MAINWINDOW_H</span></span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h2 id="QFile"><a href="#QFile" class="headerlink" title="QFile"></a>QFile</h2><p>QFile 类提供了读取和写入文件的接口。在嵌入式里如果需要读写文件，最简单的方法就是用Qfile。QFile 是一个读写文本、二进制文件和资源的I&#x2F;O 设备。QFile 可以自己使用，也可以更方便地与QTextStream 或QDataStream 一起使用。</p>
+<ul>
+<li><p>对一个文本文件的操作流程</p>
+<p><img src="image-20250609220624715-17532767674302.png" alt="image-20250609220624715"></p>
+</li>
+<li><p><strong>构造函数</strong></p>
+<p>使用 QFile 类操作文件之前，程序中需引入<QFile>头文件。创建 QFile 类的对象，常用的构造函数有：</QFile></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QFile::<span class="built_in">QFile</span>() QFile::<span class="built_in">QFile</span>(<span class="type">const</span> QString &amp;name)</span><br><span class="line"><span class="function">QFile <span class="title">file</span><span class="params">(<span class="string">&quot;/dev/gpioled&quot;</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数 name 用来指定要操作的目标文件，包含文件的存储路径和文件名，存储路径可以使用绝对路径（如”D:&#x2F;Demo&#x2F;test.txt”）或者相对路径（比如”.&#x2F;Demo&#x2F;test.txt”），<strong>路径中的分隔符要用 “&#x2F;“ 表示</strong>。不支持使用其他分隔符(例如’&#39;)。所以在Windows、 Linux 或者Mac 里文件的路径都是用’&#x2F;‘</p>
+<ul>
+<li><p>通常情况下，我们会调用第二个构造函数，直接指明要操作的文件。对于第一个构造函数创建的 QFile 对象，需要再调用setFileName() 方法指明要操作的文件。</p>
+</li>
+<li><pre><code class="language-c++">void QFile::setFileName(const QString &amp;name)
+/*例子：*/
+QFile file;
+file.setFileName(&quot;/sys/devices/platform/leds/leds/beep/brightness&quot;);
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  - 设置文件的名称。`name` 可以不包含路径、包含相对路径，也可以是绝对路径。</span><br><span class="line"></span><br><span class="line">    如果文件已经被打开，则不要调用此函数。</span><br><span class="line"></span><br><span class="line">- **检查函数**</span><br><span class="line"></span><br><span class="line">  可以使用exists()检查文件是否存在，并使用remove()删除文件</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+if (!file.exists())
+&#123;
+   return;
+&#125;
+</code></pre>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">- **打开函数**</span><br><span class="line"></span><br><span class="line">  ```c++</span><br><span class="line">  bool QFile::open(OpenMode mode)</span><br><span class="line">  /*例子：*/</span><br><span class="line">  if(!file.open(QIODevice::ReadWrite))</span><br><span class="line">          qDebug()&lt;&lt;file.errorString();</span><br></pre></td></tr></table></figure>
+
+<p>QFile::open()函数打开文件时需要传递 QIODevice::OpenModeFlag 枚举类型的参数，决定文件以什么方式打开</p>
+<p>mode 参数用来指定文件的打开方式，下表罗列了此参数的可选值以及各自的含义</p>
+<table>
+<thead>
+<tr>
+<th align="left">打开方式</th>
+<th align="left">含 义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">QIODevice::ReadOnly</td>
+<td align="left">只能对文件进行读操作</td>
+</tr>
+<tr>
+<td align="left">QIODevice::WriteOnly</td>
+<td align="left">只能对文件进行写操作，如果目标文件不存在，会自行创建一个新文件。</td>
+</tr>
+<tr>
+<td align="left">QIODevice::ReadWrite</td>
+<td align="left">等价于 ReadOnly | WriteOnly，能对文件进行读和写操作。</td>
+</tr>
+<tr>
+<td align="left">QIODevice::Append</td>
+<td align="left">以追加模式打开文件，写入的数据会追加到文件的末尾（文件原有的内容保留）。</td>
+</tr>
+<tr>
+<td align="left">QIODevice::Truncate</td>
+<td align="left">以重写模式打开，写入的数据会将原有数据全部清除。注意，此打开方式不能单独使用，通常会和 ReadOnly 或 WriteOnly 搭配。</td>
+</tr>
+<tr>
+<td align="left">QIODevice::Text</td>
+<td align="left">读取文件时，会将行尾结束符（Unix 系统中是 “\n”，Windows 系统中是 “\r\n”）转换成‘\n’；将数据写入文件时，会将行尾结束符转换成本地格式，例如 Win32 平台上是‘\r\n’。</td>
+</tr>
+</tbody></table>
+</li>
+<li><p><strong>读函数</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">qint64 <span class="title">read</span><span class="params">(<span class="type">char</span> *data, qint64 maxSize)</span></span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>功能</strong>：从设备读取原始字节到缓冲区</li>
+<li><strong>返回值</strong>：<ul>
+<li><code>&gt;0</code>：成功读取的字节数</li>
+<li><code>0</code>：无更多数据（非错误）</li>
+<li><code>-1</code>：错误（如设备关闭或只写模式）</li>
+</ul>
+</li>
+<li><strong>关键点</strong>：需手动管理缓冲区，但错误处理最可靠</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">QFile <span class="title">file</span><span class="params">(<span class="string">&quot;example.txt&quot;</span>)</span></span>;</span><br><span class="line">     <span class="keyword">if</span> (!file.<span class="built_in">open</span>(QIODevice::ReadOnly)) &#123; <span class="comment">// 以读模式打开文件</span></span><br><span class="line">         <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;无法打开文件读取：&quot;</span> &lt;&lt; file.<span class="built_in">errorString</span>();</span><br><span class="line">         <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">     &#125;</span><br><span class="line">  </span><br><span class="line">     <span class="type">char</span> buffer[<span class="number">100</span>];</span><br><span class="line">     qint64 bytesRead = file.<span class="built_in">read</span>(buffer, <span class="built_in">sizeof</span>(buffer) - <span class="number">1</span>); <span class="comment">// 保留最后一个字节给&#x27;\0&#x27;</span></span><br><span class="line">     <span class="keyword">if</span> (bytesRead &gt; <span class="number">0</span>) &#123;</span><br><span class="line">         buffer[bytesRead] = <span class="string">&#x27;\0&#x27;</span>; <span class="comment">// 添加字符串结束符</span></span><br><span class="line">         <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;读取到：&quot;</span> &lt;&lt; buffer;</span><br><span class="line">     &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">         <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;读取失败：&quot;</span> &lt;&lt; file.<span class="built_in">errorString</span>();</span><br><span class="line">     &#125;</span><br><span class="line">     file.<span class="built_in">close</span>();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>写函数</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">qint64 <span class="title">write</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *data, qint64 len)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>参数说明</strong></p>
+<ul>
+<li><strong><code>data</code></strong> ：指向要写入数据的缓冲区的指针。</li>
+<li><strong><code>len</code></strong> ：要写入的字节数（最大值为 <code>qint64</code> 类型）。</li>
+</ul>
+<p><strong>返回值</strong></p>
+<ul>
+<li>成功时返回实际写入的字节数（可能小于 <code>len</code>，例如磁盘空间不足）。</li>
+<li>如果发生错误（如文件未打开或不可写），返回 <code>-1</code>。</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">QFile <span class="title">file</span><span class="params">(<span class="string">&quot;example.txt&quot;</span>)</span></span>;</span><br><span class="line">      <span class="keyword">if</span> (!file.<span class="built_in">open</span>(QIODevice::WriteOnly)) &#123; <span class="comment">// 以写模式打开文件</span></span><br><span class="line">          <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;无法打开文件写入：&quot;</span> &lt;&lt; file.<span class="built_in">errorString</span>();</span><br><span class="line">          <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">      &#125;</span><br><span class="line">  </span><br><span class="line">      <span class="type">const</span> <span class="type">char</span> *data = <span class="string">&quot;Hello World!&quot;</span>;</span><br><span class="line">      qint64 written = file.<span class="built_in">write</span>(data, <span class="built_in">strlen</span>(data)); <span class="comment">// 写入字符串</span></span><br><span class="line">      <span class="keyword">if</span> (written != <span class="built_in">strlen</span>(data)) &#123;</span><br><span class="line">          <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;写入失败：&quot;</span> &lt;&lt; written &lt;&lt; <span class="string">&quot;字节（应写入&quot;</span> &lt;&lt; <span class="built_in">strlen</span>(data) &lt;&lt; <span class="string">&quot;字节）&quot;</span>;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="built_in">qDebug</span>() &lt;&lt; <span class="string">&quot;成功写入&quot;</span> &lt;&lt; written &lt;&lt; <span class="string">&quot;字节&quot;</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      file.<span class="built_in">close</span>();</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="实验效果"><a href="#实验效果" class="headerlink" title="实验效果"></a>实验效果</h1><img src="ae6f19608e040334195dad59abef446.jpg" alt="ae6f19608e040334195dad59abef446" style="zoom: 33%;">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2024/11/12/0002/">https://leonardo272.github.io/2024/11/12/0002/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a><a class="post-meta__tags" href="/tags/%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91/">驱动开发</a></div><div class="post-share"><div class="social-share" data-image="/page_images/2.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/06/05/0001/" title="PWM"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">PWM</div></div><div class="info-2"><div class="info-item-1">PWM(Pulse Width Modulation)基础概念与理论1.什么是 PWM？它的主要参数是什么？ PWM (Pulse Width Modulation) 即脉冲宽度调制，是一种通过控制数字信号在一个周期内高电平时间（脉宽）与周期时间之比（占空比）来模拟连续电平的技术。  主要参数： 周期 (Period) &#x2F; 频率 (Frequency)： 一个完整 PWM 波形的持续时间 (T)。频率 f = 1 / T。 占空比 (Duty Cycle)： 高电平时间 (Ton) 占整个周期 (T) 的百分比 (D = (Ton / T) * 100%)。 极性 (Polarity)： PWM 信号有效电平（Active Level）是高电平有效 (Normal) 还是低电平有效 (Inversed)。    2.应用场景 电机控制： 调节速度和方向（如直流电机、步进电机）。 LED 调光： 控制亮度（通过改变平均电流）。 电源管理： DCDC 转换器输出电压调节（通过控制开关管导通时间）。 音频： 简单的 D 类放大器。 伺服控制： 控制舵机角度（特定脉宽范围对应特...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/06/05/0001/" title="PWM"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-05</div><div class="info-item-2">PWM</div></div><div class="info-2"><div class="info-item-1">PWM(Pulse Width Modulation)基础概念与理论1.什么是 PWM？它的主要参数是什么？ PWM (Pulse Width Modulation) 即脉冲宽度调制，是一种通过控制数字信号在一个周期内高电平时间（脉宽）与周期时间之比（占空比）来模拟连续电平的技术。  主要参数： 周期 (Period) &#x2F; 频率 (Frequency)： 一个完整 PWM 波形的持续时间 (T)。频率 f = 1 / T。 占空比 (Duty Cycle)： 高电平时间 (Ton) 占整个周期 (T) 的百分比 (D = (Ton / T) * 100%)。 极性 (Polarity)： PWM 信号有效电平（Active Level）是高电平有效 (Normal) 还是低电平有效 (Inversed)。    2.应用场景 电机控制： 调节速度和方向（如直流电机、步进电机）。 LED 调光： 控制亮度（通过改变平均电流）。 电源管理： DCDC 转换器输出电压调节（通过控制开关管导通时间）。 音频： 简单的 D 类放大器。 伺服控制： 控制舵机角度（特定脉宽范围对应特...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">5</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90"><span class="toc-number">2.</span> <span class="toc-text">硬件原理分析</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AE%BE%E5%A4%87%E6%A0%91%E7%BC%96%E5%86%99"><span class="toc-number">3.</span> <span class="toc-text">设备树编写</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%B5%E6%B0%94%E5%B1%9E%E6%80%A7"><span class="toc-number">3.0.0.1.</span> <span class="toc-text">电气属性</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#GPIO%E5%AD%90%E7%B3%BB%E7%BB%9F"><span class="toc-number">4.</span> <span class="toc-text">GPIO子系统</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%80%E4%BB%8B"><span class="toc-number">4.1.</span> <span class="toc-text">简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E5%8A%9F%E8%83%BD"><span class="toc-number">4.1.1.</span> <span class="toc-text">通用功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E5%B1%9E%E6%80%A7"><span class="toc-number">4.1.2.</span> <span class="toc-text">通用属性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A5%E5%8F%A3%E5%87%BD%E6%95%B0"><span class="toc-number">4.2.</span> <span class="toc-text">接口函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#GPIO%E8%8E%B7%E5%8F%96%E5%87%BD%E6%95%B0"><span class="toc-number">4.2.1.</span> <span class="toc-text">GPIO获取函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GPIO%E6%96%B9%E5%90%91%E8%AE%BE%E7%BD%AE"><span class="toc-number">4.2.2.</span> <span class="toc-text">GPIO方向设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GPIO%E5%80%BC%E8%AF%BB%E5%86%99"><span class="toc-number">4.2.3.</span> <span class="toc-text">GPIO值读写</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GPIO%E9%87%8A%E6%94%BE%E5%87%BD%E6%95%B0"><span class="toc-number">4.2.4.</span> <span class="toc-text">GPIO释放函数</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99"><span class="toc-number">5.</span> <span class="toc-text">驱动编写</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">5.1.</span> <span class="toc-text">代码分析</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F"><span class="toc-number">6.</span> <span class="toc-text">应用程序</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Qt%E7%BC%96%E5%86%99"><span class="toc-number">7.</span> <span class="toc-text">Qt编写</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Qt-%E4%BF%A1%E5%8F%B7%E4%B8%8E%E6%A7%BD"><span class="toc-number">7.1.</span> <span class="toc-text">Qt 信号与槽</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#QFile"><span class="toc-number">7.2.</span> <span class="toc-text">QFile</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C%E6%95%88%E6%9E%9C"><span class="toc-number">8.</span> <span class="toc-text">实验效果</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/05/0001/" title="PWM"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="PWM"/></a><div class="content"><a class="title" href="/2025/06/05/0001/" title="PWM">PWM</a><time datetime="2025-06-05T13:12:00.000Z" title="发表于 2025-06-05 21:12:00">2025-06-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/11/12/0002/" title="基于GPIO的LED"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="基于GPIO的LED"/></a><div class="content"><a class="title" href="/2024/11/12/0002/" title="基于GPIO的LED">基于GPIO的LED</a><time datetime="2024-11-12T13:12:00.000Z" title="发表于 2024-11-12 21:12:00">2024-11-12</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
