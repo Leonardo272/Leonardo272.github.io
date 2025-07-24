@@ -1,0 +1,987 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>文件系统-01初识文件系统 | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="文件系统磁盘的格式化与挂载简化的Linux文件系统磁盘布局结构图如下：   虚拟机操作实验 首先我们通过添加一个磁盘文件   选择添加硬盘  选择SCSI(S)类型的磁盘  选择创建新的虚拟磁盘  设定磁盘大小为4MB，并且将虚拟磁盘存储为单个文件  点击完成   我们打开虚拟机终端，切换到管理员模式 1su  查看系统有哪些磁盘 1fdisk -l    我们可以看到我们添加的新磁盘为 &#x2F;dev">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文件系统-01初识文件系统">
+<meta property="og:url" content="https://leonardo272.github.io/2025/01/02/1001/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="文件系统磁盘的格式化与挂载简化的Linux文件系统磁盘布局结构图如下：   虚拟机操作实验 首先我们通过添加一个磁盘文件   选择添加硬盘  选择SCSI(S)类型的磁盘  选择创建新的虚拟磁盘  设定磁盘大小为4MB，并且将虚拟磁盘存储为单个文件  点击完成   我们打开虚拟机终端，切换到管理员模式 1su  查看系统有哪些磁盘 1fdisk -l    我们可以看到我们添加的新磁盘为 &#x2F;dev">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/3.jpg">
+<meta property="article:published_time" content="2025-01-02T13:12:00.000Z">
+<meta property="article:modified_time" content="2025-07-24T02:43:32.470Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="linux内核">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/3.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "文件系统-01初识文件系统",
+  "url": "https://leonardo272.github.io/2025/01/02/1001/",
+  "image": "https://leonardo272.github.io/page_images/3.jpg",
+  "datePublished": "2025-01-02T13:12:00.000Z",
+  "dateModified": "2025-07-24T02:43:32.470Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://leonardo272.github.io/2025/01/02/1001/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '文件系统-01初识文件系统',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/3.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">文件系统-01初识文件系统</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">文件系统-01初识文件系统</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-01-02T13:12:00.000Z" title="发表于 2025-01-02 21:12:00">2025-01-02</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-07-24T02:43:32.470Z" title="更新于 2025-07-24 10:43:32">2025-07-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%AD%A6%E4%B9%A0/">嵌入式学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="文件系统"><a href="#文件系统" class="headerlink" title="文件系统"></a>文件系统</h1><h2 id="磁盘的格式化与挂载"><a href="#磁盘的格式化与挂载" class="headerlink" title="磁盘的格式化与挂载"></a>磁盘的格式化与挂载</h2><p><strong>简化的Linux文件系统磁盘布局结构</strong>图如下：</p>
+<img src="image-20250722195904394.png" alt="image-20250722195904394" style="zoom:50%;">
+
+<h3 id="虚拟机操作实验"><a href="#虚拟机操作实验" class="headerlink" title="虚拟机操作实验"></a>虚拟机操作实验</h3><ul>
+<li><p>首先我们通过添加一个磁盘文件</p>
+<img src="image-20250722110042632.png" alt="image-20250722110042632" style="zoom: 67%;">
+
+<p>选择添加硬盘</p>
+<p><img src="image-20250722110139013.png" alt="image-20250722110139013"></p>
+<p>选择SCSI(S)类型的磁盘</p>
+<p><img src="image-20250722110154645.png" alt="image-20250722110154645"></p>
+<p>选择创建新的虚拟磁盘</p>
+<p><img src="image-20250722110311638.png" alt="image-20250722110311638"></p>
+<p>设定磁盘大小为4MB，并且将虚拟磁盘存储为单个文件</p>
+<p><img src="image-20250722110431700.png" alt="image-20250722110431700"></p>
+<p>点击完成</p>
+<p><img src="image-20250722110446983.png" alt="image-20250722110446983"></p>
+</li>
+<li><p>我们打开虚拟机终端，切换到管理员模式</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su</span><br></pre></td></tr></table></figure>
+
+<p>查看系统有哪些磁盘</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fdisk -l</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250722111514323.png" alt="image-20250722111514323"></p>
+</li>
+<li><p>我们可以看到我们添加的新磁盘为 <code>/dev/sdb</code>，接下来我们开始格式化添加的磁盘，我们将磁盘格式化为<code>minix</code>格式</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkfs.minix /dev/sdb</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250722125940714.png" alt="image-20250722125940714"></p>
+</li>
+<li><p>根据上图我们可以看出格式化之后文件系统创建了</p>
+<ul>
+<li>创建了 1376 个 inode（索引节点）<ul>
+<li>创建了 1376 个 inode（索引节点）。</li>
+<li><code>inode数量 ≈ 磁盘大小 / 预期平均文件大小</code><br>此处 <code>4MB / 1376 ≈ 3KB/文件</code>，适合存储大量小文件。</li>
+</ul>
+</li>
+<li>文件系统被划分为 4096 个数据块<ul>
+<li><strong>块大小</strong>：根据后续参数计算为 <strong>1024 字节（1KB）</strong>（见下方推导）。</li>
+<li>总磁盘空间：<code>4096 块 × 1024 字节/块 = 4,194,304 字节 = 4MB</code>，符合设定。</li>
+</ul>
+</li>
+<li>文件系统的<strong>块大小（block size）</strong> 为 1024 字节（1KB）<ul>
+<li>读写操作的最小单位是 1KB。</li>
+<li>小块大小适合存储大量小文件，减少空间浪费（外部碎片）。</li>
+</ul>
+</li>
+<li><strong><code>最大尺寸=268966912</code></strong><ul>
+<li>文件系统支持的最大理论容量（单位：字节）。</li>
+<li>当前磁盘仅为 4MB，表明该文件系统设计支持扩容至 256MB。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>我们现在将格式化后的文件内容导出来，进行进一步的分析</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexdump -C /dev/sdb &gt; minix_origin.data</span><br></pre></td></tr></table></figure>
+
+<p>可以看到<code>minix_origin.data</code>文件中的内容为：</p>
+<p><img src="image-20250722202924377.png" alt="image-20250722202924377"></p>
+<figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">0000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000400  60 05 00 10 01 00 01 00  2f 00 00 00 00 1c 08 10  |`......./.......|</span><br><span class="line">00000410  8f 13 01 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000420  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000800  03 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">000008a0  00 00 00 00 00 00 00 00  00 00 00 00 fe ff ff ff  |................|</span><br><span class="line">000008b0  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br><span class="line">*</span><br><span class="line">00000c00  03 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000c10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000df0  00 00 00 00 00 00 00 00  00 00 fc ff ff ff ff ff  |................|</span><br><span class="line">00000e00  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br><span class="line">*</span><br><span class="line">00001000  ed 41 00 00 40 00 00 00  a6 1a 7f 68 00 02 2f 00  |.A..@......h../.|</span><br><span class="line">00001010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000bc00  01 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc20  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00400000</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>接下来我们开始创建文件，并逐步分析</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mount /dev/sdb /mnt #挂载文件</span><br><span class="line">cd /mnt</span><br><span class="line">touch test.c</span><br><span class="line">echo &quot;hello world&quot; &gt; test.c</span><br><span class="line">mkdir head</span><br><span class="line">cd head</span><br><span class="line">touch head.h</span><br><span class="line">echo &quot;headheadhead&quot; &gt; head.h</span><br></pre></td></tr></table></figure>
+
+<p>这之后文件的结构树应该是：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@xnj-virtual-machine:/mnt# tree</span><br><span class="line">.</span><br><span class="line">├── head</span><br><span class="line">│   └── head.h</span><br><span class="line">└── test.c</span><br><span class="line"></span><br><span class="line">1 directory, 2 files</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>我们再次将磁盘的内容拷贝出来</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">umount /mnt #取消挂载文件</span><br><span class="line">hexdump -C /dev/sdb &gt; minix_make.data</span><br></pre></td></tr></table></figure>
+
+<p>进行查看：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000400  60 05 00 10 01 00 01 00  2f 00 00 00 00 1c 08 10  |`......./.......|</span><br><span class="line">00000410  8f 13 01 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000420  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000800  1f 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">000008a0  00 00 00 00 00 00 00 00  00 00 00 00 fe ff ff ff  |................|</span><br><span class="line">000008b0  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br><span class="line">*</span><br><span class="line">00000c00  1f 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000c10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000df0  00 00 00 00 00 00 00 00  00 00 fc ff ff ff ff ff  |................|</span><br><span class="line">00000e00  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br><span class="line">*</span><br><span class="line">00001000  ed 41 00 00 80 00 00 00  a1 7f 7f 68 00 03 2f 00  |.A.........h../.|</span><br><span class="line">00001010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001020  a4 81 00 00 0c 00 00 00  8c 7f 7f 68 00 01 30 00  |...........h..0.|</span><br><span class="line">00001030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001040  ed 41 00 00 60 00 00 00  b0 7f 7f 68 00 02 31 00  |.A..`......h..1.|</span><br><span class="line">00001050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001060  a4 81 00 00 0d 00 00 00  c4 7f 7f 68 00 01 32 00  |...........h..2.|</span><br><span class="line">00001070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000bc00  01 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc20  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc40  02 00 74 65 73 74 2e 63  00 00 00 00 00 00 00 00  |..test.c........|</span><br><span class="line">0000bc50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc60  03 00 68 65 61 64 00 00  00 00 00 00 00 00 00 00  |..head..........|</span><br><span class="line">0000bc70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000c000  68 65 6c 6c 6f 20 77 6f  72 6c 64 0a 00 00 00 00  |hello world.....|</span><br><span class="line">0000c010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000c400  03 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c410  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c420  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c430  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c440  04 00 68 65 61 64 2e 68  00 00 00 00 00 00 00 00  |..head.h........|</span><br><span class="line">0000c450  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000c800  68 65 61 64 68 65 61 64  68 65 61 64 0a 00 00 00  |headheadhead....|</span><br><span class="line">0000c810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00400000</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="super-block"><a href="#super-block" class="headerlink" title="super_block"></a>super_block</h2><p><strong>Super (Superblock - 超级块):</strong></p>
+<ul>
+<li><strong>作用：</strong> 文件系统的“总控信息中心”。存储描述<strong>整个文件系统</strong>的全局信息，如：<ul>
+<li>文件系统类型 (e.g., ext4, XFS)</li>
+<li>总大小、总块数</li>
+<li>空闲块数、空闲<code>inode</code>数</li>
+<li><code>inode</code>表的位置和大小</li>
+<li>块大小 (图中底部暗示为4KB)</li>
+<li>文件系统状态 (是否干净卸载)</li>
+</ul>
+</li>
+<li><strong>特点：</strong> 极其关键，损坏通常导致文件系统无法挂载。常有备份副本。</li>
+</ul>
+<p>我们打开<code>linux5.15</code>版本的<code>minix_fs.h</code>文件<a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.15/source/include/uapi/linux/minix_fs.h#L66">minix_fs.h - include&#x2F;uapi&#x2F;linux&#x2F;minix_fs.h - Linux source code v5.15 - Bootlin Elixir Cross Referencer</a>，可以查看到<code>minix_super_block</code>结构体的内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * minix super-block data on disk</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">minix_super_block</span> &#123;</span></span><br><span class="line">	__u16 s_ninodes;</span><br><span class="line">	__u16 s_nzones;</span><br><span class="line">	__u16 s_imap_blocks;</span><br><span class="line">	__u16 s_zmap_blocks;</span><br><span class="line">	__u16 s_firstdatazone;</span><br><span class="line">	__u16 s_log_zone_size;</span><br><span class="line">	__u32 s_max_size;</span><br><span class="line">	__u16 s_magic;</span><br><span class="line">	__u16 s_state;</span><br><span class="line">	__u32 s_zones;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>因为超级块在格式化生成后就不会进行更改</strong>，我们可以通过实验的数据可以查看到超级块的内容为：</p>
+<p><img src="image-20250722202952444.png" alt="image-20250722202952444"></p>
+<p><strong>超级块为小端存储</strong>，小端存储的解释可以参考文章最后一章节</p>
+<p>根据结构体我们将图中的变量大小依次解读，注释后结构体变量的内容如下所示：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">minix_super_block</span> &#123;</span></span><br><span class="line">	__u16 s_ninodes;<span class="comment">//0x0560,十进制1376，一共1376个inode节点+</span></span><br><span class="line">	__u16 s_nzones;<span class="comment">//0x1000,十进制4096，一共4096个data blocks</span></span><br><span class="line">	__u16 s_imap_blocks;<span class="comment">//0x0001,十进制1，inode位图占据1个block:</span></span><br><span class="line">	__u16 s_zmap_blocks;<span class="comment">//0x0001,十进制1，data block位图占据1个block</span></span><br><span class="line">	__u16 s_firstdatazone;<span class="comment">//0x002f,十进制47.第一个datablock的编号为47</span></span><br><span class="line">	__u16 s_log_zone_size;<span class="comment">//0x0000 一个datablock大小2^0.即1kB</span></span><br><span class="line">	__u32 s_max_size;<span class="comment">//0x10081c00,文件最大长度为268966912字节</span></span><br><span class="line">	__u16 s_magic;<span class="comment">//0x138f,minix文件系统的魔幻数：</span></span><br><span class="line">	__u16 s_state;<span class="comment">//0x0001,文件当前状态</span></span><br><span class="line">	__u32 s_zones;<span class="comment">//0x0000</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>对比我们格式化之后系统返回的信息可以知道超级块存储了磁盘的全局信息</p>
+<p><img src="image-20250722125940714.png" alt="image-20250722125940714"></p>
+<h2 id="i-bmap"><a href="#i-bmap" class="headerlink" title="i-bmap"></a>i-bmap</h2><p><strong>i-bmap (Inode Bitmap - Inode位图):</strong></p>
+<ul>
+<li><strong>作用：</strong> 一个简单的位数组（<code>bit array</code>），每个比特(<code>bit</code>)对应<code>inode</code>表中的一个<code>inode</code>条目。<ul>
+<li>比特值 <code>0</code> 表示对应的<code>inode</code>是<strong>空闲</strong>的。</li>
+<li>比特值 <code>1</code> 表示对应的<code>inode</code><strong>已被使用</strong>（分配给某个文件&#x2F;目录）。</li>
+</ul>
+</li>
+<li><strong>特点：</strong> 文件系统创建新文件&#x2F;目录时，快速扫描此位图寻找空闲<code>inode</code>号。高效管理<code>inode</code>分配状态。</li>
+</ul>
+<p>先看<code>inode bitmap</code>数据，磁盘刚刚格式化后的数据如下：</p>
+<p><img src="image-20250722205003000.png" alt="image-20250722205003000"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">00000800  1f 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">000008a0  00 00 00 00 00 00 00 00  00 00 00 00 fe ff ff ff  |................|</span><br><span class="line">000008b0  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br></pre></td></tr></table></figure>
+
+<p>磁盘格式化之后一共1376个<code>inode</code>。所以在<code>inode bitmap</code>要用1376个<code>bit</code>位来表示这些<code>inode</code></p>
+<p><img src="image-20250722205408017.png" alt="image-20250722205408017"></p>
+<p>从地址<code>0x800</code>到<code>0x8ab</code>，一共有172个字节，表示172*8&#x3D;1376个<code>inode</code>.<code>inode bitmap</code>地址的开头第一个字节<code>0x03→0b00000011</code>,<strong>第一个位图不使用，但是置为1</strong>，因此算上<code>0x8ac</code>地址上的<code>0xFE</code>上的最后一个<code>bit</code>位，正好是1376个<code>bit</code>位。</p>
+<h2 id="inode"><a href="#inode" class="headerlink" title="inode"></a>inode</h2><p><strong>The Inode Table (Closeup) - Inode 表</strong></p>
+<ul>
+<li><strong>作用：</strong> 这是文件系统的核心数据结构之一。&#x3D;&#x3D;每个文件或目录在inode表中都有一个<strong>唯一的inode条目</strong>&#x3D;&#x3D;。这个条目存储了文件的<strong>元数据</strong>（metadata），例如：<ul>
+<li>文件大小</li>
+<li>文件所有者（UID）和所属组（GID）</li>
+<li>文件权限（读、写、执行）</li>
+<li>文件创建、修改、访问时间戳</li>
+<li><strong>最关键的是：指向存储文件实际数据的数据块（data blocks）的指针。</strong></li>
+</ul>
+</li>
+<li><strong>图中的表示 (iblock 0 - iblock 4)：</strong><ul>
+<li>这里显示了文件系统保留的<strong>前5个磁盘块</strong>专门用于存储inode表 (<code>iblock</code> 即 “inode block”)。</li>
+<li>每个<code>iblock</code>可以容纳一定数量的inode结构体。图中没有展示单个inode内部的细节（如直接指针、间接指针等），而是强调了inode表本身占据的物理位置（块0-4）。</li>
+</ul>
+</li>
+<li><strong>特点：</strong><ul>
+<li><strong>固定位置&#x2F;大小：</strong> 通常在文件系统创建时确定大小和位置（常在超级块之后）。</li>
+<li><strong>索引作用：</strong> 文件名存储在目录的数据块中，目录条目将文件名映射到其对应的inode号。通过inode号即可在inode表中找到该文件的元数据和数据块指针。</li>
+<li>不存储文件名。</li>
+</ul>
+</li>
+</ul>
+<p>我们打开linux5.15版本的<code>minix_fs.h</code>文件<a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.15/source/include/uapi/linux/minix_fs.h#L35">minix_fs.h - include&#x2F;uapi&#x2F;linux&#x2F;minix_fs.h - Linux source code v5.15 - Bootlin Elixir Cross Referencer</a>，可以查看到<code>minix_inode</code>结构体的内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">minix_inode</span> &#123;</span></span><br><span class="line">	__u16 i_mode;<span class="comment">//权限</span></span><br><span class="line">	__u16 i_uid;<span class="comment">//文件所属用户</span></span><br><span class="line">	__u32 i_size;<span class="comment">//文件大小</span></span><br><span class="line">	__u32 i_time;<span class="comment">//文件时间戳</span></span><br><span class="line">	__u8  i_gid;<span class="comment">//文件所属组</span></span><br><span class="line">	__u8  i_nlinks;<span class="comment">//文件的引用计数</span></span><br><span class="line">	__u16 i_zone[<span class="number">9</span>];<span class="comment">//文件数据存储在data block上的位置</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>当用户使用<code>shell</code>命令<code>touch</code>或者<code>open</code>系统调用创建一个文件时，文件系统中会使用唯一的一个inode来标识这个文件的相关信息。</p>
+<p>所有文件的<code>inode</code>都保存在磁盘上的<code>inode table</code>上，文件系统使用<code>inode bitmap</code>来记录<code>inode table</code>中<code>inode</code>的使用情况。</p>
+<ul>
+<li><p>磁盘格式化后的<code>inode table</code>内容如下：</p>
+<p><img src="image-20250722210312356.png" alt="image-20250722210312356"></p>
+<p>结构体变量如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">minix_inode</span> &#123;</span></span><br><span class="line">	__u16 i_mode;<span class="comment">//权限 0x41ed,040755,目录文件rwxr-xr-X</span></span><br><span class="line">    			<span class="comment">//小端值：0x41ed（41为高位，ed为低位）</span></span><br><span class="line">    			<span class="comment">//二进制：0100 0001 1110 1101</span></span><br><span class="line">    			<span class="comment">//解析：</span></span><br><span class="line">    			<span class="comment">//文件类型（高 4 位）：0100 → 目录（0x4000）</span></span><br><span class="line">    			<span class="comment">//权限位（低 12 位）：0001 1110 1101 = 0755（八进制）</span></span><br><span class="line">    			<span class="comment">//用户： rwx (111)</span></span><br><span class="line">    			<span class="comment">//组：   r-x (101)</span></span><br><span class="line">    			<span class="comment">//其他： r-x (101)</span></span><br><span class="line">    			<span class="comment">//结论：目录文件，权限 rwxr-xr-x</span></span><br><span class="line">	__u16 i_uid;<span class="comment">//文件所属用户 0x0000,用户为root</span></span><br><span class="line">	__u32 i_size;<span class="comment">//文件大小 0x00000040,文件大小，64字节：</span></span><br><span class="line">	__u32 i_time;<span class="comment">//文件时间戳 0x687f1aa6</span></span><br><span class="line">	__u8  i_gid;<span class="comment">//文件所属组 0x00,属于用户组：root</span></span><br><span class="line">	__u8  i_nlinks;<span class="comment">//文件的引用计数 0x02 父目录和当前目录都指向根目录     硬链接数=2（.和..）</span></span><br><span class="line">	__u16 i_zone[<span class="number">9</span>];<span class="comment">//文件数据存储在data block上的位置 0x002f,47,数据在第47个data block数据块</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>我们找到第47个数据块为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0000bc00  01 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc20  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br></pre></td></tr></table></figure>
+
+<p>分析内容：</p>
+<p>地址 <code>0000bc00</code> 处的数据：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0000bc00  01 00 2e 00 00 00 00 00  → inode=1, name=&quot;.&quot;</span><br><span class="line">0000bc20  01 00 2e 2e 00 00 00 00 → inode=1, name=&quot;..&quot;</span><br></pre></td></tr></table></figure>
+
+<p>按 <code>struct minix_dir_entry</code> 解析：</p>
+<ul>
+<li><strong>条目1</strong>：<ul>
+<li><code>inode=0x0001</code>（&#x3D;&#x3D;根目录自身&#x3D;&#x3D;）</li>
+<li><code>name=&quot;.&quot;</code>（当前目录）</li>
+</ul>
+</li>
+<li><strong>条目2</strong>：<ul>
+<li><code>inode=0x0001</code>（&#x3D;&#x3D;根目录的父目录仍是自身&#x3D;&#x3D;）</li>
+<li><code>name=&quot;..&quot;</code>（父目录）</li>
+</ul>
+</li>
+</ul>
+<p><strong>目录项结构</strong>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">minix_dir_entry</span> &#123;</span></span><br><span class="line">    __u16 inode;          <span class="comment">// 文件/目录对应的 inode 号</span></span><br><span class="line">    <span class="type">char</span> name[<span class="number">0</span>];         <span class="comment">// 文件名（变长数组，实际存储在后方）</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>验证</strong>：</p>
+<ul>
+<li>每个目录项占 16 字节（2+14）。</li>
+<li>总大小&#x3D;64字节（与 inode 的 <code>i_size=64</code> 一致）。</li>
+</ul>
+</li>
+<li><p>当我们在磁盘中生成文件之后文件的<code>inode_table</code>块内容如下：</p>
+<p><img src="image-20250722214206993.png" alt="image-20250722214206993"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">00001000  ed 41 00 00 80 00 00 00  a1 7f 7f 68 00 03 2f 00  |.A.........h../.|</span><br><span class="line">00001010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001020  a4 81 00 00 0c 00 00 00  8c 7f 7f 68 00 01 30 00  |...........h..0.|</span><br><span class="line">00001030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001040  ed 41 00 00 60 00 00 00  b0 7f 7f 68 00 02 31 00  |.A..`......h..1.|</span><br><span class="line">00001050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001060  a4 81 00 00 0d 00 00 00  c4 7f 7f 68 00 01 32 00  |...........h..2.|</span><br><span class="line">00001070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>我们进行了三个操作，生成的文件结构如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@xnj-virtual-machine:/mnt# tree</span><br><span class="line">.</span><br><span class="line">├── head</span><br><span class="line">│   └── head.h</span><br><span class="line">└── test.c</span><br><span class="line"></span><br><span class="line">1 directory, 2 files</span><br></pre></td></tr></table></figure>
+
+<p>现在进行逐个分析：</p>
+<ul>
+<li><p>第一个：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">00001000  ed 41 00 00 80 00 00 00  a1 7f 7f 68 00 03 2f 00  |.A.........h../.|</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>内存字节</th>
+<th>十六进制值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>i_mode</code></td>
+<td><code>41 ed</code></td>
+<td><code>0x41ed</code></td>
+<td>权限<code>rw-r-xr-x</code>（目录文件）</td>
+</tr>
+<tr>
+<td><code>i_uid</code></td>
+<td><code>00 00</code></td>
+<td><code>0x0000</code></td>
+<td>所属用户<code>root</code></td>
+</tr>
+<tr>
+<td><code>i_size</code></td>
+<td><code>80 00 00 00</code></td>
+<td><code>0x00000080</code></td>
+<td>文件大小<code>128 字节</code></td>
+</tr>
+<tr>
+<td><code>i_time</code></td>
+<td><code>a1 7f 7f 68</code></td>
+<td><code>0x687f7fa1</code></td>
+<td>时间戳</td>
+</tr>
+<tr>
+<td><code>i_gid</code></td>
+<td><code>00</code></td>
+<td><code>0x00</code></td>
+<td>所属用户组<code>root</code></td>
+</tr>
+<tr>
+<td><code>i_nlinks</code></td>
+<td><code>03</code></td>
+<td><code>0x03 </code></td>
+<td>引用计数</td>
+</tr>
+<tr>
+<td><code>i_zone[9]</code></td>
+<td><code>2f 00</code></td>
+<td><code>0x002f</code></td>
+<td>数据块位置<code>47</code></td>
+</tr>
+</tbody></table>
+<p>我们查看第47块数据块，内容如下：</p>
+<p><img src="image-20250722220811267.png" alt="image-20250722220811267"></p>
+<ul>
+<li><p>第一行：<code>2e</code>：点号 <code>.</code></p>
+</li>
+<li><p>第三行：两个点号<code>..</code></p>
+</li>
+<li><p>第五行：</p>
+<table>
+<thead>
+<tr>
+<th>字节值</th>
+<th>ASCII字符</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>74</code></td>
+<td><code>t</code></td>
+<td>字母<code>t</code></td>
+</tr>
+<tr>
+<td><code>65</code></td>
+<td><code>e</code></td>
+<td>字母<code>e</code></td>
+</tr>
+<tr>
+<td><code>73</code></td>
+<td><code>s</code></td>
+<td>字母<code>s</code></td>
+</tr>
+<tr>
+<td><code>74</code></td>
+<td><code>t</code></td>
+<td>字母<code>t</code></td>
+</tr>
+<tr>
+<td><code>2e</code></td>
+<td><code>.</code></td>
+<td>字母<code>.</code></td>
+</tr>
+<tr>
+<td><code>63</code></td>
+<td><code>c</code></td>
+<td>字母<code>c</code></td>
+</tr>
+</tbody></table>
+</li>
+<li><p>第七行：</p>
+<table>
+<thead>
+<tr>
+<th>字节值</th>
+<th>ASCII字符</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>68</code></td>
+<td><code>h</code></td>
+<td>字母<code>h</code></td>
+</tr>
+<tr>
+<td><code>65</code></td>
+<td><code>e</code></td>
+<td>字母<code>e</code></td>
+</tr>
+<tr>
+<td><code>61</code></td>
+<td><code>a</code></td>
+<td>字母<code>a</code></td>
+</tr>
+<tr>
+<td><code>64</code></td>
+<td><code>d</code></td>
+<td>字母<code>d</code></td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+</li>
+<li><p>第二个：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">00001020  a4 81 00 00 0c 00 00 00  8c 7f 7f 68 00 01 30 00  |...........h..0.|</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>内存字节</th>
+<th>十六进制值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>i_mode</code></td>
+<td><code>81 a4</code></td>
+<td><code>0x81a4</code></td>
+<td>权限<code>rw-rw-r--</code>（普通文件）</td>
+</tr>
+<tr>
+<td><code>i_uid</code></td>
+<td><code>00 00</code></td>
+<td><code>0x0000</code></td>
+<td>所属用户<code>root</code></td>
+</tr>
+<tr>
+<td><code>i_size</code></td>
+<td><code>0c 00 00 00</code></td>
+<td><code>0x0000000c</code></td>
+<td>文件大小<code>12 字节</code></td>
+</tr>
+<tr>
+<td><code>i_time</code></td>
+<td><code>8c 7f 7f 68</code></td>
+<td><code>0x687f7f8c</code></td>
+<td>时间戳（需转换为可读时间）</td>
+</tr>
+<tr>
+<td><code>i_gid</code></td>
+<td><code>00</code></td>
+<td><code>0x00</code></td>
+<td>所属用户组<code>root</code></td>
+</tr>
+<tr>
+<td><code>i_nlinks</code></td>
+<td><code>01</code></td>
+<td><code>0x01</code></td>
+<td>引用计数</td>
+</tr>
+<tr>
+<td><code>i_zone[9]</code></td>
+<td><code>30 00</code></td>
+<td><code>0x0030</code></td>
+<td>数据块位置<code>48</code></td>
+</tr>
+</tbody></table>
+<p>我们查看第48块数据块，内容如下：</p>
+<p><img src="image-20250722215833683.png" alt="image-20250722215833683"></p>
+<p>根据内容我们可以知道</p>
+<table>
+<thead>
+<tr>
+<th>字节值</th>
+<th>ASCII字符</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>68</code></td>
+<td><code>h</code></td>
+<td>字母<code>h</code></td>
+</tr>
+<tr>
+<td><code>65</code></td>
+<td><code>e</code></td>
+<td>字母<code>e</code></td>
+</tr>
+<tr>
+<td><code>6c</code></td>
+<td><code>l</code></td>
+<td>字母<code>l</code></td>
+</tr>
+<tr>
+<td><code>6c</code></td>
+<td><code>l</code></td>
+<td>字母<code>l</code></td>
+</tr>
+<tr>
+<td><code>6f</code></td>
+<td><code>o</code></td>
+<td>字母<code>o</code></td>
+</tr>
+<tr>
+<td><code>20</code></td>
+<td>&#96;&#96;</td>
+<td>空格</td>
+</tr>
+<tr>
+<td><code>77</code></td>
+<td><code>w</code></td>
+<td>字母<code>w</code></td>
+</tr>
+<tr>
+<td><code>6f</code></td>
+<td><code>o</code></td>
+<td>字母<code>o</code></td>
+</tr>
+<tr>
+<td><code>72</code></td>
+<td><code>r</code></td>
+<td>字母<code>r</code></td>
+</tr>
+<tr>
+<td><code>6c</code></td>
+<td><code>l</code></td>
+<td>字母<code>l</code></td>
+</tr>
+<tr>
+<td><code>64</code></td>
+<td><code>d</code></td>
+<td>字母<code>d</code></td>
+</tr>
+<tr>
+<td><code>0a</code></td>
+<td><code>\n</code></td>
+<td>换行符（Line Feed）</td>
+</tr>
+<tr>
+<td><code>00</code></td>
+<td><code>\0</code></td>
+<td>空字符（Null Terminator）</td>
+</tr>
+<tr>
+<td><code>00</code></td>
+<td><code>\0</code></td>
+<td>空字符</td>
+</tr>
+<tr>
+<td><code>00</code></td>
+<td><code>\0</code></td>
+<td>空字符</td>
+</tr>
+<tr>
+<td><code>00</code></td>
+<td><code>\0</code></td>
+<td>空字符</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>略</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="d-bitmap"><a href="#d-bitmap" class="headerlink" title="d-bitmap"></a>d-bitmap</h2><p><strong>d-bmap (Data Block Bitmap - 数据块位图):</strong></p>
+<ul>
+<li><p><strong>作用：</strong> 一个简单的位数组（bit array），每个比特(bit)对应文件系统中的一个<strong>数据块</strong>。</p>
+<ul>
+<li>比特值 <code>0</code> 表示对应的数据块是<strong>空闲</strong>的。</li>
+<li>比特值 <code>1</code> 表示对应的数据块<strong>已被使用</strong>（存储了文件&#x2F;目录数据或间接块指针）。</li>
+</ul>
+</li>
+<li><p><strong>特点：</strong> 文件系统需要为文件分配存储空间时，快速扫描此位图寻找连续或分散的空闲数据块。高效管理磁盘空间分配状态。</p>
+</li>
+<li><p>磁盘格式化后的<code>d-bmap</code>内容如下：</p>
+</li>
+<li><p><img src="image-20250722210632108.png" alt="image-20250722210632108"></p>
+</li>
+</ul>
+<p>实验的4MB大小的磁盘格式化后，一共4096个<code>block</code>，每个<code>block</code>大小为1KB。</p>
+<p><img src="image-20250722211413556.png" alt="image-20250722211413556"></p>
+<p>格式化之后显示首个数据区为47，因为前面的引导块、超级块、<code>inode_table</code>、<code>i-bmap</code>、<code>d-bmap</code>占据了0~46总共47个<code>block</code>,所以还剩下的<code>data block</code>数量为4049个。</p>
+<p><code>bitmap</code>中需要4049个<code>bit</code>位来表示这些<code>block</code>的使用情况。我们从<code>d-bmap</code>内容可以知道从<code>0xc00</code>到<code>0xdf9</code>一共有506个字节，加上<code>0xdfa</code>上的数据<code>0xfc</code>的2个<code>bit</code>位，再减去起始位置的一个bit位，一共是4049位。</p>
+<p><img src="image-20250722212758769.png" alt="image-20250722212758769"></p>
+<p>通过计算知道第一个数据块的起始地址为<code>0xbc00</code>，我们找到第一个数据块，内容如下：</p>
+<p><img src="image-20250722213132239.png" alt="image-20250722213132239"></p>
+<p>第一个数据块的数据，其实是根目录的数据区，格式化后的文件系统里面什么都没有，但是会有一个根目录。目录项在文件系统中也是一个文件，也会用唯一的<code>inode</code>来标识</p>
+<h2 id="目录文件"><a href="#目录文件" class="headerlink" title="目录文件"></a>目录文件</h2><p>文件目录的本质是一个文件，有自己的inode，在inode中将该文件类型标记为”目录“，和普通文件不同的是，普通文件的块里面保存的是文件数据，而目录文件的块里面保存的是目录里面一项一项的文件信息。</p>
+<p>在目录文件的块中，最简单的保存格式就是<strong>列表</strong>，就是一项一项地将目录下的文件信息（如文件名、文件inode、文件类型等)列在表里。列表中每一项就代表该目录下的文件的文件名和对应的inode,通过这个inode,就可以找到真正的文件。</p>
+<img src="%E7%9B%AE%E5%BD%95%E5%93%88%E5%B8%8C%E8%A1%A8.png" alt="目录格式哈希表" style="zoom: 50%;">
+
+<p>通常，第一项是<code>.</code>，表示当前目录，第二项是<code>..</code>，表示上一级目录，接下来就是一项一项的文件名和inode.</p>
+<p>如果一个目录有超级多的文件，我们要想在这个目录下找文件，按照列表一项一项的找，效率就不高了。于是，保存目录的格式改成<strong>哈希表</strong>，对文件名进行哈希计算，把哈希值保存起来，如果我们要查找一个目录下面的文件名，可以通过名称取哈希。</p>
+<p>如果哈希能够匹配上，就说明这个文件的信息在相应的块里面。Linux系统的ext2文件系统就是采用了哈希表，来保存目录的内容，这种方法的优点是查找非常速，插入和删除也较简单。目录查询是通过在磁盘上反复搜索完成，需要不断地进行I&#x2F;O操作，开销较大。所以，为了减少I&#x2F;O操作，把当前使用的文件目录缓存在内存，以后要使用该文件时只要在内存中操作，从而降低了磁盘操作次数，提高了文件系统的访问速度。</p>
+<h3 id="文件目录项entry数据结构"><a href="#文件目录项entry数据结构" class="headerlink" title="文件目录项entry数据结构"></a>文件目录项entry数据结构</h3><h4 id="minix文件系统"><a href="#minix文件系统" class="headerlink" title="minix文件系统"></a>minix文件系统</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">minix_dir_entry</span> &#123;</span></span><br><span class="line">    __u16 inode;          <span class="comment">// 文件/目录对应的 inode 号</span></span><br><span class="line">    <span class="type">char</span> name[<span class="number">0</span>];         <span class="comment">// 文件名（变长数组，实际存储在后方）</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>结构体变量：</strong></p>
+<ol>
+<li><strong>固定部分</strong>（2字节）：<code>inode</code> 字段</li>
+<li><strong>可变部分</strong>：<code>name</code> 字段存储在 <code>inode</code> 之后的内存空间</li>
+<li><strong>无长度字段</strong>：依赖特殊规则确定文件名长度（如遇空字符终止）</li>
+</ol>
+<h4 id="ext2-ext3文件系统"><a href="#ext2-ext3文件系统" class="headerlink" title="ext2&#x2F;ext3文件系统"></a>ext2&#x2F;ext3文件系统</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext2_dir_entry_2</span> &#123;</span></span><br><span class="line">    __u32 inode;          <span class="comment">// 文件/目录的 inode 号</span></span><br><span class="line">    __u16 rec_len;        <span class="comment">// 当前目录项的总长度（含填充）</span></span><br><span class="line">    __u8 name_len;        <span class="comment">// 文件名的实际长度</span></span><br><span class="line">    __u8 file_type;       <span class="comment">// 文件类型标识</span></span><br><span class="line">    <span class="type">char</span> name[];          <span class="comment">// 文件名（变长数组）</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>各字段详解：</strong></p>
+<ol>
+<li><p><strong><code>__u32 inode</code></strong></p>
+<ul>
+<li><strong>作用</strong>：存储该目录项对应的 <strong>inode 编号</strong></li>
+<li><strong>意义</strong>：通过此编号可在 inode 表中找到文件元数据和数据块位置</li>
+<li><strong>特点</strong>：32 位支持更多文件（Minix 仅 16 位）</li>
+</ul>
+</li>
+<li><p><strong><code>__u16 rec_len</code></strong></p>
+<ul>
+<li><strong>作用</strong>：记录 <strong>整个目录项占用的字节数</strong>（包括填充字节）</li>
+<li><strong>意义</strong>：<ul>
+<li>用于遍历目录：<code>下一个条目地址 = 当前地址 + rec_len</code></li>
+<li>删除文件时：扩展前一项的 <code>rec_len</code> 覆盖被删项（避免碎片）</li>
+</ul>
+</li>
+<li><strong>特点</strong>：长度按 4 字节对齐（提高访问效率）</li>
+</ul>
+</li>
+<li><p><strong><code>__u8 name_len</code></strong></p>
+<ul>
+<li><strong>作用</strong>：存储 <strong>文件名的实际长度</strong>（单位：字节）</li>
+<li><strong>意义</strong>：动态确定文件名边界（支持最长 255 字符）</li>
+<li><strong>示例</strong>：文件名 <code>a.txt</code> → <code>name_len = 6</code></li>
+</ul>
+</li>
+<li><p><strong><code>__u8 file_type</code></strong></p>
+<ul>
+<li><p><strong>作用</strong>：标识 <strong>文件类型</strong>，避免查询 inode</p>
+</li>
+<li><p><strong>常见值</strong>：</p>
+<p>c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_UNKNOWN   0  <span class="comment">// 未知类型</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_REG_FILE  1  <span class="comment">// 普通文件</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_DIR       2  <span class="comment">// 目录</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_CHRDEV    3  <span class="comment">// 字符设备</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_BLKDEV    4  <span class="comment">// 块设备</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_FIFO      5  <span class="comment">// 管道</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_SOCK      6  <span class="comment">// 套接字</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT2_FT_SYMLINK   7  <span class="comment">// 符号链接</span></span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong><code>char name[]</code></strong></p>
+<ul>
+<li><strong>作用</strong>：存储 <strong>文件名</strong>（变长数组，不以 <code>\0</code> 结尾）</li>
+<li><strong>特点</strong>：<ul>
+<li>实际占用空间 &#x3D; <code>name_len</code> 字节</li>
+<li>与后续字段间可能有<strong>填充字节</strong>（满足 4 字节对齐）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="文件查找流程"><a href="#文件查找流程" class="headerlink" title="文件查找流程"></a>文件查找流程</h4><p>我们实验使用<code>minix</code>文件系统，我们查找文件<code>/head/head.h</code>，流程如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000400  60 05 00 10 01 00 01 00  2f 00 00 00 00 1c 08 10  |`......./.......|</span><br><span class="line">00000410  8f 13 01 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000420  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000800  1f 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">000008a0  00 00 00 00 00 00 00 00  00 00 00 00 fe ff ff ff  |................|</span><br><span class="line">000008b0  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br><span class="line">*</span><br><span class="line">00000c00  1f 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00000c10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00000df0  00 00 00 00 00 00 00 00  00 00 fc ff ff ff ff ff  |................|</span><br><span class="line">00000e00  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|</span><br><span class="line">*</span><br><span class="line">00001000  ed 41 00 00 80 00 00 00  a1 7f 7f 68 00 03 2f 00  |.A.........h../.|</span><br><span class="line">00001010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001020  a4 81 00 00 0c 00 00 00  8c 7f 7f 68 00 01 30 00  |...........h..0.|</span><br><span class="line">00001030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001040  ed 41 00 00 60 00 00 00  b0 7f 7f 68 00 02 31 00  |.A..`......h..1.|</span><br><span class="line">00001050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001060  a4 81 00 00 0d 00 00 00  c4 7f 7f 68 00 01 32 00  |...........h..2.|</span><br><span class="line">00001070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000bc00  01 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc20  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc40  02 00 74 65 73 74 2e 63  00 00 00 00 00 00 00 00  |..test.c........|</span><br><span class="line">0000bc50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc60  03 00 68 65 61 64 00 00  00 00 00 00 00 00 00 00  |..head..........|</span><br><span class="line">0000bc70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000c000  68 65 6c 6c 6f 20 77 6f  72 6c 64 0a 00 00 00 00  |hello world.....|</span><br><span class="line">0000c010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000c400  03 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c410  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c420  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c430  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c440  04 00 68 65 61 64 2e 68  00 00 00 00 00 00 00 00  |..head.h........|</span><br><span class="line">0000c450  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">0000c800  68 65 61 64 68 65 61 64  68 65 61 64 0a 00 00 00  |headheadhead....|</span><br><span class="line">0000c810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">*</span><br><span class="line">00400000</span><br></pre></td></tr></table></figure>
+
+<p>首先解析<code>/</code>根目录，我们在inode table中找到根目录的内容：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">00001000  ed 41 00 00 80 00 00 00  a1 7f 7f 68 00 03 2f 00  |.A.........h../.|</span><br></pre></td></tr></table></figure>
+
+<p>我们对内容进行分析可以得知</p>
+<table>
+<thead>
+<tr>
+<th align="left">字段</th>
+<th align="left">原始字节</th>
+<th align="left">小端值</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>i_mode</strong></td>
+<td align="left"><code>ed 41</code></td>
+<td align="left"><code>0x41ed</code></td>
+<td align="left">目录文件，权限 <code>rwxr-xr-x</code></td>
+</tr>
+<tr>
+<td align="left"><strong>i_uid</strong></td>
+<td align="left"><code>00 00</code></td>
+<td align="left"><code>0x0000</code></td>
+<td align="left">所属用户：root (UID&#x3D;0)</td>
+</tr>
+<tr>
+<td align="left"><strong>i_size</strong></td>
+<td align="left"><code>80 00 00 00</code></td>
+<td align="left"><code>0x00000080</code></td>
+<td align="left">大小：128 字节</td>
+</tr>
+<tr>
+<td align="left"><strong>i_time</strong></td>
+<td align="left"><code>a1 7f 7f 68</code></td>
+<td align="left"><code>0x687f7fa1</code></td>
+<td align="left">时间戳：2025-09-28 08:30:41</td>
+</tr>
+<tr>
+<td align="left"><strong>i_gid</strong></td>
+<td align="left"><code>00</code></td>
+<td align="left"><code>0x00</code></td>
+<td align="left">所属组：root (GID&#x3D;0)</td>
+</tr>
+<tr>
+<td align="left"><strong>i_nlinks</strong></td>
+<td align="left"><code>03</code></td>
+<td align="left"><code>0x03</code></td>
+<td align="left">硬链接数：3</td>
+</tr>
+<tr>
+<td align="left"><strong>i_zone[9]</strong></td>
+<td align="left"><code>2f 00</code></td>
+<td align="left"><code>0x002f</code></td>
+<td align="left">数据块位置：47</td>
+</tr>
+</tbody></table>
+<p>可以知道根目录的纯数据存放在47的数据块中，我们找到47*1024&#x3D;<code>0xbc00</code>，数据块中的内容为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">0000bc00  01 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc10  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc20  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc30  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc40  02 00 74 65 73 74 2e 63  00 00 00 00 00 00 00 00  |..test.c........|</span><br><span class="line">0000bc50  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000bc60  03 00 68 65 61 64 00 00  00 00 00 00 00 00 00 00  |..head..........|</span><br><span class="line">0000bc70  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br></pre></td></tr></table></figure>
+
+<p>这个数据块保存的是目录文件的内容，根据结构体<code>struct minix_dir_entry</code>可以得知每行的内容结构为<code>inode+name</code>，当我们找到了<code>/</code>之后，进一步查找内容<code>head</code>，我们根据内容可以知道<code>head</code>存储在如下的地址：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0000bc60  03 00 68 65 61 64 00 00  00 00 00 00 00 00 00 00  |..head..........|</span><br></pre></td></tr></table></figure>
+
+<p>可以知道<code>head</code>的<code>inode</code>为3，因此我们可以知道<code>head</code>在<code>inode table</code>中条目的顺序为3，我们返回<code>inode table</code>的内容中，看到内容为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">00001000  ed 41 00 00 80 00 00 00  a1 7f 7f 68 00 03 2f 00  |.A.........h../.|</span><br><span class="line">00001010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001020  a4 81 00 00 0c 00 00 00  8c 7f 7f 68 00 01 30 00  |...........h..0.|</span><br><span class="line">00001030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001040  ed 41 00 00 60 00 00 00  b0 7f 7f 68 00 02 31 00  |.A..`......h..1.|</span><br><span class="line">00001050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">00001060  a4 81 00 00 0d 00 00 00  c4 7f 7f 68 00 01 32 00  |...........h..2.|</span><br><span class="line">00001070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br></pre></td></tr></table></figure>
+
+<p><code>inode</code>为1的时候地址为<code>0x00001000</code>，因此我们可以通过计算得知<code>head</code>的<code>inode</code>信息存放在<code>0x00001000+sizeof(struct minix_inode)*(3-1)=0x00001040</code>，于是我们在地址<code>0x00001040</code>中可以找到<code>head</code>的<code>inode</code>信息为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">00001040  ed 41 00 00 60 00 00 00  b0 7f 7f 68 00 02 31 00  |.A..`......h..1.|</span><br></pre></td></tr></table></figure>
+
+<p>我们对内容进行分析可以得知</p>
+<table>
+<thead>
+<tr>
+<th align="left">字段</th>
+<th align="left">原始字节</th>
+<th align="left">小端值</th>
+<th align="left">解析结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>i_mode</strong></td>
+<td align="left"><code>ed 41</code></td>
+<td align="left"><code>0x41ed</code></td>
+<td align="left">目录文件，权限 <code>rwxr-xr-x</code></td>
+</tr>
+<tr>
+<td align="left"><strong>i_uid</strong></td>
+<td align="left"><code>00 00</code></td>
+<td align="left"><code>0x0000</code></td>
+<td align="left">root 用户 (UID&#x3D;0)</td>
+</tr>
+<tr>
+<td align="left"><strong>i_size</strong></td>
+<td align="left"><code>60 00 00 00</code></td>
+<td align="left"><code>0x00000060</code></td>
+<td align="left">文件大小：96 字节</td>
+</tr>
+<tr>
+<td align="left"><strong>i_time</strong></td>
+<td align="left"><code>b0 7f 7f 68</code></td>
+<td align="left"><code>0x687f7fb0</code></td>
+<td align="left">时间戳：2025-09-28 08:30:40</td>
+</tr>
+<tr>
+<td align="left"><strong>i_gid</strong></td>
+<td align="left"><code>00</code></td>
+<td align="left"><code>0x00</code></td>
+<td align="left">root 组 (GID&#x3D;0)</td>
+</tr>
+<tr>
+<td align="left"><strong>i_nlinks</strong></td>
+<td align="left"><code>02</code></td>
+<td align="left"><code>0x02</code></td>
+<td align="left">硬链接数：2</td>
+</tr>
+<tr>
+<td align="left"><strong>i_zone[0]</strong></td>
+<td align="left"><code>31 00</code></td>
+<td align="left"><code>0x0031</code></td>
+<td align="left">数据块位置：49</td>
+</tr>
+</tbody></table>
+<p>我们找到49的数据块位置，内容为下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">0000c400  03 00 2e 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c410  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c420  01 00 2e 2e 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c430  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br><span class="line">0000c440  04 00 68 65 61 64 2e 68  00 00 00 00 00 00 00 00  |..head.h........|</span><br><span class="line">0000c450  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br></pre></td></tr></table></figure>
+
+<p>同理我们知道<code>head.h</code>在<code>inode table</code>中条目的顺序为4，内容如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">00001060  a4 81 00 00 0d 00 00 00  c4 7f 7f 68 00 01 32 00  |...........h..2.|</span><br></pre></td></tr></table></figure>
+
+<p>分析内容：</p>
+<table>
+<thead>
+<tr>
+<th align="left">字段</th>
+<th align="left">原始字节</th>
+<th align="left">小端值</th>
+<th align="left">解析结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>i_mode</strong></td>
+<td align="left"><code>a4 81</code></td>
+<td align="left"><code>0x81a4</code></td>
+<td align="left">普通文件，权限 <code>rw-r--r--</code></td>
+</tr>
+<tr>
+<td align="left"><strong>i_uid</strong></td>
+<td align="left"><code>00 00</code></td>
+<td align="left"><code>0x0000</code></td>
+<td align="left">root 用户 (UID&#x3D;0)</td>
+</tr>
+<tr>
+<td align="left"><strong>i_size</strong></td>
+<td align="left"><code>0d 00 00 00</code></td>
+<td align="left"><code>0x0000000d</code></td>
+<td align="left">文件大小：13 字节</td>
+</tr>
+<tr>
+<td align="left"><strong>i_time</strong></td>
+<td align="left"><code>c4 7f 7f 68</code></td>
+<td align="left"><code>0x687f7fc4</code></td>
+<td align="left">时间戳：2025-09-28 08:30:44</td>
+</tr>
+<tr>
+<td align="left"><strong>i_gid</strong></td>
+<td align="left"><code>00</code></td>
+<td align="left"><code>0x00</code></td>
+<td align="left">root 组 (GID&#x3D;0)</td>
+</tr>
+<tr>
+<td align="left"><strong>i_nlinks</strong></td>
+<td align="left"><code>01</code></td>
+<td align="left"><code>0x01</code></td>
+<td align="left">硬链接数：1</td>
+</tr>
+<tr>
+<td align="left"><strong>i_zone[0]</strong></td>
+<td align="left"><code>32 00</code></td>
+<td align="left"><code>0x0032</code></td>
+<td align="left">数据块位置：50</td>
+</tr>
+</tbody></table>
+<p>因此我们就可以找到<code>/head/head.h</code>文件的纯数据就保存在50的数据块中，内容如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0000c800  68 65 61 64 68 65 61 64  68 65 61 64 0a 00 00 00  |headheadhead....|</span><br><span class="line">0000c810  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</span><br></pre></td></tr></table></figure>
+
+<h2 id="硬链接与软链接"><a href="#硬链接与软链接" class="headerlink" title="硬链接与软链接"></a>硬链接与软链接</h2><table>
+<thead>
+<tr>
+<th align="left"><strong>特性</strong></th>
+<th align="left"><strong>硬链接（Hard Link）</strong></th>
+<th align="left"><strong>软链接（Symbolic Link）</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>本质</strong></td>
+<td align="left">多个目录项指向同一个 inode</td>
+<td align="left">特殊文件，内容存储目标文件的路径</td>
+</tr>
+<tr>
+<td align="left"><strong>inode 关系</strong></td>
+<td align="left">共享相同 inode</td>
+<td align="left">拥有独立 inode</td>
+</tr>
+<tr>
+<td align="left"><strong>跨文件系统</strong></td>
+<td align="left">❌ 不支持</td>
+<td align="left">✅ 支持</td>
+</tr>
+<tr>
+<td align="left"><strong>原始文件删除</strong></td>
+<td align="left">不影响硬链接访问（inode 引用计数减1）<br><strong>只有删除文件的所有硬链接以及源文件时，系统才会彻底删除该文件。</strong></td>
+<td align="left">导致链接失效（”断链”）</td>
+</tr>
+<tr>
+<td align="left"><strong>文件类型</strong></td>
+<td align="left">与原文件相同</td>
+<td align="left">固定为符号链接类型（<code>l</code>）</td>
+</tr>
+<tr>
+<td align="left"><strong>命令示例</strong></td>
+<td align="left"><code>ln source.txt hardlink.txt</code></td>
+<td align="left"><code>ln -s source.txt softlink.txt</code></td>
+</tr>
+</tbody></table>
+<p>硬链接是 inode 的别名，软链接是路径的快捷方式。</p>
+<p>我们在实验中使用的Minix系统，<code>minix_inode</code>结构体中的<code>__u8  i_nlinks</code>，这个变量就表示这个文件的硬链接</p>
+<p>目录文件的硬链接有以下部分组成：</p>
+<ul>
+<li><strong>自身引用</strong>：目录自身的 <code>.</code> 条目。</li>
+<li><strong>子目录引用</strong>：<strong>至少有一个子目录</strong>的 <code>..</code> 指向它。</li>
+</ul>
+<p>每增加一个子目录，父目录的硬链接数+1</p>
+<p><img src="%E7%A1%AC%E9%93%BE%E6%8E%A5-2.png" alt="硬链接"></p>
+<p><img src="%E8%BD%AF%E9%93%BE%E6%8E%A5.png" alt="软链接"></p>
+<p><strong>例子：</strong></p>
+<p>我们实验中磁盘的树结构为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">root@xnj-virtual-machine:/mnt# tree</span><br><span class="line">.</span><br><span class="line">├── head</span><br><span class="line">│   └── head.h</span><br><span class="line">└── test.c</span><br><span class="line"></span><br><span class="line">1 directory, 2 files</span><br></pre></td></tr></table></figure>
+
+<p>按照理论来讲<code>/</code>根目录的硬链接数为3，因为本身的条目<code>.</code>与<code>..</code>都指向自己，其下还有一个子目录<code>head</code>中的<code>..</code>也指向它。那么我们来查看实际是否是这样的呢？我们在<code>inode</code>章节的分析可以验证理论是正确的！</p>
+<p><img src="image-20250723151212774.png" alt="image-20250723151212774"></p>
+<h1 id="大小端存储"><a href="#大小端存储" class="headerlink" title="大小端存储"></a>大小端存储</h1><p><strong>大小端存储（Endianness）</strong> 是指多字节数据类型（如整数、浮点数等）在内存中的存储方式。它决定了数据的高字节（Most Significant Byte, MSB）和低字节（Least Significant Byte, LSB）在内存中的排列顺序。这一概念对数据的跨平台兼容性、网络通信以及编程实践至关重要。</p>
+<h2 id="大小端的定义"><a href="#大小端的定义" class="headerlink" title="大小端的定义"></a>大小端的定义</h2><ul>
+<li><p><strong>大端序（Big-Endian）</strong> </p>
+<p>高字节（MSB）存储在内存的<strong>低地址</strong>，低字节（LSB）存储在<strong>高地址</strong>。  </p>
+<p><strong>示例</strong>：  </p>
+<p>一个 32 位整数 <code>0x12345678</code> 在大端序中的内存布局为：  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">地址 0: 0x12（MSB）</span><br><span class="line">地址 1: 0x34</span><br><span class="line">地址 2: 0x56</span><br><span class="line">地址 3: 0x78（LSB）</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>小端序（Little-Endian）</strong>  </p>
+<p>低字节（LSB）存储在内存的<strong>低地址</strong>，高字节（MSB）存储在<strong>高地址</strong>。  </p>
+<p><strong>示例</strong>：  </p>
+<p>同一整数 <code>0x12345678</code> 在小端序中的内存布局为：  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">地址 0: 0x78（LSB）</span><br><span class="line">地址 1: 0x56</span><br><span class="line">地址 2: 0x34</span><br><span class="line">地址 3: 0x12（MSB）</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="如何检测系统的字节序？"><a href="#如何检测系统的字节序？" class="headerlink" title="如何检测系统的字节序？"></a>如何检测系统的字节序？</h2><p>可以通过一段简单的代码判断系统是大端还是小端：  </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> num = <span class="number">0x12345678</span>; <span class="comment">// 32位整数</span></span><br><span class="line">    <span class="type">char</span> *byte = (<span class="type">char</span> *)&amp;num;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (*byte == <span class="number">0x78</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Little-Endian\n&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (*byte == <span class="number">0x12</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Big-Endian\n&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Unknown Endianness\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>输出</strong>：  </p>
+<ul>
+<li>在 x86（小端）系统上会输出 <code>Little-Endian</code>。  </li>
+<li>在 ARM（可配置）或网络协议（强制大端）上可能输出 <code>Big-Endian</code>。</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2025/01/02/1001/">https://leonardo272.github.io/2025/01/02/1001/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a><a class="post-meta__tags" href="/tags/linux%E5%86%85%E6%A0%B8/">linux内核</a></div><div class="post-share"><div class="social-share" data-image="/page_images/3.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/06/05/0001/" title="驱动开发-PWM"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">驱动开发-PWM</div></div><div class="info-2"><div class="info-item-1">PWM(Pulse Width Modulation)基础概念与理论1.什么是 PWM？它的主要参数是什么？ PWM (Pulse Width Modulation) 即脉冲宽度调制，是一种通过控制数字信号在一个周期内高电平时间（脉宽）与周期时间之比（占空比）来模拟连续电平的技术。  主要参数： 周期 (Period) &#x2F; 频率 (Frequency)： 一个完整 PWM 波形的持续时间 (T)。频率 f = 1 / T。 占空比 (Duty Cycle)： 高电平时间 (Ton) 占整个周期 (T) 的百分比 (D = (Ton / T) * 100%)。 极性 (Polarity)： PWM 信号有效电平（Active Level）是高电平有效 (Normal) 还是低电平有效 (Inversed)。    2.应用场景 电机控制： 调节速度和方向（如直流电机、步进电机）。 LED 调光： 控制亮度（通过改变平均电流）。 电源管理： DCDC 转换器输出电压调节（通过控制开关管导通时间）。 音频： 简单的 D 类放大器。 伺服控制： 控制舵机角度（特定脉宽范围对应特...</div></div></div></a><a class="pagination-related" href="/2024/11/12/0002/" title="驱动开发-基于GPIO的LED"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">驱动开发-基于GPIO的LED</div></div><div class="info-2"><div class="info-item-1">前言本次实验是基于正点原子开发板I.MX6ULL开发板来学习的 硬件原理分析本次实验我们使用的是正点原子开发板上的led灯，我们查看开发板原理图可以看到led灯连接在GPIO_3引脚上的  我们打开芯片核心原理图可以找到GPIO_3对应的是IMX6ULL芯片的GPIO1_IO03引脚  我们本次实验使用的就是I/O功能，因此我们打开arch/arm/boot/dts/imx6ul-pinfunc.h文件找到对应的宏MX6UL_PAD_GPIO1_IO03__GPIO1_IO03  设备树编写dtbs文件：  添加pinctrl节点 在 iomuxc 节点的 imx6ul-evk 子节点下创建一个名为pinctrl_led的子节点,将 GPIO1_IO03 这个 PIN 复用为 GPIO1_IO03，电气属性值为 0X10B0。 在imx6ull-alientek-emmc.dts文件中找到&amp;iomuxc 节点，添加对应的电气属性 格式： 123456pinctrl_自定义名字: 自定义名字&#123;	fsl,pins = &lt;	引脚复用宏定义PAD（引脚）属性	引脚...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/06/05/0001/" title="驱动开发-PWM"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-05</div><div class="info-item-2">驱动开发-PWM</div></div><div class="info-2"><div class="info-item-1">PWM(Pulse Width Modulation)基础概念与理论1.什么是 PWM？它的主要参数是什么？ PWM (Pulse Width Modulation) 即脉冲宽度调制，是一种通过控制数字信号在一个周期内高电平时间（脉宽）与周期时间之比（占空比）来模拟连续电平的技术。  主要参数： 周期 (Period) &#x2F; 频率 (Frequency)： 一个完整 PWM 波形的持续时间 (T)。频率 f = 1 / T。 占空比 (Duty Cycle)： 高电平时间 (Ton) 占整个周期 (T) 的百分比 (D = (Ton / T) * 100%)。 极性 (Polarity)： PWM 信号有效电平（Active Level）是高电平有效 (Normal) 还是低电平有效 (Inversed)。    2.应用场景 电机控制： 调节速度和方向（如直流电机、步进电机）。 LED 调光： 控制亮度（通过改变平均电流）。 电源管理： DCDC 转换器输出电压调节（通过控制开关管导通时间）。 音频： 简单的 D 类放大器。 伺服控制： 控制舵机角度（特定脉宽范围对应特...</div></div></div></a><a class="pagination-related" href="/2024/11/12/0002/" title="驱动开发-基于GPIO的LED"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-11-12</div><div class="info-item-2">驱动开发-基于GPIO的LED</div></div><div class="info-2"><div class="info-item-1">前言本次实验是基于正点原子开发板I.MX6ULL开发板来学习的 硬件原理分析本次实验我们使用的是正点原子开发板上的led灯，我们查看开发板原理图可以看到led灯连接在GPIO_3引脚上的  我们打开芯片核心原理图可以找到GPIO_3对应的是IMX6ULL芯片的GPIO1_IO03引脚  我们本次实验使用的就是I/O功能，因此我们打开arch/arm/boot/dts/imx6ul-pinfunc.h文件找到对应的宏MX6UL_PAD_GPIO1_IO03__GPIO1_IO03  设备树编写dtbs文件：  添加pinctrl节点 在 iomuxc 节点的 imx6ul-evk 子节点下创建一个名为pinctrl_led的子节点,将 GPIO1_IO03 这个 PIN 复用为 GPIO1_IO03，电气属性值为 0X10B0。 在imx6ull-alientek-emmc.dts文件中找到&amp;iomuxc 节点，添加对应的电气属性 格式： 123456pinctrl_自定义名字: 自定义名字&#123;	fsl,pins = &lt;	引脚复用宏定义PAD（引脚）属性	引脚...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">6</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.</span> <span class="toc-text">文件系统</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A3%81%E7%9B%98%E7%9A%84%E6%A0%BC%E5%BC%8F%E5%8C%96%E4%B8%8E%E6%8C%82%E8%BD%BD"><span class="toc-number">1.1.</span> <span class="toc-text">磁盘的格式化与挂载</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%93%8D%E4%BD%9C%E5%AE%9E%E9%AA%8C"><span class="toc-number">1.1.1.</span> <span class="toc-text">虚拟机操作实验</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#super-block"><span class="toc-number">1.2.</span> <span class="toc-text">super_block</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#i-bmap"><span class="toc-number">1.3.</span> <span class="toc-text">i-bmap</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#inode"><span class="toc-number">1.4.</span> <span class="toc-text">inode</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#d-bitmap"><span class="toc-number">1.5.</span> <span class="toc-text">d-bitmap</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6"><span class="toc-number">1.6.</span> <span class="toc-text">目录文件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E9%A1%B9entry%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.6.1.</span> <span class="toc-text">文件目录项entry数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#minix%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.6.1.1.</span> <span class="toc-text">minix文件系统</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ext2-ext3%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.6.1.2.</span> <span class="toc-text">ext2&#x2F;ext3文件系统</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E6%9F%A5%E6%89%BE%E6%B5%81%E7%A8%8B"><span class="toc-number">1.6.1.3.</span> <span class="toc-text">文件查找流程</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E9%93%BE%E6%8E%A5%E4%B8%8E%E8%BD%AF%E9%93%BE%E6%8E%A5"><span class="toc-number">1.7.</span> <span class="toc-text">硬链接与软链接</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%A7%E5%B0%8F%E7%AB%AF%E5%AD%98%E5%82%A8"><span class="toc-number">2.</span> <span class="toc-text">大小端存储</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%A7%E5%B0%8F%E7%AB%AF%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="toc-number">2.1.</span> <span class="toc-text">大小端的定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%A3%80%E6%B5%8B%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%AD%97%E8%8A%82%E5%BA%8F%EF%BC%9F"><span class="toc-number">2.2.</span> <span class="toc-text">如何检测系统的字节序？</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/07/24/0003/" title="无标题">无标题</a><time datetime="2025-07-24T02:33:14.195Z" title="发表于 2025-07-24 10:33:14">2025-07-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/05/0001/" title="驱动开发-PWM"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="驱动开发-PWM"/></a><div class="content"><a class="title" href="/2025/06/05/0001/" title="驱动开发-PWM">驱动开发-PWM</a><time datetime="2025-06-05T13:12:00.000Z" title="发表于 2025-06-05 21:12:00">2025-06-05</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
