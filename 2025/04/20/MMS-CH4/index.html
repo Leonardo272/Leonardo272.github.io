@@ -1,0 +1,606 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>CH4-内核虚拟空间学习与I.MX6ULL嵌入式驱动开发实践 | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="虚拟内存内核空间    &#x3D;&#x3D;内核态虚拟内存空间是所有进程共享的，不同进程进入内核态之后看到的虚拟内存空间全部是一样的。&#x3D;&#x3D; 线性映射区 lowmem在总共大小1G的内核虚拟内存空间中，位于最前边有一块896M大小的区域，我们称之为直接映射区或者线性映射区，地址范围为3G—–3G+896m。 之所以这块896M大小的区域称为直接映射区或者线性映射区，是因为这块">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CH4-内核虚拟空间学习与I.MX6ULL嵌入式驱动开发实践">
+<meta property="og:url" content="https://leonardo272.github.io/2025/04/20/MMS-CH4/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="虚拟内存内核空间    &#x3D;&#x3D;内核态虚拟内存空间是所有进程共享的，不同进程进入内核态之后看到的虚拟内存空间全部是一样的。&#x3D;&#x3D; 线性映射区 lowmem在总共大小1G的内核虚拟内存空间中，位于最前边有一块896M大小的区域，我们称之为直接映射区或者线性映射区，地址范围为3G—–3G+896m。 之所以这块896M大小的区域称为直接映射区或者线性映射区，是因为这块">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/6.jpg">
+<meta property="article:published_time" content="2025-04-20T13:12:00.000Z">
+<meta property="article:modified_time" content="2025-08-29T15:52:16.713Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="内存管理">
+<meta property="article:tag" content="进程虚拟空间">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/6.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "CH4-内核虚拟空间学习与I.MX6ULL嵌入式驱动开发实践",
+  "url": "https://leonardo272.github.io/2025/04/20/MMS-CH4/",
+  "image": "https://leonardo272.github.io/page_images/6.jpg",
+  "datePublished": "2025-04-20T13:12:00.000Z",
+  "dateModified": "2025-08-29T15:52:16.713Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/%5Bobject%20Object%5D"><link rel="canonical" href="https://leonardo272.github.io/2025/04/20/MMS-CH4/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/site.webmanifest"/><meta name="msapplication-TileColor" content="#3b70fc"/><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'CH4-内核虚拟空间学习与I.MX6ULL嵌入式驱动开发实践',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/"><link rel="manifest" href="/site.webmanifest"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load', preloader.endLoading)
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">30</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/6.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">CH4-内核虚拟空间学习与I.MX6ULL嵌入式驱动开发实践</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">CH4-内核虚拟空间学习与I.MX6ULL嵌入式驱动开发实践</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-04-20T13:12:00.000Z" title="发表于 2025-04-20 21:12:00">2025-04-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-08-29T15:52:16.713Z" title="更新于 2025-08-29 23:52:16">2025-08-29</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%AD%90%E7%B3%BB%E7%BB%9F/">内存管理子系统</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="虚拟内存内核空间"><a href="#虚拟内存内核空间" class="headerlink" title="虚拟内存内核空间"></a>虚拟内存内核空间</h1><img src="c88bda5db60029f3ea57e4306e7da936.jpeg" alt="img" style="zoom:50%;">
+
+<img src="fc1b281658bdf92edf7ef6421c85d2cc.png" alt="img" style="zoom:50%;">
+
+<p>&#x3D;&#x3D;内核态虚拟内存空间是所有进程共享的，不同进程进入内核态之后看到的虚拟内存空间全部是一样的。&#x3D;&#x3D;</p>
+<h1 id="线性映射区-lowmem"><a href="#线性映射区-lowmem" class="headerlink" title="线性映射区 lowmem"></a>线性映射区 lowmem</h1><p>在总共大小1G的内核虚拟内存空间中，位于最前边有一块896M大小的区域，我们称之为直接映射区或者线性映射区，地址范围为3G—–3G+896m。</p>
+<p>之所以这块896M大小的区域称为直接映射区或者线性映射区，是因为这块<strong>连续</strong>的<strong>虚拟内存地址</strong>会映射到0-896M这块<strong>连续</strong>的<strong>物理内存</strong>上。</p>
+<p>也就是说3G-3G+896m这块896M大小的虚拟内存会直接映射到0-896M这块896M大小的物理内存上，这块区域中的虚拟内存地址直接减去0xC0000000(3G)就得到了物理内存地址。所以我们称这块区域为直接映射区。<strong>直接映射区中的映射关系是一比一映射。映射关系是固定的不会改变</strong>。</p>
+<img src="image-20250623105956015.png" alt="image-20250623105956015" style="zoom:67%;">
+
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>线性映射区（Direct Mapping Area）是内核虚拟地址空间中一段<strong>固定偏移映射</strong>的区域，其核心原理是通过简单的数学关系建立虚拟地址与物理地址的直接对应：</p>
+<ul>
+<li><p>经典通常是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">虚拟地址 = 物理地址 + PAGE_OFFSET</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>PAGE_OFFSET</strong>：内核空间起始地址（32位ARM通常为0xC0000000）；在 <strong>32 位系统</strong> 中，内核虚拟地址空间通常为 <code>0xC0000000</code>（3GB）到 <code>0xFFFFFFFF</code>（4GB），起始地址为 <code>0xC0000000</code></p>
+<img src="image-20250623105138816.png" alt="image-20250623105138816" style="zoom: 50%;">
+</li>
+<li><p>映射关系在系统启动时建立，<strong>始终保持不变</strong></p>
+</li>
+<li><p>映射范围覆盖整个低端内存区域（ZONE_NORMAL）</p>
+</li>
+</ul>
+</li>
+<li><p>在<strong>imx6ull开发板</strong>的内核配置中（NXP官方的内核代码）为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//linux-core/arch/arm/include/asm/memory.h</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __pa(x)			__virt_to_phys((unsigned long)(x))<span class="comment">//虚拟地址转换为物理地址</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __va(x)			((void *)__phys_to_virt((phys_addr_t)(x)))<span class="comment">//物理地址转换为虚拟地址</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">phys_addr_t</span> __virt_to_phys(<span class="type">unsigned</span> <span class="type">long</span> x)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> (<span class="type">phys_addr_t</span>)x - PAGE_OFFSET + PHYS_OFFSET;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">unsigned</span> <span class="type">long</span> __phys_to_virt(<span class="type">phys_addr_t</span> x)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> x - PHYS_OFFSET + PAGE_OFFSET;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>PAGE_OFFSET 虚拟内存中内核空间中线性映射区的起始地址（为0x80000000），因为在系统配置中设置为了2GB&#x2F;2GB的类型，可以在kernel代码文件使用<code>make menuconfig</code>命令进入图形界面设置，查看PAGE_OFFSET的设置</p>
+<img src="896cfa9e58478332f3588d6575a348b.png" alt="896cfa9e58478332f3588d6575a348b" style="zoom:50%;">
+</li>
+<li><p>PHYS_OFFSET 物理内存中NOEMAL_ZONE的起始地址</p>
+<img src="image-20250623103908492.png" alt="image-20250623103908492" style="zoom:50%;"></li>
+</ul>
+</li>
+</ul>
+<h2 id="存储的内容"><a href="#存储的内容" class="headerlink" title="存储的内容"></a>存储的内容</h2><p>在这段896M大小的物理内存中，前1M已经在系统启动的时候被系统占用，1M之后的物理内存存放的是<strong>内核代码段，数据段，BSS段</strong>（这些信息起初存放在ELF格式的二进制文件中，在系统启动的时候被加载进内存)。</p>
+<p>当我们使用fork系统调用创建进程的时候，内核会创建一系列进程相关的描述符，比如之前提到的进程的核心数据结构task_struct,进程的内存空间描述符mm_struct,以及虚拟内存区域描述符vm_area_struct等。这些<strong>进程相关的数据结构</strong>也会存放在物理内存前896M的这段区域中，当然也会被直接映射至内核态虚拟内存空间中的3G-3G+896m这段直接映射区域中。</p>
+<img src="image-20250623110628639.png" alt="image-20250623110628639" style="zoom: 80%;">
+
+
+
+<p>当进程被创建完毕之后，在内核运行的过程中，会涉及内核栈的分配，内核会为每个进程分配一个<strong>固定大小的内核栈</strong>（一般是两个页大小，依赖具体的体系结构），每个进程的整个调用链必须放在自己的内核栈中，内核栈也是分配在直接映射区。</p>
+<h2 id="功能划分"><a href="#功能划分" class="headerlink" title="功能划分"></a>功能划分</h2><p>理想状况下任何种类的数据页都可以存放在任何页框中，没有什么限制。</p>
+<p>但是实际的计算机体系结构受到硬件方面的限制制约，间接导致限制了页框的使用方式。比如在X86体系结构下，ISA总线的DMA(直接内存存取)控制器，只能对内存的前16M进行寻址，这就导致了ISA设备不能在整个32位地址空间中执行DMA，<strong>只能使用物理内存的前16M进行DMA操作。</strong></p>
+<p>因此直接映射区的<strong>前16M专门让内核用来为DMA分配内存我们称之为ZONE_DMA</strong>。&#x3D;&#x3D;用于DMA的内存必须从ZONE_DMA区域中分配&#x3D;&#x3D;。而<strong>直接映射区中剩下的部分</strong>也就是从16M到896M(不包含896M)这段区域，<strong>我们称之为ZONE_NORMAL</strong></p>
+<p>ZONE_NORMAL由于也是属于直接映射区的一部分，对应的物理内存16M到896M这段区域也是被直接映射至内核态虚拟内存空间中的3G+16M到3G+896M这段虚拟内存上。</p>
+<img src="image-20250623164851527.png" alt="image-20250623164851527" style="zoom:50%;">
+
+<p>注意：ZONE_DMA和ZONE_NORMAL是内核<strong>针对物理内存区域</strong>的划分。</p>
+<h2 id="kmalloc函数"><a href="#kmalloc函数" class="headerlink" title="kmalloc函数"></a>kmalloc函数</h2><ul>
+<li>从**低端内存（ZONE_DMA&#x2F;ZONE_NORMAL）**分配&#x3D;&#x3D;物理连续的内存块&#x3D;&#x3D;，适用于小块内存需求（通常 ≤ 128KB）。</li>
+</ul>
+<p><strong>申请与释放内存：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/slab.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 标准内存分配</span></span><br><span class="line"><span class="type">void</span> *<span class="title function_">kmalloc</span><span class="params">(<span class="type">size_t</span> size, <span class="type">gfp_t</span> flags)</span>;</span><br><span class="line"><span class="comment">// 清零内存分配</span></span><br><span class="line"><span class="type">void</span> *<span class="title function_">kzalloc</span><span class="params">(<span class="type">size_t</span> size, <span class="type">gfp_t</span> flags)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 释放kmalloc分配的内存</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">kfree</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *objp)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>size:分配的内存大小，单位为字节</li>
+<li>flags：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left"><strong>标志位</strong></th>
+<th align="left"><strong>含义</strong></th>
+<th align="left"><strong>使用场景</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>GFP_USER</code></td>
+<td align="left">用户空间分配</td>
+<td align="left">映射到用户空间的内存</td>
+</tr>
+<tr>
+<td align="left"><code>GFP_KERNEL</code></td>
+<td align="left">内核常规分配</td>
+<td align="left">进程上下文（可睡眠）</td>
+</tr>
+<tr>
+<td align="left"><code>GFP_ATOMIC</code></td>
+<td align="left">原子分配</td>
+<td align="left">中断&#x2F;原子上下文（不可睡眠）</td>
+</tr>
+<tr>
+<td align="left"><code>GFP_NOWAIT</code></td>
+<td align="left">非阻塞分配</td>
+<td align="left">避免直接回收内存</td>
+</tr>
+<tr>
+<td align="left"><code>GFP_DMA</code></td>
+<td align="left">DMA内存分配</td>
+<td align="left">硬件DMA操作（&lt;16MB）</td>
+</tr>
+<tr>
+<td align="left"><code>__GFP_ZERO</code></td>
+<td align="left">清零内存</td>
+<td align="left">kzalloc内部使用</td>
+</tr>
+<tr>
+<td align="left"><code>__GFP_HIGHMEM</code></td>
+<td align="left">高端内存分配</td>
+<td align="left">访问&gt;896MB物理内存</td>
+</tr>
+</tbody></table>
+<ul>
+<li>返回值：虚拟地址</li>
+</ul>
+<h3 id="实现机制分析"><a href="#实现机制分析" class="headerlink" title="实现机制分析"></a>实现机制分析</h3><p><strong>关键实现机制：</strong></p>
+<ul>
+<li><p>大小分类：</p>
+<ul>
+<li>小于8KB：通过<strong>SLAB&#x2F;SLUB分配器</strong></li>
+<li>大于8KB：直接调用<strong>伙伴系统</strong></li>
+</ul>
+</li>
+<li><p>缓存机制</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 内核预定义缓存（mm/slab_common.c）</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kmem_cache</span> *<span class="title">kmalloc_caches</span>[<span class="title">KMALLOC_SHIFT_HIGH</span> + 1];</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 典型缓存大小：32, 64, 128, 256, 512, 1024, 2048...字节</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>分配函数核心逻辑</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">kmalloc</span><span class="params">(<span class="type">size_t</span> size, <span class="type">gfp_t</span> flags)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (__builtin_constant_p(size)) &#123;</span><br><span class="line">        <span class="comment">// 编译器优化已知大小</span></span><br><span class="line">        <span class="keyword">return</span> __kmalloc(size, flags);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> __kmalloc(size, flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="kmalloc与Slab、伙伴系统："><a href="#kmalloc与Slab、伙伴系统：" class="headerlink" title="kmalloc与Slab、伙伴系统："></a><strong>kmalloc与Slab、伙伴系统：</strong></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">应用程序</span><br><span class="line">  │</span><br><span class="line">  ├─ kmalloc/kfree  ← 开发者接口</span><br><span class="line">  │</span><br><span class="line">  ├─ SLAB/SLUB分配器  ← 小内存管理（&lt;8KB）</span><br><span class="line">  │   ├─ kmem_cache</span><br><span class="line">  │   └─ 对象缓存</span><br><span class="line">  │</span><br><span class="line">  └─ 伙伴系统(Buddy)  ← 大内存管理（≥8KB）</span><br><span class="line">      ├─ alloc_pages</span><br><span class="line">      └─ free_pages</span><br></pre></td></tr></table></figure>
+
+<p><strong>协作机制：</strong></p>
+<ol>
+<li><p><strong>小内存分配路径：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kmalloc(128, GFP_KERNEL) </span><br><span class="line">→ slab_alloc(kmalloc-128 cache) </span><br><span class="line">→ 从per-CPU缓存获取对象</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>大内存分配路径：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kmalloc(16384, GFP_KERNEL)  // 16KB</span><br><span class="line">→ (size &gt; 8192) </span><br><span class="line">→ alloc_pages(GFP_KERNEL, 4)  // 2^4=16页</span><br><span class="line">→ 伙伴系统分配连续页</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>缓存填充机制：</strong></p>
+<ul>
+<li>当SLAB缓存为空时，调用<code>__get_free_pages()</code>向伙伴系统申请整页</li>
+<li>将整页分割为多个小对象加入缓存</li>
+</ul>
+</li>
+</ol>
+<h3 id="kmalloc-能申请的最大内存是多少？"><a href="#kmalloc-能申请的最大内存是多少？" class="headerlink" title="kmalloc 能申请的最大内存是多少？"></a>kmalloc 能申请的最大内存是多少？</h3><p>在 x86 系统中，kmalloc 的最大申请大小由两个关键因素决定：</p>
+<p><strong>技术限制：</strong></p>
+<ul>
+<li><p><strong>SLUB&#x2F;SLAB 上限</strong>：默认最大为 <strong>8KB</strong>（<code>KMALLOC_MAX_SIZE</code>）</p>
+</li>
+<li><p><strong>伙伴系统上限</strong>：最大连续分配为 <code>2^(MAX_ORDER-1)</code> 页</p>
+<ul>
+<li><p>32位 x86：<code>MAX_ORDER=11</code> → 2^10&#x3D;1024 页 → <strong>4MB</strong> (PAGE_SIZE&#x3D;4KB)</p>
+</li>
+<li><p>64位 x86：<code>MAX_ORDER=11</code> → <strong>4MB</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 内核源码验证 (mm/slab_common.c)</span></span><br><span class="line"><span class="keyword">if</span> (size &gt; KMALLOC_MAX_SIZE) &#123;</span><br><span class="line">    <span class="comment">// 回退到伙伴系统</span></span><br><span class="line">    <span class="keyword">return</span> (<span class="type">void</span> *)__get_free_pages(flags, get_order(size));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用命令查看buddy系统的最大分配页数</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看系统支持的最大阶数</span></span><br><span class="line"><span class="built_in">cat</span> /proc/buddyinfo </span><br><span class="line">Node 0, zone   Normal  11  10  9  ...  <span class="comment"># 最大阶数11</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 计算最大分配：2^(11-1) * 4KB = 4MB</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250623201957980.png" alt="image-20250623201957980"></p>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>x86 实际限制因素：</strong></p>
+<ul>
+<li>物理内存碎片程度</li>
+<li>内核配置（<code>CONFIG_FORCE_MAX_ZONEORDER</code>）</li>
+<li>系统负载情况</li>
+</ul>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>本次实验使用kmalloc函数对内核空间的直接映射区进行实验</p>
+<ul>
+<li><p>编写内核的驱动代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/slab.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/mm.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span>  <span class="comment">// 延迟函数头文件</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. 将结构体定义移到函数外部</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span></span><br><span class="line">    <span class="type">int</span> age;</span><br><span class="line">    <span class="type">char</span> sex;</span><br><span class="line">    <span class="type">char</span> name[<span class="number">10</span>];</span><br><span class="line">    <span class="type">float</span> score;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> *<span class="title">p</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">hello_init</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">    <span class="type">phys_addr_t</span> phys;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 2. 添加内核启动等待</span></span><br><span class="line">    msleep(<span class="number">5000</span>);  <span class="comment">// 等待5秒确保内核完全启动</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 3. 修复结构体使用</span></span><br><span class="line">    p = kmalloc(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> student), GFP_KERNEL);</span><br><span class="line">    <span class="keyword">if</span> (!p)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 4. 修复物理地址转换</span></span><br><span class="line">    phys = virt_to_phys(p);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 5. 修复打印格式</span></span><br><span class="line">    printk(<span class="string">&quot;PAGE_OFFSET = 0x%lx\n&quot;</span>, (<span class="type">unsigned</span> <span class="type">long</span>)PAGE_OFFSET);</span><br><span class="line">    printk(<span class="string">&quot;PHYS_OFFSET = 0x%x\n&quot;</span>, (<span class="type">unsigned</span> <span class="type">int</span>)PHYS_OFFSET);  <span class="comment">// 使用%x格式</span></span><br><span class="line">    printk(<span class="string">&quot;Virtual: 0x%p\n&quot;</span>, p);</span><br><span class="line">    printk(<span class="string">&quot;Physical: 0x%llx\n&quot;</span>, (<span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span>)phys);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 6. 添加计算验证</span></span><br><span class="line">    printk(<span class="string">&quot;Calculated: 0x%lx\n&quot;</span>, </span><br><span class="line">           (<span class="type">unsigned</span> <span class="type">long</span>)p - PAGE_OFFSET + PHYS_OFFSET);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">hello_exit</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">    kfree(p);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(hello_init);</span><br><span class="line">module_exit(hello_exit);</span><br><span class="line"></span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;kevin.cc&quot;</span>);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;Fixed kmalloc/kfree demo&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>实验结果</strong></p>
+<p><img src="image-20250623185158382.png" alt="image-20250623185158382"></p>
+<p>实验结果表明内核空间起始地址与物理内存起始地址相同，</p>
+</li>
+</ul>
+<h1 id="ZONE-HIGHMEM区"><a href="#ZONE-HIGHMEM区" class="headerlink" title="ZONE_HIGHMEM区"></a>ZONE_HIGHMEM区</h1><h2 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h2><p><strong>物理内存中</strong> </p>
+<ul>
+<li>896M 以上的区域被内核划分为 ZONE_HIGHMEM 区域，我们称之为高端内存。物理内存假设为 4G，高端内存区域为 4G - 896M &#x3D; <strong>3200M</strong>。</li>
+</ul>
+<p><strong>虚拟内存中</strong></p>
+<ul>
+<li>由于内核虚拟内存空间中的前896M虚拟内存已经被直接映射区所占用，而在32体系结构下内核虚拟内存空间总共也就1G的大小，这样一来内核剩余可用的虚拟内存空间就变为了1G-896M&#x3D;<strong>128M</strong>。</li>
+</ul>
+<p>这样一来物理内存中的<strong>ZONE_HIGHMEM区域</strong>就只能<strong>采用动态映射</strong>的方式映射到128M大小的内核虚拟内存空间中，也就是说只能动态的一部分一部分的分批映射，先映射正在使用的这部分，使用完毕解除映射，接着映射其他部分。</p>
+<img src="image-20250623172349049.png" alt="image-20250623172349049" style="zoom:67%;">
+
+<p>内核虚拟内存空间中的3G+896M这块地址在内核中定义为high_memory,high_memory往上有一段8M大小的内存空洞。空洞范围为：high_memory到VMALLOC_START。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//arch/x86/include/asm/pgtable_.32_areas.h文件中：</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> VMALLOC_OFFSET (8*1024*1024)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> VMALLOC_END Oxff800000UL</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> * __initdata vmalloc_min =</span><br><span class="line">	(<span class="type">void</span> *)(VMALLOC_END - (<span class="number">240</span> &lt;&lt; <span class="number">20</span>) - VMALLOC_OFFSET);</span><br><span class="line"></span><br><span class="line">vmalloc_limit =(u64)(<span class="type">uintptr_t</span>)vmalloc_min PAGE_OFFSET PHYS_OFFSET;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>开发板配置</strong></p>
+<p>开发板默认没有高端内存空间，我们需要在编译内核的时候开启宏<strong>CONFIG_HIGHMEM</strong></p>
+<img src="image-20250623203917309.png" alt="image-20250623203917309" style="zoom:67%;">
+
+<p>如果配置好了之后仍然没有显示高端内存区域，那么可能是虚拟内存中的内核空间的配置中线性映射区的大小等于了物理内存，因此没有了高端内存区。</p>
+</li>
+</ul>
+<h1 id="vmalloc动态映射区"><a href="#vmalloc动态映射区" class="headerlink" title="vmalloc动态映射区"></a>vmalloc动态映射区</h1><p>接下来<code>VMALLOC_START</code>到<code>VMALLOC_END</code>之间的这块区域成为动态映射区。采用动态映射的方式映射物理内存中的高端内存。</p>
+<p><strong>特点：</strong></p>
+<ul>
+<li><p>和用户态进程使用malloc申请内存一样，在这块动态映射区内核是使用vmalloc进行内存分配。vmalloc分配的内存在&#x3D;&#x3D;虚拟内存上是连续的，但是物理内存是不连续的&#x3D;&#x3D;。通过页表来建立物理内存与虚拟内存之间的映射关系，从而可以将不连续的物理内存映射到连续的虚拟内存上。</p>
+</li>
+<li><p>由于vmalloc获得的物理内存页是不连续的，因此它只能将这些物理内存页一个一个地进行映射，在性能开销上会比直接映射大得多。</p>
+</li>
+</ul>
+<p><img src="image-20250623190447507.png" alt="image-20250623190447507"></p>
+<h2 id="编程接口"><a href="#编程接口" class="headerlink" title="编程接口"></a>编程接口</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">vmalloc</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> size)</span>;</span><br><span class="line"><span class="type">void</span> *<span class="title function_">vzalloc</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> size)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">vfree</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *addr)</span>;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> <span class="title function_">vmalloc_to_pfn</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *vmalloc_addr)</span>;</span><br><span class="line"><span class="keyword">struct</span> page *<span class="title function_">vmalloc_to_page</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *vmalloc_addr)</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>vmalloc实现机制分析</strong></p>
+<ul>
+<li>从VMALLOC_START:到VMALLOC_END查找一片虚拟地址空间</li>
+<li>根据内存的大小从伙伴系统申请多个物理页帧page</li>
+<li>一把每个申请到的物理页帧逐页映射到虚拟地址空间</li>
+</ul>
+<h2 id="ioremap"><a href="#ioremap" class="headerlink" title="ioremap"></a>ioremap</h2><ul>
+<li><p><strong>ioremap 函数</strong></p>
+<p>用于获取指 定 物 理 地 址 空 间 对 应 的 虚 拟 地 址 空 间 ， 定 义 在<code>arch/arm/include/asm/io.h</code> 文件中，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ioremap (cookie,size) __arm_ioremap((cookie),(size),MT DEVICE)</span></span><br><span class="line"><span class="type">void</span> __iomem * __arm_ioremap(<span class="type">phys_addr_t</span> phys_addr,<span class="type">size_t</span> size,<span class="type">unsigned</span> <span class="type">int</span> mtype)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> arch_ioremap_caller(phys_addr,size,mtype,__builtin_return_address (<span class="number">0</span>));    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ioremap是个宏，有两个参数：cookie和size,真正起作用的是函数 __arm_ioremap,此函数有三个参数和一个返回值，这些参数和返回值的含义如下：</p>
+<ul>
+<li>**phys_addr:**要映射的物理起始地址。</li>
+<li>**size:**要映射的内存空间大小（单位字节）。</li>
+<li>**mtype:**ioremap的类型，可以选择MT_DEVICE、MT DEVICE NONSHARED、MT_DEVICE CACHED和MT DEVICE WC,ioremap函数选择MT DEVICE。</li>
+<li><strong>返回值：</strong>_iomem类型的指针，指向映射后的<strong>虚拟空间首地址</strong>。</li>
+</ul>
+<p>例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> SW_MUX_GPIO1_I0_03_BASE (0X020E0068)</span></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem* SW_MUX_GPIO1_I0_03;</span><br><span class="line">SW_MUX_GPIO1_1003 <span class="title function_">ioremap</span><span class="params">(SW_MUX_GPIO1_IO03_BASE,<span class="number">4</span>)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>宏<code>SW_MUX_GPIO1_IO03BASE</code>是寄存器物理地址，<code>SW_MUX_GPIO1_IO03</code>是映射后的虚拟地址。对于IX6ULL来说一个寄存器是4字节(32位)的，因此映射的内存长度为4。映射完成以后直接对<code>SW MUX GPIO1IO03</code>进行读写操作即可。</p>
+</li>
+<li><p><strong>iounmap</strong> <strong>函数</strong></p>
+<p>卸载驱动的时候需要使用 iounmap 函数释放掉 ioremap 函数所做的映射，iounmap 函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">iounmap</span> <span class="params">(<span class="keyword">volatile</span> <span class="type">void</span> iomem *addr)</span></span><br></pre></td></tr></table></figure>
+
+<p>iounmap 只有一个参数 addr，此参数就是要取消映射的虚拟地址空间首地址。假如我们现在要取消掉 IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO03 寄存器的地址映射，使用如下代码即可：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iounmap(SW_MUX_GPIO1_IO03);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>I&#x2F;O内存访问函数</p>
+<p><strong>1. 读操作函数</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">u8  <span class="title function_">readb</span><span class="params">(<span class="type">const</span> <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>;</span><br><span class="line">u16 <span class="title function_">readw</span><span class="params">(<span class="type">const</span> <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>;</span><br><span class="line">u32 <span class="title function_">readl</span><span class="params">(<span class="type">const</span> <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>功能</strong>：从指定内存地址读取数据。</li>
+<li><strong>参数</strong>：<ul>
+<li><code>addr</code>：要读取的内存地址（<code>volatile void __iomem *</code> 类型）。</li>
+</ul>
+</li>
+<li><strong>返回值</strong>：<ul>
+<li><code>readb</code>：返回 8 位（1 字节）数据（<code>u8</code> 类型）。</li>
+<li><code>readw</code>：返回 16 位（2 字节）数据（<code>u16</code> 类型）。</li>
+<li><code>readl</code>：返回 32 位（4 字节）数据（<code>u32</code> 类型）。</li>
+</ul>
+</li>
+</ul>
+<p><strong>2. 写操作函数</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">writeb</span><span class="params">(u8 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">writew</span><span class="params">(u16 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>;</span><br><span class="line"><span class="type">void</span>	<span class="title function_">writel</span><span class="params">(u32 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>功能</strong>：向指定内存地址写入数据。</li>
+<li><strong>参数</strong>：<ul>
+<li><code>value</code>：要写入的数值（类型分别为 <code>u8</code>、<code>u16</code>、<code>u32</code>）。</li>
+<li><code>addr</code>：目标内存地址（<code>volatile void __iomem *</code> 类型）。</li>
+</ul>
+</li>
+<li><strong>返回值</strong>：无（<code>void</code>）。</li>
+</ul>
+<p><strong>关键说明</strong></p>
+<ol>
+<li><p><strong><code>volatile</code> 关键字</strong>：</p>
+<ul>
+<li><p>&#x3D;&#x3D;确保编译器不会对这些变量进行优化，强制每次访问都直接操作硬件内存。&#x3D;&#x3D;</p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong>场景</strong></th>
+<th align="left"><strong>无 <code>volatile</code> 的风险</strong></th>
+<th align="left"><strong><code>volatile</code> 的解决方案</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">读硬件寄存器</td>
+<td align="left">编译器缓存旧值，忽略硬件更新</td>
+<td align="left">强制每次读取都访问物理地址</td>
+</tr>
+<tr>
+<td align="left">写硬件寄存器</td>
+<td align="left">优化掉“冗余”写入，导致操作缺失</td>
+<td align="left">确保每次写入都立即生效</td>
+</tr>
+<tr>
+<td align="left">多步操作硬件</td>
+<td align="left">指令重排破坏硬件要求的顺序</td>
+<td align="left">禁止编译器&#x2F;CPU 重排内存操作顺序</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+</li>
+<li><p><strong><code>__iomem</code> 宏</strong>：</p>
+<ul>
+<li>通常用于标记 I&#x2F;O 内存指针（如 Linux 内核中的内存映射 I&#x2F;O 操作）。</li>
+</ul>
+</li>
+<li><p><strong>应用场景</strong>：</p>
+<ul>
+<li>常用于嵌入式系统或设备驱动开发中，直接操作硬件寄存器或内存映射的外设。</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h3><ul>
+<li><p><strong>直接映射到外设寄存器的物理地址：</strong> <code>ioremap</code> 的核心作用就是&#x3D;&#x3D;将<strong>外设寄存器（或设备内存）在物理地址空间中的地址（Bus Address）</strong> 映射到内核的虚拟地址空间&#x3D;&#x3D;。</p>
+</li>
+<li><p><strong>这些地址不是普通内存：</strong> 这些物理地址通常位于由硬件（如CPU、内存控制器、PCIe Host Bridge）定义的特定物理地址区域（例如 <code>0x3F000000</code> 到 <code>0x3FFFFFFF</code> 用于树莓派的GPIO）。它们<strong>不是</strong>主存（DRAM）的一部分。</p>
+</li>
+<li><p><strong>不映射到普通物理内存：</strong> <code>ioremap</code> <strong>不会</strong>将外设地址映射到普通DRAM的某个位置。它建立的是一个<strong>虚拟地址到设备寄存器物理地址的直接映射关系</strong>。</p>
+</li>
+<li><p><strong>非缓存访问 (Uncached&#x2F;Device)：</strong> 这是与普通内存访问的本质区别。PTE的特殊标志确保CPU绕过缓存，每次读写都直接作用于总线上的设备。</p>
+</li>
+<li><p>&#x3D;&#x3D;<code>ioremap</code> 函数映射到<strong>内核空间的虚拟地址</strong>。具体位置在内核的<strong>vmalloc 区域</strong>&#x3D;&#x3D;，这是一个专门用于动态映射的区域。以下是详细说明：</p>
+</li>
+</ul>
+<h3 id="虚拟内存如何与外设寄存器通信？"><a href="#虚拟内存如何与外设寄存器通信？" class="headerlink" title="虚拟内存如何与外设寄存器通信？"></a><strong>虚拟内存如何与外设寄存器通信？</strong></h3><p>映射完成后，内核驱动通过返回的<strong>虚拟地址</strong>进行访问，通信过程如下：</p>
+<ol>
+<li><strong>驱动代码执行访问：</strong> 驱动程序使用 <code>ioread8/16/32/64</code>, <code>iowrite8/16/32/64</code> 或其衍生函数（或直接谨慎地通过指针解引用），对 <code>ioremap</code> 返回的虚拟地址（如 <code>vaddr</code>）进行读或写操作。</li>
+<li><strong>MMU进行地址翻译：</strong> CPU 发出访问这个虚拟地址的指令。</li>
+<li><strong>查找页表项：</strong> MMU 查找该虚拟地址对应的页表项（Page Table Entry, PTE）。</li>
+<li><strong>特殊PTE标志：</strong> 对于 <code>ioremap</code> 映射的区域，其对应的PTE会被标记为：<ul>
+<li><strong><code>uncached</code> (或 <code>device</code>):</strong> 最重要的标志。告诉CPU和缓存系统：<strong>禁止缓存对该地址的访问</strong>。每次读操作必须直接发到总线上从设备读取最新状态；每次写操作必须立即（或尽快）通过总线发送到设备，不能延迟或合并。</li>
+<li><strong><code>non-executable</code>:</strong> 禁止在该地址上执行代码（安全性和正确性）。</li>
+<li><strong>特权访问：</strong> 通常要求在内核模式（或EL1&#x2F;EL2）下访问。</li>
+</ul>
+</li>
+<li><strong>生成物理地址：</strong> MMU 根据PTE将虚拟地址翻译成对应的<strong>物理地址（即设备寄存器的总线地址）</strong>。</li>
+<li><strong>总线操作：</strong><ul>
+<li><strong>读操作：</strong> CPU 将物理地址放到地址总线上，发出读信号。对应的外设（识别到自己的地址范围被访问）将其寄存器当前的值放到数据总线上。CPU 读取数据总线上的值，完成读取。</li>
+<li><strong>写操作：</strong> CPU 将物理地址放到地址总线上，将要写入的数据放到数据总线上，发出写信号。对应的外设（识别到自己的地址范围被访问）锁存数据总线上的值，更新其内部寄存器。</li>
+</ul>
+</li>
+<li><strong>结果返回：</strong><ul>
+<li><strong>读操作：</strong> 从数据总线获取的值作为读取结果返回给驱动代码。</li>
+<li><strong>写操作：</strong> 数据被写入设备寄存器，操作完成。</li>
+</ul>
+</li>
+</ol>
+<p>例子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/cdev.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/device.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/mach/map.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/uaccess.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/io.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NEWCHRLED_CNT			1		  	<span class="comment">/* 设备号个数 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NEWCHRLED_NAME			<span class="string">&quot;newchrled&quot;</span>	<span class="comment">/* 名字 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LEDOFF 					0			<span class="comment">/* 关灯 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LEDON 					1			<span class="comment">/* 开灯 */</span></span></span><br><span class="line"> </span><br><span class="line"><span class="comment">/* 寄存器物理地址 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CCM_CCGR1_BASE				(0X020C406C)	</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SW_MUX_GPIO1_IO03_BASE		(0X020E0068)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SW_PAD_GPIO1_IO03_BASE		(0X020E02F4)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPIO1_DR_BASE				(0X0209C000)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> GPIO1_GDIR_BASE				(0X0209C004)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 映射后的寄存器虚拟地址指针 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *IMX6U_CCM_CCGR1;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *SW_MUX_GPIO1_IO03;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *SW_PAD_GPIO1_IO03;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *GPIO1_DR;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *GPIO1_GDIR;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* newchrled设备结构体 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">newchrled_dev</span>&#123;</span></span><br><span class="line">	<span class="type">dev_t</span> devid;			<span class="comment">/* 设备号 	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> <span class="title">cdev</span>;</span>		<span class="comment">/* cdev 	*/</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> *<span class="keyword">class</span>;</span>		<span class="comment">/* 类 		*/</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">device</span>;</span>	<span class="comment">/* 设备 	 */</span></span><br><span class="line">	<span class="type">int</span> major;				<span class="comment">/* 主设备号	  */</span></span><br><span class="line">	<span class="type">int</span> minor;				<span class="comment">/* 次设备号   */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">newchrled_dev</span> <span class="title">newchrled</span>;</span>	<span class="comment">/* led设备 */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">led_switch</span><span class="params">(u8 sta)</span></span><br><span class="line">&#123;</span><br><span class="line">	u32 val = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">if</span>(sta == LEDON) &#123;</span><br><span class="line">		val = readl(GPIO1_DR);</span><br><span class="line">		val &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	</span><br><span class="line">		writel(val, GPIO1_DR);</span><br><span class="line">	&#125;<span class="keyword">else</span> <span class="keyword">if</span>(sta == LEDOFF) &#123;</span><br><span class="line">		val = readl(GPIO1_DR);</span><br><span class="line">		val|= (<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	</span><br><span class="line">		writel(val, GPIO1_DR);</span><br><span class="line">	&#125;	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">led_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	filp-&gt;private_data = &amp;newchrled; <span class="comment">/* 设置私有数据 */</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">led_read</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *offt)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">led_write</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">const</span> <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *offt)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> retvalue;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> databuf[<span class="number">1</span>];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> ledstat;</span><br><span class="line"></span><br><span class="line">	retvalue = copy_from_user(databuf, buf, cnt);</span><br><span class="line">	<span class="keyword">if</span>(retvalue &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		printk(<span class="string">&quot;kernel write failed!\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> -EFAULT;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	ledstat = databuf[<span class="number">0</span>];		<span class="comment">/* 获取状态值 */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>(ledstat == LEDON) &#123;	</span><br><span class="line">		led_switch(LEDON);		<span class="comment">/* 打开LED灯 */</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span>(ledstat == LEDOFF) &#123;</span><br><span class="line">		led_switch(LEDOFF);	<span class="comment">/* 关闭LED灯 */</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">led_release</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 设备操作函数 */</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">newchrled_fops</span> =</span> &#123;</span><br><span class="line">	.owner = THIS_MODULE,</span><br><span class="line">	.open = led_open,</span><br><span class="line">	.read = led_read,</span><br><span class="line">	.write = led_write,</span><br><span class="line">	.release = 	led_release,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">led_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	u32 val = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 初始化LED */</span></span><br><span class="line">	<span class="comment">/* 1、寄存器地址映射 */</span></span><br><span class="line">  	IMX6U_CCM_CCGR1 = ioremap(CCM_CCGR1_BASE, <span class="number">4</span>);</span><br><span class="line">	SW_MUX_GPIO1_IO03 = ioremap(SW_MUX_GPIO1_IO03_BASE, <span class="number">4</span>);</span><br><span class="line">  	SW_PAD_GPIO1_IO03 = ioremap(SW_PAD_GPIO1_IO03_BASE, <span class="number">4</span>);</span><br><span class="line">	GPIO1_DR = ioremap(GPIO1_DR_BASE, <span class="number">4</span>);</span><br><span class="line">	GPIO1_GDIR = ioremap(GPIO1_GDIR_BASE, <span class="number">4</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 2、使能GPIO1时钟 */</span></span><br><span class="line">	val = readl(IMX6U_CCM_CCGR1);</span><br><span class="line">	val &amp;= ~(<span class="number">3</span> &lt;&lt; <span class="number">26</span>);	<span class="comment">/* 清楚以前的设置 */</span></span><br><span class="line">	val |= (<span class="number">3</span> &lt;&lt; <span class="number">26</span>);	<span class="comment">/* 设置新值 */</span></span><br><span class="line">	writel(val, IMX6U_CCM_CCGR1);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 3、设置GPIO1_IO03的复用功能，将其复用为</span></span><br><span class="line"><span class="comment">	 *    GPIO1_IO03，最后设置IO属性。</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	writel(<span class="number">5</span>, SW_MUX_GPIO1_IO03);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/*寄存器SW_PAD_GPIO1_IO03设置IO属性</span></span><br><span class="line"><span class="comment">	 *bit 16:0 HYS关闭</span></span><br><span class="line"><span class="comment">	 *bit [15:14]: 00 默认下拉</span></span><br><span class="line"><span class="comment">     *bit [13]: 0 kepper功能</span></span><br><span class="line"><span class="comment">     *bit [12]: 1 pull/keeper使能</span></span><br><span class="line"><span class="comment">     *bit [11]: 0 关闭开路输出</span></span><br><span class="line"><span class="comment">     *bit [7:6]: 10 速度100Mhz</span></span><br><span class="line"><span class="comment">     *bit [5:3]: 110 R0/6驱动能力</span></span><br><span class="line"><span class="comment">     *bit [0]: 0 低转换率</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	writel(<span class="number">0x10B0</span>, SW_PAD_GPIO1_IO03);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 4、设置GPIO1_IO03为输出功能 */</span></span><br><span class="line">	val = readl(GPIO1_GDIR);</span><br><span class="line">	val &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	<span class="comment">/* 清除以前的设置 */</span></span><br><span class="line">	val |= (<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	<span class="comment">/* 设置为输出 */</span></span><br><span class="line">	writel(val, GPIO1_GDIR);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 5、默认关闭LED */</span></span><br><span class="line">	val = readl(GPIO1_DR);</span><br><span class="line">	val |= (<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	</span><br><span class="line">	writel(val, GPIO1_DR);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 注册字符设备驱动 */</span></span><br><span class="line">	<span class="comment">/* 1、创建设备号 */</span></span><br><span class="line">	<span class="keyword">if</span> (newchrled.major) &#123;		<span class="comment">/*  定义了设备号 */</span></span><br><span class="line">		newchrled.devid = MKDEV(newchrled.major, <span class="number">0</span>);</span><br><span class="line">		register_chrdev_region(newchrled.devid, NEWCHRLED_CNT, NEWCHRLED_NAME);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;						<span class="comment">/* 没有定义设备号 */</span></span><br><span class="line">		alloc_chrdev_region(&amp;newchrled.devid, <span class="number">0</span>, NEWCHRLED_CNT, NEWCHRLED_NAME);	<span class="comment">/* 申请设备号 */</span></span><br><span class="line">		newchrled.major = MAJOR(newchrled.devid);	<span class="comment">/* 获取分配号的主设备号 */</span></span><br><span class="line">		newchrled.minor = MINOR(newchrled.devid);	<span class="comment">/* 获取分配号的次设备号 */</span></span><br><span class="line">	&#125;</span><br><span class="line">	printk(<span class="string">&quot;newcheled major=%d,minor=%d\r\n&quot;</span>,newchrled.major, newchrled.minor);	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 2、初始化cdev */</span></span><br><span class="line">	newchrled.cdev.owner = THIS_MODULE;</span><br><span class="line">	cdev_init(&amp;newchrled.cdev, &amp;newchrled_fops);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 3、添加一个cdev */</span></span><br><span class="line">	cdev_add(&amp;newchrled.cdev, newchrled.devid, NEWCHRLED_CNT);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 4、创建类 */</span></span><br><span class="line">	newchrled.class = class_create(THIS_MODULE, NEWCHRLED_NAME);</span><br><span class="line">	<span class="keyword">if</span> (IS_ERR(newchrled.class)) &#123;</span><br><span class="line">		<span class="keyword">return</span> PTR_ERR(newchrled.class);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 5、创建设备 */</span></span><br><span class="line">	newchrled.device = device_create(newchrled.class, <span class="literal">NULL</span>, newchrled.devid, <span class="literal">NULL</span>, NEWCHRLED_NAME);</span><br><span class="line">	<span class="keyword">if</span> (IS_ERR(newchrled.device)) &#123;</span><br><span class="line">		<span class="keyword">return</span> PTR_ERR(newchrled.device);</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">led_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* 取消映射 */</span></span><br><span class="line">	iounmap(IMX6U_CCM_CCGR1);</span><br><span class="line">	iounmap(SW_MUX_GPIO1_IO03);</span><br><span class="line">	iounmap(SW_PAD_GPIO1_IO03);</span><br><span class="line">	iounmap(GPIO1_DR);</span><br><span class="line">	iounmap(GPIO1_GDIR);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 注销字符设备驱动 */</span></span><br><span class="line">	cdev_del(&amp;newchrled.cdev);<span class="comment">/*  删除cdev */</span></span><br><span class="line">	unregister_chrdev_region(newchrled.devid, NEWCHRLED_CNT); <span class="comment">/* 注销设备号 */</span></span><br><span class="line"></span><br><span class="line">	device_destroy(newchrled.class, newchrled.devid);</span><br><span class="line">	class_destroy(newchrled.class);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(led_init);</span><br><span class="line">module_exit(led_exit);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;kevin&quot;</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="永久映射区"><a href="#永久映射区" class="headerlink" title="永久映射区"></a>永久映射区</h1><img src="image-20250625151207766.png" alt="image-20250625151207766" style="zoom: 80%;">
+
+<p>而在<code>PKMAP_BASE</code>到<code>FIXADDR_START</code>之间的这段空间称为永久映射区（LAST_PKMAP表示永久映射区可以映射的页数限制）。在内核的这段<strong>虚拟地址空间</strong>中允许<strong>建立与物理高端内存</strong>的<strong>长期映射关系</strong>。比如内核通过<code>alloc_pages()</code>函数在物理内存的高端内存中申请获取到的物理内存页，这些物理内存页可以通过调用kmap映射到永久映射区中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> PKMAP BASE \</span></span><br><span class="line"><span class="meta">((LDT_BASE_ADDR - PAGE_SIZE) &amp; PMD_MASK)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LAST_PKMAP 1024</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="固定映射区-fixmap"><a href="#固定映射区-fixmap" class="headerlink" title="固定映射区 fixmap"></a>固定映射区 fixmap</h1><p><img src="image-20250625165109494.png" alt="image-20250625165109494"></p>
+<p>内核虚拟内存空间中的下一个区域为固定映射区，区域范围为：<code>FIXADDR_START</code>到<code>FIXADDR_TOP</code>。<code>FIXADDR_START</code>和<code>FIXADDR_TOP</code>定义在内核原码&#x2F;arch&#x2F;x86&#x2F;include&#x2F;asm&#x2F;fixmap.h文件中：</p>
+<p>在固定映射区中的虚以内存地址可以自由映射到物理内存的高端地址上，但是与动态映射区以及永久映射区不同的是，**在固定映射区中虚以地址是固定的，而被映射的物理地址是可以改变的。**也就是说，有些虚拟地址在编译的时侯就固定下来了，是在内核启动过程中被确定的，而这些虚拟地址对应的物理地址不是固定的。采用固定虚拟地址的好处是它相当于一个指针常量（常量的值在编译时确定），指向物理地址，如果虚以地址不固定，则相当于一个指针变量。</p>
+<p><img src="image-20250625160034966.png" alt="image-20250625160034966"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 典型枚举定义 (include/asm-generic/fixmap.h)</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">fixed_addresses</span> &#123;</span></span><br><span class="line">    FIX_HOLE,</span><br><span class="line">    FIX_EARLYCON_MEM_BASE,  <span class="comment">// 早期控制台</span></span><br><span class="line">    FIX_DT_BLOB,            <span class="comment">// 设备树</span></span><br><span class="line">    FIX_ACPI_BEGIN,         <span class="comment">// ACPI 表</span></span><br><span class="line">    FIX_KMAP_BEGIN,         <span class="comment">// kmap_atomic 起始</span></span><br><span class="line">    FIX_KMAP_END = FIX_KMAP_BEGIN + (KM_TYPE_NR * NR_CPUS) - <span class="number">1</span>,</span><br><span class="line">    __end_of_fixed_addresses</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th align="left"><strong>应用场景</strong></th>
+<th align="left"><strong>具体功能</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>早期启动阶段</strong></td>
+<td align="left">在内核解压缩后、完整页表初始化前，提供关键硬件的访问能力</td>
+</tr>
+<tr>
+<td align="left"><strong>特殊硬件访问</strong></td>
+<td align="left">映射处理器特定寄存器（如 ARM 的 PSCI 接口）</td>
+</tr>
+<tr>
+<td align="left"><strong>调试支持</strong></td>
+<td align="left">提供早期控制台（earlycon）输出能力</td>
+</tr>
+<tr>
+<td align="left"><strong>内存管理初始化</strong></td>
+<td align="left">在 paging_init() 完成前映射页表相关数据结构</td>
+</tr>
+<tr>
+<td align="left"><strong>设备树解析</strong></td>
+<td align="left">映射设备树 blob（FDT）进行硬件识别</td>
+</tr>
+<tr>
+<td align="left"><strong>EFI 服务</strong></td>
+<td align="left">在 UEFI 系统上调用运行时服务</td>
+</tr>
+<tr>
+<td align="left"><strong>持久映射</strong></td>
+<td align="left">为某些需要长期固定映射的外设提供支持（如 ACPI 表）<code>early_ioremap_setup</code></td>
+</tr>
+</tbody></table>
+<h1 id="临时映射区-pkmap"><a href="#临时映射区-pkmap" class="headerlink" title="临时映射区 pkmap"></a>临时映射区 pkmap</h1><p><img src="image-20250625162310248.png" alt="image-20250625162310248"></p>
+<p>在Buffered IO模式下进行文件写入的时候，在下图中的第四步，内核会调用iov_iter_copy_.from_user_.atomic函数将用户空间缓冲区DirectByteBuffer中的待写入数据拷贝到page cache中。但是<strong>内核又不能直接进行拷贝</strong>，因为此时从<strong>page cache中取出的缓存页page是物理地址</strong>，而在内核中是不能够直接操作物理地址的，只能操作虚拟地址。那怎么办呢？所以就<strong>需要使用kmap_atomic将缓存页临时映射到内核空间的一段虚拟地址上，这段虚拟地址就位于内核虚拟内存空间中的临时映射区上</strong>，然后将用户空间缓存区DirectByteBuffer中的待写入数据通过这段映射的虚拟地址拷贝到page cache中的相应缓存页中。这时文件的写入操作就已经完成了。由于是临时映射，所以在拷贝完成之后，调用kunmap_atomic将这段映射再解除掉。</p>
+<p><img src="fcb8b59a4b73a823603b6cbd4f720b5d.png" alt="img"></p>
+<ul>
+<li><p><strong>使用核心编程接口：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*函数*/</span></span><br><span class="line">kmap(<span class="keyword">struct</span> page *)	<span class="comment">//为物理页帧建立长期映射（可睡眠）</span></span><br><span class="line">kunmap(<span class="keyword">struct</span> page *)	<span class="comment">//解除由 kmap 建立的映射</span></span><br><span class="line">kmap_atomic(<span class="keyword">struct</span> page *)	<span class="comment">//建立临时原子映射（不可睡眠，用于中断等场景）</span></span><br><span class="line"><span class="comment">/*操作实例*/</span></span><br><span class="line"><span class="comment">// 1. 申请低端内存页帧</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">low_page</span> =</span> alloc_page(GFP_KERNEL); </span><br><span class="line"><span class="type">void</span> *vaddr_low = kmap(low_page);  <span class="comment">// 实际返回直接映射地址</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 申请高端内存页帧</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">high_page</span> =</span> alloc_page(GFP_KERNEL | __GFP_HIGHMEM);</span><br><span class="line"><span class="type">void</span> *vaddr_high = kmap(high_page); <span class="comment">// 从 pkmap 区分配虚拟地址</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. 观察地址差异</span></span><br><span class="line">printk(<span class="string">&quot;Lowmem vaddr: %pn&quot;</span>, vaddr_low);  <span class="comment">// 如 0xc0000000~0xf7ffffff</span></span><br><span class="line">printk(<span class="string">&quot;Highmem vaddr: %pn&quot;</span>, vaddr_high); <span class="comment">// 如 0xffff0000~0xffffffff    </span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h2><p>我们使用kmap分别在高端与低端内存中映射，空间分配比例为3:1</p>
+<ul>
+<li><p><strong>驱动代码：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/slab.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/highmem.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page_lowmem</span>, *<span class="title">page_highmem</span>;</span></span><br><span class="line"><span class="type">void</span> *virt_addr;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> phys_addr;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">hello_init</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">    page_lowmem = alloc_page(GFP_KERNEL);</span><br><span class="line">    <span class="keyword">if</span> (!page_lowmem) &#123;</span><br><span class="line">        printk(<span class="string">&quot;alloc page failed\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    virt_addr = kmap(page_lowmem);</span><br><span class="line">    phys_addr = __page_to_pfn(page_lowmem) &lt;&lt; <span class="number">12</span>;</span><br><span class="line">    printk(<span class="string">&quot;phys_addr:%x  virt_addr:%x\n&quot;</span>, phys_addr, (<span class="type">unsigned</span> <span class="type">int</span>)virt_addr);</span><br><span class="line"></span><br><span class="line">    page_highmem = alloc_page(__GFP_HIGHMEM);</span><br><span class="line">    <span class="keyword">if</span> (!page_highmem) &#123;</span><br><span class="line">        printk(<span class="string">&quot;alloc page failed\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    virt_addr = kmap(page_highmem);</span><br><span class="line">    phys_addr = __page_to_pfn(page_highmem) &lt;&lt; <span class="number">12</span>;</span><br><span class="line">    printk(<span class="string">&quot;phys_addr:%x  virt_addr:%x\n&quot;</span>, phys_addr, (<span class="type">unsigned</span> <span class="type">int</span>)virt_addr);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">hello_exit</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">    kunmap(page_lowmem);</span><br><span class="line">    kunmap(page_highmem);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(hello_init);</span><br><span class="line">module_exit(hello_exit);</span><br><span class="line"></span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;kevin&quot;</span>);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;kmap/kunmap demo&quot;</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>实验结果</p>
+<ul>
+<li><p>虚拟内核空间地址：</p>
+<p><img src="image-20250625160034966.png" alt="image-20250625160034966"></p>
+</li>
+<li><p>实验结果：</p>
+<p><img src="image-20250625160105488.png" alt="image-20250625160105488"></p>
+</li>
+</ul>
+</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2025/04/20/MMS-CH4/">https://leonardo272.github.io/2025/04/20/MMS-CH4/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a><a class="post-meta__tags" href="/tags/%E8%BF%9B%E7%A8%8B%E8%99%9A%E6%8B%9F%E7%A9%BA%E9%97%B4/">进程虚拟空间</a></div><div class="post-share"><div class="social-share" data-image="/page_images/6.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/06/05/00008/" title="驱动开发-pinctrl与gpio子系统"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">驱动开发-pinctrl与gpio子系统</div></div><div class="info-2"><div class="info-item-1">pinctrl子系统i.MX 芯片（以及很多其他 SoC）面临的一个根本问题：芯片的引脚（PAD）数量有限，但内部功能模块（如 USDHC, UART, I2C, GPIO 等）非常多。为了解决这个矛盾，芯片设计引入了 IOMUX Controller (IOMUXC)。  IOMUXC (I&#x2F;O Multiplexer Controller)： 功能：它是一个硬件控制器，允许一个物理引脚（PAD）被复用到多个内部功能模块上。 工作方式：通过寄存器配置，为每个引脚选择 up to 8 种不同的工作模式（ALT modes，即 Alternate Function 复用功能）。例如，一个引脚可以被配置为 GPIO1_IO00、UART1_TXD 或 I2C1_SDA 等功能。 额外控制：除了选择功能，IOMUXC 还控制每个引脚的电气特性，如上拉&#x2F;下拉电阻、驱动强度、转换速率等。这被称为 Pad Settings。    我们需要在设备树中设置PIN的信息，在imx6ull.dtsi文件中，找到iomuxc的节点，iomuxc 节点就是I.MX6ULL的IOMU...</div></div></div></a><a class="pagination-related" href="/2025/04/15/MMS-CH3/" title="CH3-mmap详解与基于IMX6ULL嵌入式驱动开发实践"><img class="cover" src="/page_images/6.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">CH3-mmap详解与基于IMX6ULL嵌入式驱动开发实践</div></div><div class="info-2"><div class="info-item-1">映射关系以下是针对 Linux 内存映射的四种组合及其应用场景的详细分析： 1. 文件共享映射（File Shared Mapping） 特点：  共享性：多个进程共享同一份物理内存，修改会立即反映到其他进程。 持久化：修改内容会写回磁盘文件（若文件支持）。 实现方式：通过 mmap 的 MAP_SHARED 标志实现。 内核机制：依赖文件系统的缓冲机制，所有修改需通过页缓存同步。  应用场景：  进程间通信（IPC）：如共享文件的读写操作。 数据库缓存：将数据库文件映射到内存，多个进程直接操作内存实现高效访问。 多进程日志记录：多个进程共享同一日志文件的映射区域，减少磁盘 I&#x2F;O。  示例代码： 12int fd = open(&quot;shared_file&quot;, O_RDWR);void *addr = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  2. 文件私有映射（File Private Mapping） 特点：  独占性：每个进程拥有独立的私有副本，修改仅影响...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/04/10/MMS-CH1/" title="CH1-进程虚拟空间"><img class="cover" src="/page_images/6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-04-10</div><div class="info-item-2">CH1-进程虚拟空间</div></div><div class="info-2"><div class="info-item-1">代码学习链接： Linux 源代码 （v6.15.5） - Bootlin Elixir 交叉引用器 理论知识学习链接：小林coding | Java面试学习 进程虚拟内存空间为了防止多进程运行时造成的内存地址冲突，内核引入了虚拟内存地址，为每个进程提供了一个独立的虚拟内存空间，使得进程以为自己独占全部内存资源。   内核根据进程运行的过程中所需要不同种类的数据而为其开辟了对应的地址空间。分别为：  用于存放进程程序二进制文件中的机器指令的代码段。 用于存放程序二进制文件中定义的全局变量和静态变量的数据段和BSS段。 那些在代码中被我们指定了初始值的全局变量和静态变量在虚以内存空间中的存储区域我们叫做数据段。 那些没有指定初始值的全局变量和静态变量在虚以内存空间中的存储区域我们叫做BSS段。这些未初始化的全局变量被加载进内存之后会被初始化为0值。   用于在程序运行过程中动态申请内存的堆。这里的堆指的是OS堆并不是VM中的堆。 用于存放这些动态链接库中的代码段，数据段，BSS段，以及通过mmp系统调用映射的共享内存区，在虚拟内存空间的存储区域叫做文件映射与匿名映射区。 用于存放函...</div></div></div></a><a class="pagination-related" href="/2025/04/11/MMS-CH2/" title="CH2-malloc"><img class="cover" src="/page_images/6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-04-11</div><div class="info-item-2">CH2-malloc</div></div><div class="info-2"><div class="info-item-1">malloc实际上，malloc并不是系统调用，而是C库里的函数，用于动态分配内存。malloc申请内存的时候，会有两种方式向操作系统申请堆内存。  **方式一：**通过&#x3D;&#x3D;brk()系统调用&#x3D;&#x3D;从堆分配内存 实现的方式很简单，就是通过brk()函数将「堆顶」指针向高地址移动，获得新的内存空间。如下图：   **方式二：**通过&#x3D;&#x3D;mmap()系统调用&#x3D;&#x3D;在文件映射区域分配内存   malloc()源码里默认定义了一个阈值：  如果用户分配的内存小于128KB,则通过brk()申请内存； 如果用户分配的内存大于128KB,则通过mmap()申请内存；  特点：  当malloc通过brk系统调用申请内存时，释放该内存后，操作系统不会立即回收这部分空间；相反，它会被保留在malloc管理的内存池中，供后续分配请求直接复用，从而减少系统调用开销。 当malloc通过mmap系统调用申请内存时，释放该内存后，系统会立即将其归还给操作系统，实现物理内存的即时释放，避免资源长期占用。  malloc()分配虚拟...</div></div></div></a><a class="pagination-related" href="/2025/04/15/MMS-CH3/" title="CH3-mmap详解与基于IMX6ULL嵌入式驱动开发实践"><img class="cover" src="/page_images/6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-04-15</div><div class="info-item-2">CH3-mmap详解与基于IMX6ULL嵌入式驱动开发实践</div></div><div class="info-2"><div class="info-item-1">映射关系以下是针对 Linux 内存映射的四种组合及其应用场景的详细分析： 1. 文件共享映射（File Shared Mapping） 特点：  共享性：多个进程共享同一份物理内存，修改会立即反映到其他进程。 持久化：修改内容会写回磁盘文件（若文件支持）。 实现方式：通过 mmap 的 MAP_SHARED 标志实现。 内核机制：依赖文件系统的缓冲机制，所有修改需通过页缓存同步。  应用场景：  进程间通信（IPC）：如共享文件的读写操作。 数据库缓存：将数据库文件映射到内存，多个进程直接操作内存实现高效访问。 多进程日志记录：多个进程共享同一日志文件的映射区域，减少磁盘 I&#x2F;O。  示例代码： 12int fd = open(&quot;shared_file&quot;, O_RDWR);void *addr = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  2. 文件私有映射（File Private Mapping） 特点：  独占性：每个进程拥有独立的私有副本，修改仅影响...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">30</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Leonardo272"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">enjoy your life</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%86%85%E6%A0%B8%E7%A9%BA%E9%97%B4"><span class="toc-number">1.</span> <span class="toc-text">虚拟内存内核空间</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BA%BF%E6%80%A7%E6%98%A0%E5%B0%84%E5%8C%BA-lowmem"><span class="toc-number">2.</span> <span class="toc-text">线性映射区 lowmem</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">2.1.</span> <span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E7%9A%84%E5%86%85%E5%AE%B9"><span class="toc-number">2.2.</span> <span class="toc-text">存储的内容</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%9F%E8%83%BD%E5%88%92%E5%88%86"><span class="toc-number">2.3.</span> <span class="toc-text">功能划分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#kmalloc%E5%87%BD%E6%95%B0"><span class="toc-number">2.4.</span> <span class="toc-text">kmalloc函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6%E5%88%86%E6%9E%90"><span class="toc-number">2.4.1.</span> <span class="toc-text">实现机制分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#kmalloc%E4%B8%8ESlab%E3%80%81%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F%EF%BC%9A"><span class="toc-number">2.4.2.</span> <span class="toc-text">kmalloc与Slab、伙伴系统：</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#kmalloc-%E8%83%BD%E7%94%B3%E8%AF%B7%E7%9A%84%E6%9C%80%E5%A4%A7%E5%86%85%E5%AD%98%E6%98%AF%E5%A4%9A%E5%B0%91%EF%BC%9F"><span class="toc-number">2.4.3.</span> <span class="toc-text">kmalloc 能申请的最大内存是多少？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C"><span class="toc-number">2.5.</span> <span class="toc-text">实验</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#ZONE-HIGHMEM%E5%8C%BA"><span class="toc-number">3.</span> <span class="toc-text">ZONE_HIGHMEM区</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%90%86-1"><span class="toc-number">3.1.</span> <span class="toc-text">原理</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#vmalloc%E5%8A%A8%E6%80%81%E6%98%A0%E5%B0%84%E5%8C%BA"><span class="toc-number">4.</span> <span class="toc-text">vmalloc动态映射区</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E7%A8%8B%E6%8E%A5%E5%8F%A3"><span class="toc-number">4.1.</span> <span class="toc-text">编程接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ioremap"><span class="toc-number">4.2.</span> <span class="toc-text">ioremap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%9C%E7%94%A8"><span class="toc-number">4.2.1.</span> <span class="toc-text">作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%A6%82%E4%BD%95%E4%B8%8E%E5%A4%96%E8%AE%BE%E5%AF%84%E5%AD%98%E5%99%A8%E9%80%9A%E4%BF%A1%EF%BC%9F"><span class="toc-number">4.2.2.</span> <span class="toc-text">虚拟内存如何与外设寄存器通信？</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B0%B8%E4%B9%85%E6%98%A0%E5%B0%84%E5%8C%BA"><span class="toc-number">5.</span> <span class="toc-text">永久映射区</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9B%BA%E5%AE%9A%E6%98%A0%E5%B0%84%E5%8C%BA-fixmap"><span class="toc-number">6.</span> <span class="toc-text">固定映射区 fixmap</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%B4%E6%97%B6%E6%98%A0%E5%B0%84%E5%8C%BA-pkmap"><span class="toc-number">7.</span> <span class="toc-text">临时映射区 pkmap</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-1"><span class="toc-number">7.1.</span> <span class="toc-text">实验</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/05/00008/" title="驱动开发-pinctrl与gpio子系统"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="驱动开发-pinctrl与gpio子系统"/></a><div class="content"><a class="title" href="/2025/06/05/00008/" title="驱动开发-pinctrl与gpio子系统">驱动开发-pinctrl与gpio子系统</a><time datetime="2025-06-05T13:12:00.000Z" title="发表于 2025-06-05 21:12:00">2025-06-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/05/0001/" title="驱动开发-PWM"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="驱动开发-PWM"/></a><div class="content"><a class="title" href="/2025/06/05/0001/" title="驱动开发-PWM">驱动开发-PWM</a><time datetime="2025-06-05T13:12:00.000Z" title="发表于 2025-06-05 21:12:00">2025-06-05</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
