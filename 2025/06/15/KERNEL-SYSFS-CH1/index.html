@@ -1,0 +1,585 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>kernel-sysfs文件系统介绍 | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="sysfs文件系统 sysfs 文件系统的目录  定义：sysfs是一个基于内存的虚拟文件系统（Virtual Filesystem）。它被挂载在 &#x2F;sys 目录下，是Linux内核中内核对象（kobject）、属性（attribute）和关系（relationship） 的直观体现。 核心作用：sysfs的主要作用是在用户空间（Userspace） 和内核空间（Kernelspace） 之间搭建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kernel-sysfs文件系统介绍">
+<meta property="og:url" content="https://leonardo272.github.io/2025/06/15/KERNEL-SYSFS-CH1/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="sysfs文件系统 sysfs 文件系统的目录  定义：sysfs是一个基于内存的虚拟文件系统（Virtual Filesystem）。它被挂载在 &#x2F;sys 目录下，是Linux内核中内核对象（kobject）、属性（attribute）和关系（relationship） 的直观体现。 核心作用：sysfs的主要作用是在用户空间（Userspace） 和内核空间（Kernelspace） 之间搭建">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/7.jpg">
+<meta property="article:published_time" content="2025-06-15T13:12:00.000Z">
+<meta property="article:modified_time" content="2025-09-10T12:47:07.709Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="linux内核">
+<meta property="article:tag" content="sysfs">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/7.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "kernel-sysfs文件系统介绍",
+  "url": "https://leonardo272.github.io/2025/06/15/KERNEL-SYSFS-CH1/",
+  "image": "https://leonardo272.github.io/page_images/7.jpg",
+  "datePublished": "2025-06-15T13:12:00.000Z",
+  "dateModified": "2025-09-10T12:47:07.709Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/%5Bobject%20Object%5D"><link rel="canonical" href="https://leonardo272.github.io/2025/06/15/KERNEL-SYSFS-CH1/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/site.webmanifest"/><meta name="msapplication-TileColor" content="#3b70fc"/><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'kernel-sysfs文件系统介绍',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/"><link rel="manifest" href="/site.webmanifest"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load', preloader.endLoading)
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">39</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/7.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">kernel-sysfs文件系统介绍</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">kernel-sysfs文件系统介绍</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-15T13:12:00.000Z" title="发表于 2025-06-15 21:12:00">2025-06-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-10T12:47:07.709Z" title="更新于 2025-09-10 20:47:07">2025-09-10</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0/">内核学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="sysfs文件系统"><a href="#sysfs文件系统" class="headerlink" title="sysfs文件系统"></a>sysfs文件系统</h1><p><img src="image-20250909222539773.png" alt="image-20250909222539773"></p>
+<center>sysfs 文件系统的目录</center>
+
+<p><strong>定义：<strong>sysfs是一个基于内存的虚拟文件系统（Virtual Filesystem）。它被挂载在 <code>/sys</code> 目录下，是Linux内核中</strong>内核对象（kobject）、属性（attribute）和关系（relationship）</strong> 的直观体现。</p>
+<p><strong>核心作用</strong>：sysfs的主要作用是在<strong>用户空间（Userspace）</strong> 和<strong>内核空间（Kernelspace）</strong> 之间搭建一座桥梁，提供一个标准化的接口，使得用户空间的程序能够安全、方便地查看和配置内核的运行参数、硬件设备信息、驱动程序状态、电源管理选项等。</p>
+<p><strong>具体作用包括</strong>：</p>
+<ol>
+<li><strong>展示设备层次结构</strong>：以目录树的形式清晰地展示系统中总线（bus）、设备（device）、驱动（driver）、类（class）等内核对象的层次关系。</li>
+<li><strong>导出对象属性</strong>：将内核对象的属性（通常是变量或状态）以普通文件的形式暴露出来。用户可以通过<code>cat</code>命令读取属性，通过<code>echo</code>命令修改属性（如果该属性可写）。</li>
+<li><strong>支持用户空间事件</strong>：通过<code>poll</code>或<code>select</code>系统调用，用户空间程序可以监听内核发出的事件通知（例如，设备的插拔）。</li>
+</ol>
+<p><strong>特点：</strong></p>
+<ol>
+<li><strong>层次化结构</strong>：sysfs是一个树形结构，目录和文件组织严密，反映了内核内部对象的父子、兄弟关系。</li>
+<li><strong>统一设备模型（Udm）的表示</strong>：它是Linux<strong>统一设备模型</strong>的外在表现。内核中的<code>kobject</code>, <code>kset</code>, <code>kobj_type</code>等结构体，在sysfs中都有对应的目录和文件。</li>
+<li><strong>“一个值一个文件”原则</strong>：一个属性文件通常只包含一个简单值。这简化了用户空间和内核空间的交互逻辑。</li>
+<li><strong>原子操作</strong>：对sysfs文件的读写操作通常是原子的（一次读或写操作完成一个完整的事务）。</li>
+<li><strong>符号链接广泛使用</strong>：大量使用符号链接来表示对象间复杂的关系，例如，<code>/sys/class/net/eth0</code> 通常会链接到 <code>/sys/devices/pci0000:00/0000:00:1c.4/0000:03:00.0/net/eth0</code>，这表示“网络类”中的eth0设备实际上是一个PCI设备。</li>
+<li><strong>只读与可写文件</strong>：很多文件是只读的（用于展示信息），也有一些文件是可写的（用于配置）。文件权限反映了这一特性。</li>
+</ol>
+<h2 id="struct-kobject"><a href="#struct-kobject" class="headerlink" title="struct kobject"></a>struct kobject</h2><img src="image-20250908232846430.png" alt="image-20250908232846430" style="zoom:67%;">
+
+<p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/kobject.h#L64">kobject</a>是Linux内核设备管理机制的最高层抽象。kobject类似面向对象体系中的基类，它往往被嵌入到其他结构体中，形成一个复杂的多层次结构。kobject本身对应着sysfs文件系统中的一个目录。</p>
+<ul>
+<li><strong>提供基础的对象管理能力</strong>：主要是<strong>引用计数（reference counting）</strong>。通过<code>kref</code>机制，内核可以跟踪有多少地方正在使用这个对象，从而在引用计数降为0时安全地释放它，防止use-after-free错误。</li>
+<li><strong>在sysfs中表示自己</strong>：每个<code>kobject</code>在sysfs文件系统中都对应一个<strong>目录</strong>。这个目录的创建、位置和删除都由<code>kobject</code>管理。</li>
+<li><strong>构建层次结构</strong>：通过指定<code>parent</code>，<code>kobject</code>可以构建起一个层次化的树状结构（类似于文件系统的目录树），这直观地反映了内核内部对象的父子关系（例如，一个USB设备属于一个USB控制器）。</li>
+<li><strong>关联与用户空间的交互</strong>：<code>kobject</code>与一个<code>kobj_type</code>结构体关联，该结构体定义了它的属性（在sysfs中表现为文件）和行为（如<code>show</code>&#x2F;<code>store</code>方法）。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>		*name;<span class="comment">//名称</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>	<span class="title">entry</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobject</span>		*<span class="title">parent</span>;</span><span class="comment">//父对象</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kset</span>		*<span class="title">kset</span>;</span><span class="comment">//所属的kset</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobj_type</span>	*<span class="title">ktype</span>;</span><span class="comment">// 对象的类型</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kernfs_node</span>	*<span class="title">sd</span>;</span> <span class="comment">/*sysfs 目录项*/</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kref</span>		<span class="title">kref</span>;</span><span class="comment">// 引用计数</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_DEBUG_KOBJECT_RELEASE</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">delayed_work</span>	<span class="title">release</span>;</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> state_initialized:<span class="number">1</span>;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> state_in_sysfs:<span class="number">1</span>;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> state_add_uevent_sent:<span class="number">1</span>;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> state_remove_uevent_sent:<span class="number">1</span>;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> uevent_suppress:<span class="number">1</span>;<span class="comment">//是否发送uevent 事件</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>变量名</th>
+<th>类型</th>
+<th>意义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><code>name</code></strong></td>
+<td><code>const char *</code></td>
+<td><strong>对象名称</strong>，在 sysfs 中显示为目录名。必须设置（通常通过<code>kobject_set_name</code>），是用户可见的标识。若未设置，sysfs 中目录名为空，导致功能异常。</td>
+</tr>
+<tr>
+<td><strong><code>parent</code></strong></td>
+<td><code>struct kobject *</code></td>
+<td><strong>父 kobject 指针</strong>，定义 sysfs 层次结构。例如，设备的 kobject 的<code>parent</code>指向其总线的 kobject。决定对象在<code>/sys</code>中的位置（如<code>/sys/bus/...</code>）。</td>
+</tr>
+<tr>
+<td><strong><code>kset</code></strong></td>
+<td><code>struct kset *</code></td>
+<td><strong>所属 kset 集合指针</strong>。kset 是 kobject 的容器（类似目录），用于分组管理（如所有 block 设备）。若 kobject 属于某个集合（如<code>block_kset</code>），必须设置此字段。</td>
+</tr>
+<tr>
+<td><strong><code>ktype</code></strong></td>
+<td><code>struct kobj_type *</code></td>
+<td><strong>对象类型指针</strong>，定义关键行为： -<code>release()</code>：对象释放时的回调函数（<strong>必须实现</strong>，否则内存泄漏）。 -<code>sysfs_ops</code>：sysfs 读写操作（如<code>show</code>&#x2F;<code>store</code>）。 -<code>default_attrs</code>：默认属性列表。<strong>这是 sysfs 属性管理的核心</strong>。</td>
+</tr>
+<tr>
+<td><strong><code>sd</code></strong></td>
+<td><code>struct kernfs_node *</code></td>
+<td><strong>sysfs 目录项指针</strong>（旧版内核中为<code>struct sysfs_dirent *</code>）。内核内部使用，指向 sysfs 中的实际目录节点。通常无需手动操作，但调试时可用于检查 sysfs 状态。</td>
+</tr>
+<tr>
+<td><strong><code>kref</code></strong></td>
+<td><code>struct kref</code></td>
+<td><strong>引用计数</strong>，通过<code>kref</code>实现自动内存管理。调用<code>kobject_get()</code>增加计数，<code>kobject_put()</code>减少计数；计数为 0 时触发<code>ktype-&gt;release()</code>。<strong>避免手动释放内存的关键</strong>。</td>
+</tr>
+<tr>
+<td><code>state_initialized</code></td>
+<td><code>unsigned int</code>(bitfield)</td>
+<td>标记对象是否已初始化。由<code>kobject_init()</code>设置，通常无需开发者干预。</td>
+</tr>
+<tr>
+<td><code>state_in_sysfs</code></td>
+<td><code>unsigned int</code>(bitfield)</td>
+<td>标记对象是否已添加到 sysfs。由<code>kobject_add()</code>设置，用于状态检查。</td>
+</tr>
+<tr>
+<td><code>state_add_uevent_sent</code> <code>state_remove_uevent_sent</code></td>
+<td><code>unsigned int</code>(bitfield)</td>
+<td>标记 uevent 事件是否已发送。用于事件去重，开发者一般无需直接操作。</td>
+</tr>
+<tr>
+<td><code>uevent_suppress</code></td>
+<td><code>unsigned int</code>(bitfield)</td>
+<td>若置位，禁止发送 uevent 事件。用于优化性能（如批量操作时），但需谨慎使用。</td>
+</tr>
+<tr>
+<td><code>entry</code></td>
+<td><code>struct list_head</code></td>
+<td>链表节点，用于在<code>kset</code>的链表中链接 kobject。内核内部使用，开发者无需操作。</td>
+</tr>
+</tbody></table>
+<h3 id="API函数"><a href="#API函数" class="headerlink" title="API函数"></a>API函数</h3><table>
+<thead>
+<tr>
+<th align="left">函数原型</th>
+<th align="left">作用描述</th>
+<th align="left">参数说明</th>
+<th align="left">返回值及注意事项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>struct kobject *kobject_create(void);</code></strong></td>
+<td align="left">分配并初始化一个 kobject</td>
+<td align="left">无参数</td>
+<td align="left">成功返回指向新 kobject 的指针，失败返回 NULL（必须检查）。只做了最基本初始化，需要后续调用 <code>kobject_add()</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>int kobject_add(struct kobject *kobj, struct kobject *parent, const char *fmt, ...);</code></strong></td>
+<td align="left">将已初始化的 kobject 注册到内核并添加到 sysfs</td>
+<td align="left"><code>kobj</code>: 要添加的 kobject <code>parent</code>: 父 kobject 指针（可为 NULL） <code>fmt</code>: 生成名称的格式字符串（类似 printf） <code>...</code>: 格式字符串的参数</td>
+<td align="left">成功返回 0，失败返回错误码。必须在 <code>kobject_init()</code> 或 <code>kobject_create()</code> 后调用</td>
+</tr>
+<tr>
+<td align="left"><strong><code>struct kobject *kobject_create_and_add(const char *name, struct kobject *parent);</code></strong></td>
+<td align="left">分配、初始化并添加一个 kobject 到 sysfs</td>
+<td align="left"><code>name</code>: kobject 的名称（sysfs 中的目录名） <code>parent</code>: 父 kobject 指针（可为 NULL）</td>
+<td align="left">成功返回 kobject 指针，失败返回 NULL。是 <code>kobject_create()</code> + <code>kobject_add()</code> 的便捷组合</td>
+</tr>
+<tr>
+<td align="left"><strong><code>void kobject_init(struct kobject *kobj, const struct kobj_type *ktype);</code></strong></td>
+<td align="left">初始化一个已分配的 kobject</td>
+<td align="left"><code>kobj</code>: 要初始化的 kobject 指针 <code>ktype</code>: 该 kobject 的类型结构体</td>
+<td align="left">无返回值。设置引用计数为 1，关联 ktype，标记为已初始化</td>
+</tr>
+<tr>
+<td align="left"><strong><code>int kobject_init_and_add(struct kobject *kobj, const struct kobj_type *ktype, struct kobject *parent, const char *fmt, ...);</code></strong></td>
+<td align="left">初始化并添加 kobject 到 sysfs</td>
+<td align="left"><code>kobj</code>: 要初始化的 kobject <code>ktype</code>: kobject 类型 <code>parent</code>: 父 kobject <code>fmt</code>: 名称格式字符串 <code>...</code>: 格式参数</td>
+<td align="left">成功返回 0，失败返回错误码。是 <code>kobject_init()</code> + <code>kobject_add()</code> 的便捷组合</td>
+</tr>
+<tr>
+<td align="left"><strong><code>void kobject_del(struct kobject *kobj);</code></strong></td>
+<td align="left">从 sysfs 中移除 kobject</td>
+<td align="left"><code>kobj</code>: 要从 sysfs 移除的 kobject</td>
+<td align="left">无返回值。只从 sysfs 移除，不释放内存，通常后跟 <code>kobject_put()</code></td>
+</tr>
+<tr>
+<td align="left"><strong><code>struct kobject *kobject_get(struct kobject *kobj);</code></strong></td>
+<td align="left">增加 kobject 的引用计数</td>
+<td align="left"><code>kobj</code>: 要增加引用的 kobject</td>
+<td align="left">返回传入的 kobject 指针。如果 kobj 为 NULL，也返回 NULL</td>
+</tr>
+<tr>
+<td align="left"><strong><code>void kobject_put(struct kobject *kobj);</code></strong></td>
+<td align="left">减少 kobject 的引用计数</td>
+<td align="left"><code>kobj</code>: 要减少引用的 kobject</td>
+<td align="left">无返回值。当引用计数为 0 时，会调用 ktype-&gt;release 释放 kobject</td>
+</tr>
+<tr>
+<td align="left"><strong><code>int kobject_uevent(struct kobject *kobj, enum kobject_action action);</code></strong></td>
+<td align="left">向用户空间发送 uevent 事件</td>
+<td align="left"><code>kobj</code>: 发送事件的源 kobject <code>action</code>: 事件类型（KOBJ_ADD, KOBJ_REMOVE 等）</td>
+<td align="left">成功返回 0，失败返回错误码。通常由设备核心代码调用，驱动中较少直接使用</td>
+</tr>
+<tr>
+<td align="left"><strong><code>int kobject_rename(struct kobject *kobj, const char *new_name);</code></strong></td>
+<td align="left">重命名 kobject</td>
+<td align="left"><code>kobj</code>: 要重命名的 kobject <code>new_name</code>: 新的名称</td>
+<td align="left">成功返回 0，失败返回错误码。会改变 sysfs 中的目录名</td>
+</tr>
+<tr>
+<td align="left"><strong><code>int kobject_move(struct kobject *kobj, struct kobject *new_parent);</code></strong></td>
+<td align="left">移动 kobject 到新的父对象</td>
+<td align="left"><code>kobj</code>: 要移动的 kobject <code>new_parent</code>: 新的父 kobject</td>
+<td align="left">成功返回 0，失败返回错误码。会改变 kobject 在 sysfs 中的位置</td>
+</tr>
+</tbody></table>
+<h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p>本次实验在&#x2F;sysfs的目录下创建一个新的目录</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kobject.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/sysfs.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> *<span class="title">kobj_test</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">kobject_test_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    kobj_test = kobject_create_and_add(<span class="string">&quot;test_kobject&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="comment">// kobj_test = kobject_create_and_add(&quot;test&quot;, kernel_kobj);</span></span><br><span class="line">    <span class="keyword">if</span> (!kobj_test)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">kobject_test_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    kobject_put(kobj_test);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(kobject_test_init);</span><br><span class="line">module_exit(kobject_test_exit);</span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;kevin&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;create and add a kobject to kernel&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>实验结果：</strong></p>
+<p><img src="image-20250908232501174.png" alt="image-20250908232501174"></p>
+<p><code>kobject_create_and_add</code>函数定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> kobject *<span class="title function_">kobject_create_and_add</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *name, <span class="keyword">struct</span> kobject *parent)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> *<span class="title">kobj</span>;</span></span><br><span class="line">	<span class="type">int</span> retval;</span><br><span class="line"></span><br><span class="line">	kobj = kobject_create();</span><br><span class="line">	<span class="keyword">if</span> (!kobj)</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">	retval = kobject_add(kobj, parent, <span class="string">&quot;%s&quot;</span>, name);</span><br><span class="line">	<span class="keyword">if</span> (retval) &#123;</span><br><span class="line">		pr_warn(<span class="string">&quot;%s: kobject_add error: %d\n&quot;</span>, __func__, retval);</span><br><span class="line">		kobject_put(kobj);</span><br><span class="line">		kobj = <span class="literal">NULL</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> kobj;</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL_GPL(kobject_create_and_add);</span><br></pre></td></tr></table></figure>
+
+<p>常见的<code>struct kobject *parent</code>变量：</p>
+<table>
+<thead>
+<tr>
+<th align="left">parent 参数</th>
+<th align="left">对应的 sysfs 路径</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><code>NULL</code></strong></td>
+<td align="left"><code>/sys/</code> 根目录下</td>
+<td align="left">创建在 sysfs 的根目录中，但通常不推荐这样做</td>
+</tr>
+<tr>
+<td align="left"><strong><code>kernel_kobj</code></strong></td>
+<td align="left"><code>/sys/kernel/</code></td>
+<td align="left">用于内核相关的配置和状态信息</td>
+</tr>
+<tr>
+<td align="left"><strong><code>fs_kobj</code></strong></td>
+<td align="left"><code>/sys/fs/</code></td>
+<td align="left">用于文件系统相关的配置</td>
+</tr>
+<tr>
+<td align="left"><strong><code>firmware_kobj</code></strong></td>
+<td align="left"><code>/sys/firmware/</code></td>
+<td align="left">用于固件相关的接口</td>
+</tr>
+<tr>
+<td align="left"><strong><code>power_kobj</code></strong></td>
+<td align="left"><code>/sys/power/</code></td>
+<td align="left">用于电源管理相关的配置</td>
+</tr>
+<tr>
+<td align="left"><strong><code>module_kobj</code></strong></td>
+<td align="left"><code>/sys/module/</code></td>
+<td align="left">用于内核模块信息</td>
+</tr>
+</tbody></table>
+<h2 id="struct-attribute"><a href="#struct-attribute" class="headerlink" title="struct attribute"></a>struct attribute</h2><p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/sysfs.h#L30">struct attribute</a>结构体，用来描述内核对象的特性，它是<strong>一个 sysfs 文件的元数据</strong>：只有<strong>名字</strong>和<strong>权限位</strong>（mode）。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> &#123;</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>		*name;</span><br><span class="line">	<span class="type">umode_t</span>			mode;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_DEBUG_LOCK_ALLOC</span></span><br><span class="line">	<span class="type">bool</span>			ignore_lockdep:<span class="number">1</span>;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">lock_class_key</span>	*<span class="title">key</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">lock_class_key</span>	<span class="title">skey</span>;</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p> <strong><code>name</code></strong> 决定这个属性的名字，<strong><code>mode</code></strong> 决定读写权限，如 <code>0644</code>（root 可写，所有人可读）。</p>
+<p><strong>它的派生类型：</strong></p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>用途</th>
+<th>常见放置对象</th>
+<th>典型路径</th>
+<th>创建&#x2F;移除 API</th>
+<th>常用宏</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>struct attribute</code></td>
+<td>最基础元数据（文件名+权限），<strong>不含回调</strong></td>
+<td>任意 <code>kobject</code></td>
+<td>取决于 <code>kobj</code></td>
+<td><code>sysfs_create_file</code> &#x2F; <code>sysfs_remove_file</code></td>
+<td>无（通常被封装类型使用）</td>
+</tr>
+<tr>
+<td><code>struct kobj_attribute</code></td>
+<td><strong>文本属性</strong>（ASCII），带 <code>show/store</code> 回调</td>
+<td>任意 <code>kobject</code></td>
+<td><code>/sys/.../你的目录/文件</code></td>
+<td><code>sysfs_create_file(s)</code>、<code>sysfs_create_group</code></td>
+<td><code>__ATTR</code> &#x2F; <code>__ATTR_RO</code> &#x2F; <code>__ATTR_WO</code></td>
+</tr>
+<tr>
+<td><code>struct device_attribute</code></td>
+<td>设备目录下的<strong>文本属性</strong></td>
+<td><code>struct device</code> 的 <code>kobj</code></td>
+<td><code>/sys/devices/.../你的设备/文件</code> 或 <code>/sys/class/.../设备/文件</code></td>
+<td><code>device_create_file</code> &#x2F; <code>device_remove_file</code></td>
+<td><code>DEVICE_ATTR</code> &#x2F; <code>DEVICE_ATTR_RO</code> &#x2F; <code>DEVICE_ATTR_WO</code></td>
+</tr>
+<tr>
+<td><code>struct driver_attribute</code></td>
+<td>驱动目录下的<strong>文本属性</strong></td>
+<td><code>struct device_driver</code></td>
+<td><code>/sys/bus/&lt;bus&gt;/drivers/&lt;drv&gt;/文件</code></td>
+<td><code>driver_create_file</code> &#x2F; <code>driver_remove_file</code></td>
+<td><code>DRIVER_ATTR</code></td>
+</tr>
+<tr>
+<td><code>struct class_attribute</code></td>
+<td>类目录下的<strong>文本属性</strong></td>
+<td><code>struct class</code></td>
+<td><code>/sys/class/&lt;class&gt;/文件</code>（或其下）</td>
+<td><code>class_create_file</code> &#x2F; <code>class_remove_file</code></td>
+<td><code>CLASS_ATTR</code></td>
+</tr>
+<tr>
+<td><code>struct bus_attribute</code></td>
+<td>总线目录下的<strong>文本属性</strong></td>
+<td><code>struct bus_type</code></td>
+<td><code>/sys/bus/&lt;bus&gt;/文件</code></td>
+<td><code>bus_create_file</code> &#x2F; <code>bus_remove_file</code></td>
+<td><code>BUS_ATTR</code></td>
+</tr>
+<tr>
+<td><code>struct bin_attribute</code></td>
+<td><strong>二进制属性</strong>，支持偏移读写、可选 <code>mmap</code></td>
+<td>任意 <code>kobject</code>（含 <code>device</code>）</td>
+<td><code>/sys/.../你的目录/文件</code></td>
+<td><code>sysfs_create_bin_file</code> &#x2F; <code>sysfs_remove_bin_file</code></td>
+<td><code>BIN_ATTR</code> &#x2F; <code>BIN_ATTR_RO</code> &#x2F; <code>BIN_ATTR_WO</code></td>
+</tr>
+<tr>
+<td><code>struct attribute_group</code></td>
+<td>批量创建属性（可选子目录&#x2F;可见性控制）</td>
+<td>任意 <code>kobject</code></td>
+<td><code>/sys/.../你的目录/(组名)/文件们</code></td>
+<td><code>sysfs_create_group</code> &#x2F; <code>sysfs_remove_group</code></td>
+<td>组里放 <code>attrs[]</code>（以及可选 <code>bin_attrs[]</code>）</td>
+</tr>
+</tbody></table>
+<h3 id="kobj-attribute"><a href="#kobj-attribute" class="headerlink" title="kobj_attribute"></a><strong><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/kobject.h#L163">kobj_attribute</a></strong></h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kobj_attribute</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> <span class="title">attr</span>;</span></span><br><span class="line">	<span class="type">ssize_t</span> (*show)(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr,</span><br><span class="line">			<span class="type">char</span> *buf);</span><br><span class="line">	<span class="type">ssize_t</span> (*store)(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr,</span><br><span class="line">			 <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>返回值规范</strong>：</p>
+<ul>
+<li><code>show()</code>：返回写入的字节数。</li>
+<li><code>store()</code>：<strong>成功应返回 <code>count</code></strong>；解析失败返回 <code>-EINVAL</code> 等错误码。</li>
+</ul>
+<p><strong>换行</strong>：<code>show()</code> 输出通常以 <code>\n</code> 结尾，便于 <code>cat</code>。</p>
+<p><strong>配套的宏：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__ATTR(name, mode, show, store)</span><br><span class="line">__ATTR_RO(name)</span><br><span class="line">__ATTR_WO(name)</span><br><span class="line">__ATTR_RW(name)</span><br></pre></td></tr></table></figure>
+
+<p>可以用过两个方法初始化</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/********* 方法一 ***********/</span></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">value_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr,</span></span><br><span class="line"><span class="params">                          <span class="type">char</span> *buf)</span></span><br><span class="line">&#123;</span><br><span class="line">........</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">value_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr, </span></span><br><span class="line"><span class="params">                          <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">........</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_attribute</span> <span class="title">value_attribute</span> =</span> &#123;</span><br><span class="line">    .attr = &#123;</span><br><span class="line">        .name = <span class="string">&quot;value&quot;</span>,</span><br><span class="line">        .mode = <span class="number">0664</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    .show  = value_show,</span><br><span class="line">    .store = value_store, </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/********* 方法二 ***********/</span></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">hello_buf_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr,</span></span><br><span class="line"><span class="params">                          <span class="type">char</span> *buf)</span></span><br><span class="line">&#123;</span><br><span class="line">........</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">hello_buf_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr, </span></span><br><span class="line"><span class="params">                          <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">........</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_attribute</span> <span class="title">foo_attribute</span> =</span> </span><br><span class="line">              __ATTR(buf, <span class="number">0664</span>, hello_buf_show, hello_buf_store);</span><br></pre></td></tr></table></figure>
+
+<h4 id="实验-1"><a href="#实验-1" class="headerlink" title="实验"></a>实验</h4><p>本次实验我们实现创建文件的可读可写属性。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kobject.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/sysfs.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">char</span>    attribute_test_buf[<span class="number">100</span>];</span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> attribute_test_value;</span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> *<span class="title">kobj_attribute_test</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">value_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr,</span></span><br><span class="line"><span class="params">                          <span class="type">char</span> *buf)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">sprintf</span>(buf, <span class="string">&quot;attribute_test_value = %lu\n&quot;</span>, attribute_test_value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">value_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr, </span></span><br><span class="line"><span class="params">                          <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> tmp_buf[<span class="number">10</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="built_in">strncpy</span>(tmp_buf, buf, count);</span><br><span class="line">    attribute_test_value = simple_strtoul(tmp_buf, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_attribute</span> <span class="title">value_attribute</span> =</span> &#123;</span><br><span class="line">    .attr = &#123;</span><br><span class="line">        .name = <span class="string">&quot;value&quot;</span>,</span><br><span class="line">        .mode = <span class="number">0664</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    .show  = value_show,</span><br><span class="line">    .store = value_store, </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">attribute_test_buf_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr,</span></span><br><span class="line"><span class="params">                          <span class="type">char</span> *buf)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">strncpy</span>(buf, attribute_test_buf, <span class="built_in">strlen</span>(attribute_test_buf));</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">strlen</span>(attribute_test_buf);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">attribute_test_buf_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> kobj_attribute *attr, </span></span><br><span class="line"><span class="params">                          <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">strncpy</span>(attribute_test_buf, buf, count);</span><br><span class="line">	<span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_attribute</span> <span class="title">foo_attribute</span> =</span> </span><br><span class="line">              __ATTR(buf, <span class="number">0664</span>, attribute_test_buf_show, attribute_test_buf_store);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">kobject_attribute_test_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> retval;</span><br><span class="line"></span><br><span class="line">	kobj_attribute_test = kobject_create_and_add(<span class="string">&quot;attribute_test&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">	<span class="keyword">if</span> (!kobj_attribute_test)</span><br><span class="line">		<span class="keyword">return</span> -ENOMEM;</span><br><span class="line">	</span><br><span class="line">	retval = sysfs_create_file(kobj_attribute_test, &amp;foo_attribute.attr);</span><br><span class="line">	<span class="keyword">if</span> (retval) &#123;</span><br><span class="line">		printk(KERN_ALERT <span class="string">&quot;%s: create sysfs file failed\n&quot;</span>, __func__);</span><br><span class="line">	    kobject_put(kobj_attribute_test);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">    retval = sysfs_create_file(kobj_attribute_test, &amp;value_attribute.attr);</span><br><span class="line">	<span class="keyword">if</span> (retval) &#123;</span><br><span class="line">		printk(KERN_ALERT <span class="string">&quot;%s: create sysfs file failed\n&quot;</span>, __func__);</span><br><span class="line">	    kobject_put(kobj_attribute_test);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">kobject_attribute_test_exit</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">	kobject_put(kobj_attribute_test);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(kobject_attribute_test_init);</span><br><span class="line">module_exit(kobject_attribute_test_exit);</span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;kevin&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;how to create a file in sysfs&quot;</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>Makefile文件：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">KERNELDIR := /home/arm-linux/MX6U/linux-core</span><br><span class="line">CURRENT_PATH := <span class="variable">$(<span class="built_in">shell</span> pwd)</span></span><br><span class="line">INSTALL_PATH := /home/arm-linux/MX6U/nfs/rootfs/lib/modules/4.1.15</span><br><span class="line">obj-m := attribute.o</span><br><span class="line"></span><br><span class="line"><span class="section">build: kernel_modules</span></span><br><span class="line"></span><br><span class="line"><span class="section">kernel_modules:</span></span><br><span class="line">	<span class="variable">$(MAKE)</span> -C <span class="variable">$(KERNELDIR)</span> M=<span class="variable">$(CURRENT_PATH)</span> modules</span><br><span class="line"></span><br><span class="line"><span class="section">clean:</span></span><br><span class="line">	<span class="variable">$(MAKE)</span> -C <span class="variable">$(KERNELDIR)</span> M=<span class="variable">$(CURRENT_PATH)</span> clean</span><br><span class="line"><span class="section">install:</span></span><br><span class="line">	sudo cp *.ko <span class="variable">$(INSTALL_PATH)</span></span><br><span class="line"><span class="section">help:</span></span><br><span class="line">	@echo <span class="string">&quot;可用目标:&quot;</span></span><br><span class="line">	@echo <span class="string">&quot;  build     - 编译模块(默认)&quot;</span></span><br><span class="line">	@echo <span class="string">&quot;  clean     - 清理编译文件&quot;</span></span><br><span class="line">	@echo <span class="string">&quot;  install   - 安装模块到目标系统&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>实验结果：</p>
+<p><img src="image-20250909210733115.png" alt="image-20250909210733115"></p>
+<p>我们可以通过<code>echo</code>与<code>cat</code>命令查看我们编写的功能是否成功运行，结果显示两个成员都能实现相应的读写效果！</p>
+<h3 id="bin-attribute"><a href="#bin-attribute" class="headerlink" title="bin_attribute"></a><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/sysfs.h#L168">bin_attribute</a></h3><p>和文本型的 <code>kobj_attribute</code> 不同，<strong><code>bin_attribute</code> 用来在 sysfs 下暴露“二进制数据”接口</strong>，支持<strong>按偏移</strong>的部分读写，甚至可选 <strong>mmap</strong>。典型场景：固件&#x2F;大块缓冲区、寄存器快照、校准表等<strong>非 ASCII</strong> 数据。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bin_attribute</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> <span class="title">attr</span>;</span>  <span class="comment">// 内含 name/mode</span></span><br><span class="line">    <span class="type">size_t</span>  size;           <span class="comment">// 文件大小（以字节计）</span></span><br><span class="line">    <span class="type">void</span>   *private;        <span class="comment">// 可选，驱动自用</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 回调：按偏移读写。buf 是内核缓冲区（不是用户态指针）。*/</span></span><br><span class="line">    <span class="type">ssize_t</span> (*read)(<span class="keyword">struct</span> file *filp, <span class="keyword">struct</span> kobject *kobj,</span><br><span class="line">                    <span class="keyword">struct</span> bin_attribute *attr, <span class="type">char</span> *buf,</span><br><span class="line">                    <span class="type">loff_t</span> off, <span class="type">size_t</span> count);</span><br><span class="line"></span><br><span class="line">    <span class="type">ssize_t</span> (*write)(<span class="keyword">struct</span> file *filp, <span class="keyword">struct</span> kobject *kobj,</span><br><span class="line">                     <span class="keyword">struct</span> bin_attribute *attr, <span class="type">char</span> *buf,</span><br><span class="line">                     <span class="type">loff_t</span> off, <span class="type">size_t</span> count);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> (*mmap)(<span class="keyword">struct</span> file *filp, <span class="keyword">struct</span> kobject *kobj,</span><br><span class="line">                <span class="keyword">struct</span> bin_attribute *attr, <span class="keyword">struct</span> vm_area_struct *vma);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><code>attr.name</code>&#x2F;<code>attr.mode</code> 决定文件名与权限（如 <code>0644</code>）。</p>
+<p><code>size</code> 是 sysfs 看到的文件大小。<strong>必须设置</strong>（常见做法是固定值或在创建前计算好）。</p>
+<p><code>read</code>&#x2F;<code>write</code> 的 <code>buf</code> 是<strong>内核缓冲区</strong>，你<strong>直接 <code>memcpy()</code></strong> 即可（无需 <code>copy_to_user()</code>）。</p>
+<p><code>off</code> 是文件偏移；<code>count</code> 是本次请求的长度；你需要根据 <code>off/size</code> 自己裁剪返回长度。</p>
+<p><strong>创建&#x2F;删除单个二进制文件：</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int  sysfs_create_bin_file(struct kobject *kobj,</span><br><span class="line">                           const struct bin_attribute *attr);</span><br><span class="line">void sysfs_remove_bin_file(struct kobject *kobj,</span><br><span class="line">                           const struct bin_attribute *attr);</span><br></pre></td></tr></table></figure>
+
+<p><strong>宏</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#define BIN_ATTR(_name, _mode, _read, _write, _size) /* 定义静态 bin_attr */</span><br><span class="line">#define BIN_ATTR_RO(_name, _size)                     /* 只读 */</span><br><span class="line">#define BIN_ATTR_WO(_name, _size)                     /* 只写 */</span><br></pre></td></tr></table></figure>
+
+<p><strong>成组创建</strong>（如果你的头文件里有 <code>struct attribute_group</code> 的 <code>.bin_attrs</code> &#x2F; <code>.is_bin_visible</code> 字段，就可以用 <code>sysfs_create_group()</code> 一次性创建多个二进制文件；否则就逐个 <code>sysfs_create_bin_file()</code>）。</p>
+<h3 id="device-attribute"><a href="#device-attribute" class="headerlink" title="device_attribute"></a><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/device.h#L99">device_attribute</a></h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* interface for exporting device attributes */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">device_attribute</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">attribute</span>	<span class="title">attr</span>;</span></span><br><span class="line">	<span class="type">ssize_t</span> (*show)(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> device_attribute *attr,</span><br><span class="line">			<span class="type">char</span> *buf);</span><br><span class="line">	<span class="type">ssize_t</span> (*store)(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> device_attribute *attr,</span><br><span class="line">			 <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>对应的api函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">device_create_file</span><span class="params">(<span class="keyword">struct</span> device *dev, <span class="type">const</span> <span class="keyword">struct</span> device_attribute *attr)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">device_remove_file</span><span class="params">(<span class="keyword">struct</span> device *dev, <span class="type">const</span> <span class="keyword">struct</span> device_attribute *attr)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="driver-attribute"><a href="#driver-attribute" class="headerlink" title="driver_attribute"></a><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/device/driver.h#L134">driver_attribute</a></h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">driver_attribute</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> <span class="title">attr</span>;</span></span><br><span class="line">	<span class="type">ssize_t</span> (*show)(<span class="keyword">struct</span> device_driver *driver, <span class="type">char</span> *buf);</span><br><span class="line">	<span class="type">ssize_t</span> (*store)(<span class="keyword">struct</span> device_driver *driver, <span class="type">const</span> <span class="type">char</span> *buf,</span><br><span class="line">			 <span class="type">size_t</span> count);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>对应的api函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> driver_create <span class="title function_">file</span><span class="params">(<span class="keyword">struct</span> device_driver *driver,<span class="type">const</span> <span class="keyword">struct</span> driver attribute *attr)</span>;</span><br><span class="line"><span class="type">void</span> driver_remove <span class="title function_">file</span><span class="params">(<span class="keyword">struct</span> device_driver *driver,<span class="type">const</span> <span class="keyword">struct</span> driver attribute *attr)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="class-attribute"><a href="#class-attribute" class="headerlink" title="class_attribute"></a><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/device/class.h#L191">class_attribute</a></h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">class_attribute</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> <span class="title">attr</span>;</span></span><br><span class="line">	<span class="type">ssize_t</span> (*show)(<span class="keyword">struct</span> class *class, <span class="keyword">struct</span> class_attribute *attr,</span><br><span class="line">			<span class="type">char</span> *buf);</span><br><span class="line">	<span class="type">ssize_t</span> (*store)(<span class="keyword">struct</span> class *class, <span class="keyword">struct</span> class_attribute *attr,</span><br><span class="line">			<span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>对应的api函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">class_create_file</span><span class="params">(<span class="keyword">struct</span> class *class, <span class="type">const</span> <span class="keyword">struct</span> class_attribute *attr)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">class_remove_file</span><span class="params">(<span class="keyword">struct</span> class *class, <span class="type">const</span> <span class="keyword">struct</span> class_attribute *attr)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="bus-attribute"><a href="#bus-attribute" class="headerlink" title="bus_attribute"></a><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/device/bus.h#L123">bus_attribute</a></h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bus_attribute</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">attribute</span>	<span class="title">attr</span>;</span></span><br><span class="line">	<span class="type">ssize_t</span> (*show)(<span class="keyword">struct</span> bus_type *bus, <span class="type">char</span> *buf);</span><br><span class="line">	<span class="type">ssize_t</span> (*store)(<span class="keyword">struct</span> bus_type *bus, <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>对应的api函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">bus_create_file</span><span class="params">(<span class="keyword">struct</span> bus *bus, <span class="type">const</span> <span class="keyword">struct</span> bus_attribute *attr)</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">bus_remove_file</span><span class="params">(<span class="keyword">struct</span> bus *bus, <span class="type">const</span> <span class="keyword">struct</span> bus_attribute *attr)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="attribute-group"><a href="#attribute-group" class="headerlink" title="attribute_group"></a><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/C/ident/attribute_group">attribute_group</a></h3><p><strong>作用</strong>：把多份属性作为“组”一次性创建&#x2F;移除，且可选：</p>
+<ul>
+<li><strong><code>.name</code></strong>：在父目录下再建一层子目录；</li>
+<li><strong><code>.is_visible()</code></strong>：按运行时条件决定某个属性是否可见&#x2F;权限是多少；</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">attribute_group</span> &#123;</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *name; <span class="comment">// 组名；非空则生成子目录</span></span><br><span class="line">    <span class="type">umode_t</span> (*is_visible)(<span class="keyword">struct</span> kobject *, <span class="keyword">struct</span> attribute *, <span class="type">int</span>);</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> **<span class="title">attrs</span>;</span>   <span class="comment">// 以 NULL 结尾</span></span><br><span class="line">    <span class="comment">/* 4.1 常见扩展：struct bin_attribute **bin_attrs; */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>什么时候用</strong>：</p>
+<ul>
+<li>一次性建&#x2F;删一堆属性；</li>
+<li>想把属性归到一个子目录里（例如 <code>/sys/.../mydir/cfg/*.attr</code>）；</li>
+<li>需要在运行时按条件显示&#x2F;隐藏某些文件或改变权限。</li>
+</ul>
+<p><strong>API</strong>：<code>sysfs_create_group()</code> &#x2F; <code>sysfs_remove_group()</code>；多个组可用 <code>sysfs_create_groups()</code></p>
+<h2 id="struct-kobj-type"><a href="#struct-kobj-type" class="headerlink" title="struct kobj_type"></a>struct <a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/C/ident/kobj_type">kobj_type</a></h2><p><code>kobj_type</code> 是 <strong>kobject 的“类型描述符&#x2F;方法表（vtable）”</strong>：每个嵌了 <code>struct kobject</code> 的对象，都要绑定一个 <code>kobj_type</code>。它决定这个对象<strong>如何释放（release）</strong>、<strong>如何在 sysfs 中呈现和处理属性（sysfs_ops + 默认属性）</strong>。没有匹配的 <code>kobj_type</code>，kobject 就没法被正确创建&#x2F;注册。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kobj_type</span> &#123;</span></span><br><span class="line">	<span class="type">void</span> (*release)(<span class="keyword">struct</span> kobject *kobj);</span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">sysfs_ops</span> *<span class="title">sysfs_ops</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> **<span class="title">default_attrs</span>;</span>	<span class="comment">/* use default_groups instead */</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute_group</span> **<span class="title">default_groups</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_ns_type_operations</span> *(*<span class="title">child_ns_type</span>)(<span class="keyword">struct</span> <span class="title">kobject</span> *<span class="title">kobj</span>);</span></span><br><span class="line">	<span class="type">const</span> <span class="type">void</span> *(*namespace)(<span class="keyword">struct</span> kobject *kobj);</span><br><span class="line">	<span class="type">void</span> (*get_ownership)(<span class="keyword">struct</span> kobject *kobj, <span class="type">kuid_t</span> *uid, <span class="type">kgid_t</span> *gid);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>release</code></strong>：当该 kobject 的引用计数降到 0 时调用——<strong>必须提供</strong>，用于释放“外围容器结构体”的内存&#x2F;资源。</p>
+<p><strong><code>sysfs_ops</code></strong>：sysfs 对该类型属性执行读&#x2F;写时走这里指定的 <code>show/store</code> 函数指针。</p>
+<p><strong><code>default_attrs</code></strong>：<strong>默认属性</strong>数组（<code>struct attribute *</code>，以 NULL 结尾）。对象注册到 sysfs 时会自动创建这些文件（老接口）。<strong>新内核多用 <code>default_groups</code> 来替代&#x2F;增强</strong>。</p>
+<p><strong>命名空间&#x2F;属主</strong>相关钩子（<code>child_ns_type/namespace/get_ownership</code>）：决定该类型对象及其属性的 namespace&#x2F;属主等高阶行为（通常可不设）。</p>
+<h2 id="struct-kset"><a href="#struct-kset" class="headerlink" title="struct kset"></a>struct <a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/C/ident/kset">kset</a></h2><img src="image-20250909220431465.png" alt="image-20250909220431465" style="zoom:50%;">
+
+<p>kobject通过kset 组织成层次化的结构，kset是具有相同类型的kobject 的集合。所有属于同一个kset 的对象（kobject）的parent都指向该kset的kobj 成员。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kset</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span></span><br><span class="line">	<span class="type">spinlock_t</span> list_lock;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> <span class="title">kobj</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">kset_uevent_ops</span> *<span class="title">uevent_ops</span>;</span></span><br><span class="line">&#125; __randomize_layout;</span><br></pre></td></tr></table></figure>
+
+<p>kset 对象的接口函数如下：</p>
+<p>内核中常见的kset 包括：</p>
+<ul>
+<li><code>struct kset *bus_kset；</code></li>
+<li><code>struct kset *class_kset；</code></li>
+<li><code>struct kset *system_kset；</code></li>
+</ul>
+<h3 id="实验-2"><a href="#实验-2" class="headerlink" title="实验"></a>实验</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kobject.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/sysfs.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/slab.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> hello_value;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">value_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr,</span></span><br><span class="line"><span class="params">                          <span class="type">char</span> *buf)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">sprintf</span>(buf, <span class="string">&quot;hello_value = %lu\n&quot;</span>, hello_value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">value_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr, </span></span><br><span class="line"><span class="params">                          <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> tmp_buf[<span class="number">10</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="built_in">strncpy</span>(tmp_buf, buf, count);</span><br><span class="line">    hello_value = simple_strtoul(tmp_buf, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> <span class="title">value_attr</span> =</span> &#123;</span><br><span class="line">    .name = <span class="string">&quot;value&quot;</span>,</span><br><span class="line">    .mode = <span class="number">0644</span>,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sysfs_ops</span> <span class="title">value_sysfs_ops</span> =</span> &#123;</span><br><span class="line">    .show  = value_show,</span><br><span class="line">    .store = value_store, </span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> *<span class="title">value_attr_array</span>[] =</span> &#123;</span><br><span class="line">    &amp;value_attr,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">/******************************************************************/</span></span><br><span class="line"><span class="type">char</span>    hello_buf[<span class="number">100</span>];</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">buf_show</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr,</span></span><br><span class="line"><span class="params">                          <span class="type">char</span> *buf)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">strncpy</span>(buf, hello_buf, <span class="built_in">strlen</span>(hello_buf));</span><br><span class="line">	<span class="keyword">return</span> <span class="built_in">strlen</span>(hello_buf);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">buf_store</span><span class="params">(<span class="keyword">struct</span> kobject *kobj, <span class="keyword">struct</span> attribute *attr, </span></span><br><span class="line"><span class="params">                          <span class="type">const</span> <span class="type">char</span> *buf, <span class="type">size_t</span> count)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">strncpy</span>(hello_buf, buf, count);</span><br><span class="line">	<span class="keyword">return</span> count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> <span class="title">buf_attr</span> =</span> &#123;</span><br><span class="line">    .name  = <span class="string">&quot;buf&quot;</span>,</span><br><span class="line">    .mode  = <span class="number">0644</span>, </span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sysfs_ops</span> <span class="title">buf_sysfs_ops</span> =</span> &#123;</span><br><span class="line">    .show  = buf_show,</span><br><span class="line">    .store = buf_store, </span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute</span> *<span class="title">buf_attr_array</span>[] =</span> &#123;</span><br><span class="line">    &amp;buf_attr,</span><br><span class="line">    <span class="literal">NULL</span>,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*------------------------------------------------------------------*/</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">my_obj_release</span><span class="params">(<span class="keyword">struct</span> kobject *kobj)</span></span><br><span class="line">&#123;</span><br><span class="line">    printk(<span class="string">&quot;%s: kfree %s\n&quot;</span>, __func__, kobj-&gt;name);</span><br><span class="line">    kfree(kobj);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> *<span class="title">kobj_hello</span>;</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kset</span> *<span class="title">kset_hello</span>;</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> *<span class="title">kobj_value</span>, *<span class="title">kobj_buf</span>;</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_type</span> <span class="title">value_type</span>, <span class="title">buf_type</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">kobject_hello_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> retval;</span><br><span class="line"></span><br><span class="line">	kobj_hello = kobject_create_and_add(<span class="string">&quot;hello&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">	<span class="keyword">if</span> (!kobj_hello) &#123;</span><br><span class="line">		<span class="keyword">return</span> -ENOMEM;</span><br><span class="line">    &#125;</span><br><span class="line">	</span><br><span class="line">    <span class="comment">//kset_hello = kset_create_and_add(&quot;kset_hello&quot;, NULL, kobj_hello);</span></span><br><span class="line">    kset_hello = kset_create_and_add(<span class="string">&quot;kset_hello&quot;</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (!kset_hello) &#123;</span><br><span class="line">	    kobject_put(kobj_hello);</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">    &#125;</span><br><span class="line">    kobj_value = kzalloc(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> kobject), GFP_KERNEL);</span><br><span class="line">    kobj_value-&gt;kset = kset_hello; </span><br><span class="line">    value_type.release = my_obj_release;</span><br><span class="line">    value_type.default_attrs = value_attr_array;</span><br><span class="line">    value_type.sysfs_ops = &amp;value_sysfs_ops;</span><br><span class="line"></span><br><span class="line">    kobj_buf = kzalloc(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> kobject), GFP_KERNEL);</span><br><span class="line">    kobj_buf-&gt;kset = kset_hello; </span><br><span class="line">    buf_type.release = my_obj_release;</span><br><span class="line">    buf_type.default_attrs = buf_attr_array;</span><br><span class="line">    buf_type.sysfs_ops = &amp;buf_sysfs_ops;</span><br><span class="line">    </span><br><span class="line">    retval = kobject_init_and_add(kobj_value, &amp;value_type, kobj_hello, <span class="string">&quot;value&quot;</span>);</span><br><span class="line">    <span class="comment">//retval = kobject_init_and_add(kobj_value, &amp;value_type, NULL, &quot;value&quot;);</span></span><br><span class="line">    retval = kobject_init_and_add(kobj_buf, &amp;buf_type, <span class="literal">NULL</span>, <span class="string">&quot;buf&quot;</span>);</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">kobject_hello_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    kobject_del(kobj_value);</span><br><span class="line">    kobject_put(kobj_value);</span><br><span class="line">    kobject_put(kobj_buf);</span><br><span class="line">    </span><br><span class="line">    kobject_del(kobj_hello);</span><br><span class="line">	kobject_put(kobj_hello);</span><br><span class="line"></span><br><span class="line">    kset_unregister(kset_hello);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(kobject_hello_init);</span><br><span class="line">module_exit(kobject_hello_exit);</span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;KEVIN&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;create a kset object in sysfs&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>实验结果：</p>
+<p><img src="image-20250909221812933.png" alt="image-20250909221812933"></p>
+<p>我们可以打看到：</p>
+<ul>
+<li><code>kobject_create_and_add(&quot;hello&quot;, NULL)</code> → 顶层目录：<code>/sys/hello</code></li>
+<li><code>kset_create_and_add(&quot;kset_hello&quot;, NULL, NULL)</code>→ 顶层目录：<code>/sys/kset_hello</code></li>
+<li><code>kobj_value</code>（父亲是 kobj_hello，属于 kset_hello）<br>→ 目录：<code>/sys/hello/value/</code><br>→ 默认属性数组里有名为 “value” 的文件<br>→ 文件路径：<code>/sys/hello/value/value</code></li>
+<li>kobj_buf（父亲传的是 NULL，属于 kset_hello）<br>→ 目录：<code>/sys/buf/</code><br>→ 文件路径：<code>/sys/buf/buf</code></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2025/06/15/KERNEL-SYSFS-CH1/">https://leonardo272.github.io/2025/06/15/KERNEL-SYSFS-CH1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/linux%E5%86%85%E6%A0%B8/">linux内核</a><a class="post-meta__tags" href="/tags/sysfs/">sysfs</a></div><div class="post-share"><div class="social-share" data-image="/page_images/7.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img class="cover" src="/page_images/1.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">镜像烧录+ssh远程登录</div></div><div class="info-2"><div class="info-item-1">1.系统安装1.1启动设置选择SD卡启动，首先需要将启动拨码开关配置成SD卡启动模式，配置方法如下图：  1.2镜像下载**下载地址：**通过如下百度云盘链接或者联系销售获取到镜像，镜像链接：https://pan.baidu.com/s/1pStiyqohrB3SxHAFFk8R6Q 提取码：dzdv &#x3D;&#x3D;注意：&#x3D;&#x3D;镜像需下载对应内存大小的版本，目前 4GB DDR使用长鑫存储（ CXMT）的颗粒 ，2GB DDR使用兆易创新（ GigaDevice）的颗粒，如果不清楚开发板是哪个容量的 DDR，可通过DDR颗粒的上丝印字样来判断。我们拿到的是最拉的板子4GB的V2.2版本的开发板。 4GB-V2.2可以选择的镜像：(按照更新的时间来排序的) xfce_v2.1_4GB_231116.tar.gz xfce_v2.1_4GB_240123.tar.gz 飞腾派v2.1_4GB_240517.tar.gz 本次项目选择的是xfce_v2.1_4GB_240123.tar.gz，不新不老。 1.3镜像烧录准备一张存储空间 32G以上的 SD卡...</div></div></div></a><a class="pagination-related" href="/2025/06/05/DRIVER-CH1-DEVICE/" title="驱动开发-设备驱动模块"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">驱动开发-设备驱动模块</div></div><div class="info-2"><div class="info-item-1">LINUX设备驱动模块设备驱动程序，就是驱使设备按照用户的预期进行工作的软件，它是应用程序与设备沟通的桥梁。设备驱动程序主要负责硬件设备的参数配置、数据读写与中断处理。 Linux中的大部分驱动程序是以内核模块的形式编写的。内核模块是Linux 内核向外部提供的一个接口，其全称为动态可加载内核模块（Loadable Kernel Module，LKM）。 驱动程序的加载方式内核模式将新驱动程序编译进内核，需要修改内核代码和编译选项，这种方式将驱动程序代码直接编译到内核镜像（zImage或uImage等）中，成为内核的一部分。 特点：  集成度高：驱动随内核启动自动加载，无法卸载。 性能稍好：省去了模块加载和解析的开销。 安全性&#x2F;稳定性高：常用于系统最核心、必须的驱动（如根文件系统驱动）。 内核体积大：所有驱动都会被编译进去，导致内核镜像文件变大。  配置方法：通过内核的配置菜单（make menuconfig等）将对应的驱动选项配置为 y。 实验一本次实验是通过静态添加自己编写的驱动如：beep.c&#x2F;ap3216c.c&#x2F;icm20608.c等驱动。 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/05/10/kernel-intc-ch2/" title="CH2-中断处理流程分析"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH2-中断处理流程分析</div></div><div class="info-2"><div class="info-item-1">linux中断处理的流程linux-5.10.4版本：interrupt.h   linux系统启动的流程irq_domainirq_domain 是一个中间翻译层，它负责将硬件的中断号（Hardware Interrupt Number）映射到 Linux 内核的虚拟中断号（Virtual IRQ Number），并管理中断控制器的相关操作。 你可以把它想象成一个翻译官或接线总机：  硬件中断号 (HW IRQ)：是中断控制器自己识别的编号。例如，对于 ARM GIC，SGIs 是 0-15，PPIs 是 16-31，SPIs 从 32 开始。这是硬件固定的，不同控制器完全不同。 虚拟中断号 (VIRQ)：是 Linux 内核内部使用的、统一的软件中断编号。驱动开发者请求和使用的就是这个号。  它的作用：  抽象硬件差异 世界上有无数种中断控制器（GIC, APIC, IO-APIC, GPIO 控制器等），每种都有自己的编号方案和编程模型。内核无法为每种控制器都写一套独立的中断处理流程。irq_domain 提供了一个统一的抽象接口，让内核核心代码只需与 irq_domain...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc-ch4/" title="CH4-中断的上半部与下半部"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH4-中断的上半部与下半部</div></div><div class="info-2"><div class="info-item-1">中断的上半部与下半部Linux内核将中断分为上半部和下半部的主要目的就是实现中断处理函数的快进快出，我们在使用request_irq申请中断的时候注册的中断服务函数属于中断处理的上半部，只要中断触发，那么中断处理函数就会执行。 上半部：上半部就是中断处理函数，那些处理过程比较快，不会占用很长时间的处理就可以放在上半部完成。 下半部：如果中断处理过程比较耗时，那么就将这些比较耗时的代码提出来，交给下半部去执行，这样中断处理函数就会快进快出。 可以参考：  如果要处理的内容不希望被其他中断打断，那么可以放到上半部。 如果要处理的任务对时间敏感，可以放到上半部。 如果要处理的任务与硬件有关，可以放到上半部 除了上述三点以外的其他任务，优先考虑放到下半部  软中断Linux 内核使用结构体softirq_action 表示软中断， softirq_action结构体定义在文include&#x2F;linux&#x2F;interrupt.h中softirq_action 1234struct softirq_action&#123;	void	(*action)(struct soft...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc-ch3/" title="CH3-中断程序的编写"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH3-中断程序的编写</div></div><div class="info-2"><div class="info-item-1">linux中断程序编写中断的API函数request_irq1int request_irq(unsigned int irq,irq_handler_t handler,unsigned long flags,const char *name,void *dev)  **irq：**要申请中断的中断号。 **handler：**中断处理函数，当中断发生以后就会执行此中断处理函数。 **flags：**中断标志，可以在文件include/linux/interrupt.h 里面查看所有的中断标志    标志 描述    IRQF_SHARED 多个设备共享一个中断线，共享的所有中断都必须指定此标志。如果使用共享中断的话，request_irq 函数的dev参数就是唯一区分他们的标志。   IRQF_ONESHOT 单次中断，中断执行一次就结束。   IRQF_TRIGGER_NONE 无触发。   IRQF_TRIGGER_RISING 上升沿触发。   IRQF_TRIGGER_FALLING 下降沿触发。   IRQF_TRIGGER_HIGH 高电平触发。   IRQF_T...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc/" title="CH1-中断子系统介绍"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH1-中断子系统介绍</div></div><div class="info-2"><div class="info-item-1">中断子系统中断Linux中断是指在CPU正常运行期间，由于内外部事件或由程序预先安排的事件引起的CPU暂时停止正在运行的程序，转而为该内部或外部事件或预先安排的事件服务的程序中去，服务完毕后再返回去继续运行被暂时中断的程序。 中断子系统框架  CPU  中断控制器  外设  中断向量表  中断号  Linux内核中断子系统  中断编程接口（request_irq接口函数）  具体的外设驱动   中断控制器  GIC 是ARM 公司给Cortex-A&#x2F;R 内核提供的一个中断控制器，类似Cortex-M 内核中的NVIC。GIC 接收众多的外部中断，然后对其进行处理，最终就只通过四个信号报给ARM 内核，这四个信号的含义如下：  VFIQ:虚拟快速FIQ。 VIRQ:虚拟外部IRQ。 FIQ:快速中断IRQ。 IRQ:外部中断IRQ。    单核      上图中我们可以看到所有的中断都发送给了GIC控制器，它负责处理各种中断，判断优先级、屏蔽、使能等工作。在GIC控制器中有Distributor、Interface **Distributor(分发器端)：**块负责处理各...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">39</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Leonardo272"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">enjoy your life</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#sysfs%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.</span> <span class="toc-text">sysfs文件系统</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#struct-kobject"><span class="toc-number">1.1.</span> <span class="toc-text">struct kobject</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#API%E5%87%BD%E6%95%B0"><span class="toc-number">1.1.1.</span> <span class="toc-text">API函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C"><span class="toc-number">1.1.2.</span> <span class="toc-text">实验</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#struct-attribute"><span class="toc-number">1.2.</span> <span class="toc-text">struct attribute</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#kobj-attribute"><span class="toc-number">1.2.1.</span> <span class="toc-text">kobj_attribute</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-1"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">实验</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#bin-attribute"><span class="toc-number">1.2.2.</span> <span class="toc-text">bin_attribute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#device-attribute"><span class="toc-number">1.2.3.</span> <span class="toc-text">device_attribute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#driver-attribute"><span class="toc-number">1.2.4.</span> <span class="toc-text">driver_attribute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#class-attribute"><span class="toc-number">1.2.5.</span> <span class="toc-text">class_attribute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#bus-attribute"><span class="toc-number">1.2.6.</span> <span class="toc-text">bus_attribute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#attribute-group"><span class="toc-number">1.2.7.</span> <span class="toc-text">attribute_group</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#struct-kobj-type"><span class="toc-number">1.3.</span> <span class="toc-text">struct kobj_type</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#struct-kset"><span class="toc-number">1.4.</span> <span class="toc-text">struct kset</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%AA%8C-2"><span class="toc-number">1.4.1.</span> <span class="toc-text">实验</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/10/KERNEL-SYSFS-CH2/" title="无标题">无标题</a><time datetime="2025-09-10T12:47:19.013Z" title="发表于 2025-09-10 20:47:19">2025-09-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/15/KERNEL-SYSFS-CH1/" title="kernel-sysfs文件系统介绍"><img src="/page_images/7.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="kernel-sysfs文件系统介绍"/></a><div class="content"><a class="title" href="/2025/06/15/KERNEL-SYSFS-CH1/" title="kernel-sysfs文件系统介绍">kernel-sysfs文件系统介绍</a><time datetime="2025-06-15T13:12:00.000Z" title="发表于 2025-06-15 21:12:00">2025-06-15</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
