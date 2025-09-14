@@ -1,0 +1,888 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>驱动开发-I2C | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="I2C原理I2c基础知识Inter Integrated Circuit 串行总线的缩写，是 PHILIPS 公司推出的芯片间串行传输总线。它以 1 根串行数据线（ SDA ）和 1 根串行时钟线（ SCL ）实现了半双工的同步数据传输。具有接口线少，控制方式简化，器件封装形式小，通信速率较高等优点。在主从通信中，可以有多个 I2C 总线器件同时接到 I2C 总线 上，通过地址来识别通信对象。II">
+<meta property="og:type" content="article">
+<meta property="og:title" content="驱动开发-I2C">
+<meta property="og:url" content="https://leonardo272.github.io/2025/06/15/DRIVER-CH3-IIC/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="I2C原理I2c基础知识Inter Integrated Circuit 串行总线的缩写，是 PHILIPS 公司推出的芯片间串行传输总线。它以 1 根串行数据线（ SDA ）和 1 根串行时钟线（ SCL ）实现了半双工的同步数据传输。具有接口线少，控制方式简化，器件封装形式小，通信速率较高等优点。在主从通信中，可以有多个 I2C 总线器件同时接到 I2C 总线 上，通过地址来识别通信对象。II">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/2.jpg">
+<meta property="article:published_time" content="2025-06-15T13:12:00.000Z">
+<meta property="article:modified_time" content="2025-09-14T14:09:50.740Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="驱动开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/2.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "驱动开发-I2C",
+  "url": "https://leonardo272.github.io/2025/06/15/DRIVER-CH3-IIC/",
+  "image": "https://leonardo272.github.io/page_images/2.jpg",
+  "datePublished": "2025-06-15T13:12:00.000Z",
+  "dateModified": "2025-09-14T14:09:50.740Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/%5Bobject%20Object%5D"><link rel="canonical" href="https://leonardo272.github.io/2025/06/15/DRIVER-CH3-IIC/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/site.webmanifest"/><meta name="msapplication-TileColor" content="#3b70fc"/><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '驱动开发-I2C',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/"><link rel="manifest" href="/site.webmanifest"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load', preloader.endLoading)
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">41</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/2.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">驱动开发-I2C</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">驱动开发-I2C</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-15T13:12:00.000Z" title="发表于 2025-06-15 21:12:00">2025-06-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-14T14:09:50.740Z" title="更新于 2025-09-14 22:09:50">2025-09-14</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">驱动学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="I2C原理"><a href="#I2C原理" class="headerlink" title="I2C原理"></a>I2C原理</h1><h2 id="I2c基础知识"><a href="#I2c基础知识" class="headerlink" title="I2c基础知识"></a>I2c基础知识</h2><p>Inter Integrated Circuit 串行总线的缩写，是 PHILIPS 公司推出的芯片间串行传输总线。它以 1 根串行数据线（ SDA ）和 1 根串行时钟线（ SCL ）实现了<strong>半双工</strong>的同步数据传输。具有接口线少，控制方式简化，器件封装形式小，通信速率较高等优点。在主从通信中，可以有多个 I2C 总线器件同时接到 I2C 总线 上，通过地址来识别通信对象。IIC 接口的协议里面包括设备地址信息，可以同一总线上连接多个从设备，通过应答来互通数据及命令。但是传输速率有限，<strong>标准模式下可达到 100Kbps</strong> ，<strong>快速模式下可达到400Kbps</strong> （我们开发板一般在 130Kbps ），高速模式下达到 4Mbps ，不能实现全双工，不适合传输很多的数据。</p>
+<ul>
+<li><p>**串行：**数据位（0和1）是一位接着一位，<strong>排成一队，在单一通道（一条线）上依次传输</strong>的。</p>
+</li>
+<li><p><strong>同步：<strong>数据传输的节奏（ timing ）由一个</strong>统一的、共享的时钟信号</strong>来控制和协调。发送方和接收方都步调一致地根据这个时钟信号的跳变来发送和读取数据。</p>
+</li>
+<li><p><strong>半双工：<strong>I2C只有</strong>一条数据线（SDA）</strong>。这条线要被主机和所有从机共享。在任一时刻，这条线上只能有一个“说话者”来驱动它为高电平或低电平，否则会发生冲突</p>
+</li>
+</ul>
+<h3 id="I2C信号"><a href="#I2C信号" class="headerlink" title="I2C信号"></a>I2C信号</h3><p>总线<strong>传输的数据不收限制</strong>，但是每次发到 <strong>SDA 上的必须是 8 位</strong>，并且主机发送 8位后释放总线，从机收到数据后必须拉低 SDA 一个时钟，回应 ACK 表示数据接收成功，我们如果示波器上看到的波形就是每次 9 位数据， 8bit+1bit ack 。</p>
+<p>I2C协议中数据传输的单位是字节，也就是8位。但是要用到9个时钟：前面8个时钟用来传输8数据，第9个时钟用来传输回应信号。传输时，先传输最高位(MSB)。</p>
+<ul>
+<li>开始信号（S）：SCL为高电平时，SDA由&#x3D;&#x3D;<strong>高</strong>&#x3D;&#x3D;电平&#x3D;&#x3D;<strong>向低</strong>&#x3D;&#x3D;电平跳变，&#x3D;&#x3D;<strong>开始</strong>&#x3D;&#x3D;传送数据。</li>
+<li>结束信号（P）：SCL为高电平时，SDA由&#x3D;&#x3D;<strong>低</strong>&#x3D;&#x3D;电平&#x3D;&#x3D;<strong>向高</strong>&#x3D;&#x3D;电平跳变，&#x3D;&#x3D;<strong>结束</strong>&#x3D;&#x3D;传送数据。</li>
+<li>响应信号(ACK)：接收器在接收到8位数据后，在<strong>第9个时钟周期</strong>，<strong>拉低SDA</strong></li>
+<li>SDA上传输的&#x3D;&#x3D;<strong>数据</strong>&#x3D;&#x3D;必须在SCL为&#x3D;&#x3D;<strong>高电平期间保持稳定</strong>&#x3D;&#x3D;，SDA上的数据只能在SCL为&#x3D;&#x3D;<strong>低电平期间变化</strong>&#x3D;&#x3D;</li>
+</ul>
+<p>I2C协议信号如下：</p>
+<p><img src="009_i2c_signal.png" alt="image-20210220151524099"></p>
+<p>从机收到一字节数据后，如果需要一些时间处理，则会拉低 SCL ，让传输进入等待状态，处理完成，释放 SCL ，继续传输，如上图。</p>
+<h3 id="读写时序"><a href="#读写时序" class="headerlink" title="读写时序"></a>读写时序</h3><p><strong>写时序</strong></p>
+<p><img src="5bbb31d079392db0ff89d6792b9798c8.png" alt="img"></p>
+<ol>
+<li><p>空闲状态：SCL 和SDA 都为高电平。</p>
+</li>
+<li><p>发送起始信号（Start）：SCL 高电平时 SDA 线从高电平向低电平切换。</p>
+</li>
+<li><p>发送设备地址：7bit设备地址位（从设备的地址），加上1bit读&#x2F;写位（0表示写，1表示读）。</p>
+</li>
+<li><p>等待应答（ACK）：主机等待从设备的应答时，SDA 会被释放到高电平状态，从机通过拉低SDA 来表示ACK，否则则表示 NACK。</p>
+</li>
+<li><p>发送数据： 如果收到应答信号，主机就会开始发送数据帧。数据帧通常包括要写入的寄存器地址和要写入的数据。</p>
+</li>
+<li><p>等待应答（ACK）： 主机等待从设备发送应答信号，以确保从设备已成功接收到数据。重复步骤5和步骤6：略。</p>
+</li>
+<li><p>发送停止信号（Stop）： SCL 高电平时 SDA 线从低电平向高电平切换。</p>
+</li>
+</ol>
+<p><strong>读时序</strong></p>
+<p><img src="836480bcaff6b464aa278eaec50a0d84.png" alt="img"></p>
+<ol>
+<li><p>发送起始信号（Start）和设备地址： 主设备首先发送起始信号来开始通信，然后发送目标设备的地址。</p>
+</li>
+<li><p>等待应答（ACK）： 主设备发送完地址后，会释放数据线（SDA）并等待从设备的应答。</p>
+</li>
+<li><p>寄存器地址： 然后发送需要读取的目标设备的寄存器地址。</p>
+</li>
+<li><p>等待应答（ACK）： 主设备发送完地址后，会释放数据线（SDA）并等待从设备的应答。</p>
+</li>
+<li><p>设备地址：重新发送设备地址，此时的读写位为1(读)。</p>
+</li>
+<li><p>等待应答（ACK）： 主设备发送完地址后，会释放数据线（SDA）并等待从设备的应答。</p>
+</li>
+<li><p>接收数据：主设备向从设备发送数据请求后，从设备会开始发送数据帧，主设备接收从设备发送的数据。</p>
+</li>
+<li><p>发送应答（ACK）或非应答（NACK）： 主设备在接收每个数据字节后，会向从设备发送一个应答信号（ACK）或非应答信号（NACK），以指示是否要继续接收数据。如果主设备准备好继续接收数据，则发送应答信号（ACK）；如果主设备不想继续接收数据（例如，数据传输完成），则发送非应答信号（NACK）。</p>
+</li>
+<li><p>重复步骤7和步骤8： 主设备会重复步骤7和步骤8，直到接收到所有需要的数据为止。</p>
+</li>
+<li><p>发送停止信号（Stop）： 当所有数据都被接收完毕后，主设备发送停止信号来结束通信。</p>
+</li>
+</ol>
+<p><strong>注意：Repeated Start</strong> </p>
+<ul>
+<li><p>Repeated Start是一个特殊的起始信号，其时序与普通的起始信号（Start）相同：</p>
+</li>
+<li><p>SCL 线为高电平。</p>
+</li>
+<li><p>SDA 线从高电平拉低到低电平。</p>
+</li>
+<li><p>但它发生在当前通信尚未完全结束之前（即没有发送停止信号 <code>STOP</code>）</p>
+</li>
+</ul>
+<h3 id="I2C设备地址"><a href="#I2C设备地址" class="headerlink" title="I2C设备地址"></a>I2C设备地址</h3><p>I2C从设备地址有两种不同长度格式，用于在总线上唯一标识一个设备。</p>
+<ul>
+<li><strong>7位地址</strong>：<ul>
+<li>这是<strong>最常用、最广泛支持</strong>的地址模式。</li>
+<li><strong>理论上</strong>，7位地址可以表示 2^7 &#x3D; <strong>128 个设备地址</strong>。</li>
+<li>但其中一些地址是<strong>保留地址</strong>（例如，广播地址 <code>0x00</code>、CBUS地址 <code>0x01</code> 等），所以<strong>实际可用</strong>的地址范围是 <code>0x08</code> 到 <code>0x77</code> (十六进制)<strong>112个</strong>。</li>
+<li>我们通常说的设备地址（例如 <code>0x50</code>）指的是这个7位地址。</li>
+<li><strong>7位地址</strong>：<code>[Addr6:Addr0]</code> + <code>[R/W#位]</code>。例如，与地址为 <code>0x50</code> (二进制 <code>1010000</code>) 的设备<strong>写入</strong>，发出的第一个字节是 <code>0xA0</code> (<code>1010000</code> + <code>0</code> &#x3D; <code>10100000</code>)。</li>
+</ul>
+</li>
+<li><strong>10位地址</strong>：<ul>
+<li>为了解决7位地址可能不够用的问题，协议扩展了10位地址。</li>
+<li><strong>理论上</strong>，10位地址可以表示 2^10 &#x3D; <strong>1024 个设备地址</strong>，极大地扩展了地址空间。</li>
+<li>它的<strong>兼容性不如7位地址</strong>好，并非所有I2C主控制器都完美支持。</li>
+<li><strong>10位地址</strong>：需要<strong>两个字节</strong>来发送。<ul>
+<li><strong>第一个字节</strong>：特殊前缀 <code>11110</code> + <code>Addr9:Addr8</code> + <code>W#位</code> (通常为<code>0</code>，表示写)。</li>
+<li><strong>第二个字节</strong>：剩下的 <code>Addr7:Addr0</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>设备地址：</strong></p>
+<p>大多数I2C从设备芯片（如EEPROM、传感器）都有1到3个<strong>地址引脚（A0, A1, A2）</strong>。可以通过将这些引脚连接到高电平（VCC）、低电平（GND）或者留空（内部可能有上拉&#x2F;下拉）来组合出不同的地址值。这在芯片的数据手册（Datasheet）中有明确说明。</p>
+<img src="image-20250913214025569.png" alt="image-20250913214025569" style="zoom:33%;">
+
+<p><strong>例如</strong>：一个EEPROM芯片，其7位基础地址是 <code>0b1010</code>（A3-A0），加上A2, A1, A0引脚的状态，就组成了完整的7位地址。如果将A2引脚接GND，A1接VCC，A0接GND，那么最终的地址可能就是 <code>0b1010010</code>（即 <code>0x52</code>）。</p>
+<h2 id="I2C硬件连接图"><a href="#I2C硬件连接图" class="headerlink" title="I2C硬件连接图"></a>I2C硬件连接图</h2><img src="image-20250913211800659.png" alt="image-20250913211800659" style="zoom: 50%;">
+
+<p><strong>特点：</strong></p>
+<ul>
+<li>在一个芯片(SoC)内部，有一个或多个I2C控制器</li>
+<li>在一个I2C控制器上，可以连接一个或多个I2C设备</li>
+<li>I2C总线只需要2条线：时钟线SCL、数据线SDA</li>
+<li>在I2C总线的SCL、SDA线上，都有上拉电阻</li>
+</ul>
+<h2 id="I-MX6U-I2C-简介"><a href="#I-MX6U-I2C-简介" class="headerlink" title="I.MX6U I2C 简介"></a>I.MX6U I2C 简介</h2><p>I.MX6U 提供了4 个I2C 外设，I.MX6U 的I2C 支持两种模式：标准模式和快速模式，标准模式下I2C 数据传输速率最高是100Kbits&#x2F;s，在快速模式下数据传输速率最高为400Kbits&#x2F;s。</p>
+<h2 id="AP3216C-简介"><a href="#AP3216C-简介" class="headerlink" title="AP3216C 简介"></a>AP3216C 简介</h2><p>AP3216C是由敦南科技推出的一款传感器，其支持环境光强度(ALS)、接近距离(PS)和红外线强度(IR)这三个环境参数检测。</p>
+<p><strong>特点：</strong></p>
+<ol>
+<li>I2C 接口，快速模式下波特率可以到400Kbit&#x2F;S</li>
+<li>多种工作模式选择：ALS、PS+IR、ALS+PS+IR、PD 等等。</li>
+<li>内建温度补偿电路。</li>
+<li>宽工作温度范围(-30°C ~ +80°C)。</li>
+<li>超小封装，4.1mm x 2.4mm x 1.35mm</li>
+<li>环境光传感器具有16 位分辨率。</li>
+<li>接近传感器和红外传感器具有10 位分辨率。</li>
+</ol>
+<p><img src="image-20250522094454109.png" alt="image-20250522094454109"></p>
+<center>AP3216C结构图</center>
+
+<p><img src="image-20250522094545307.png" alt="image-20250522094545307"></p>
+<p><img src="image-20250522094553661.png" alt="image-20250522094553661"></p>
+<p><strong>寄存器设置</strong></p>
+<ul>
+<li>首先，0X00 这个寄存器是模式控制寄存器，用来设置AP3216C 的工作模式，一般开始先将其设置为0X04，也就是先软件复位一次AP3216C。</li>
+<li>然后，根据实际使用情况选择合适的工作模式，比如设置为0X03，也就是开启ALS+PS+IR。</li>
+<li>接着，从0X0A~0X0F 这6 个寄存器就是数据寄存器，保存着ALS、PS 和IR 这三个传感器获取到的数据值。如果同时打开ALS、<br>PS 和IR 则读取间隔最少要112.5ms，因为AP3216C 完成一次转换需要112.5ms。</li>
+</ul>
+<p><strong>配置步骤：</strong></p>
+<ol>
+<li>初始化相应的IO：初始化I2C1 相应的IO，设置其复用功能，如果要使用AP3216C 中断功能的话，还需要设置AP3216C 的中断IO。</li>
+<li>初始化I2C1：初始化I2C1 接口，设置波特率。</li>
+<li>初始化AP3216C：初始化AP3216C，读取AP3216C 的数据。</li>
+</ol>
+<p><strong>硬件原理分析</strong></p>
+<p>可以看出AP3216C 使用的是I2C1，其中I2C1_SCL 使用的UART4_TXD 这个IO、I2C1_SDA 使用的是UART4_R XD 这个IO。</p>
+<p><img src="image-20250522095926407.png" alt="image-20250522095926407"></p>
+<h1 id="I2C-tool"><a href="#I2C-tool" class="headerlink" title="I2C-tool"></a>I2C-tool</h1><p>I2C tools包含一套用于Linux应用层测试各种各样I2C功能的工具。它的主要功能包括：总线探测工具、SMBus访问帮助程序、EEPROM解码脚本、EEPROM编程工具和用于SMBus访问的python模块。只要你所使用的内核中包含I2C设备驱动，那么就可以在你的板子中正常使用这个测试工具。</p>
+<h2 id="tool命令"><a href="#tool命令" class="headerlink" title="tool命令"></a>tool命令</h2><h3 id="i2cdetect"><a href="#i2cdetect" class="headerlink" title="i2cdetect"></a>i2cdetect</h3><p>i2cdetect的主要功能就是I2C设备查询，它用于扫描I2C总线上的设备。它输出一个表，其中包含指定总线上检测到的设备的列表。该命令的常用格式为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cdetect [-y] [-a] [-q|-r] i2cbus [first last]</span><br></pre></td></tr></table></figure>
+
+<p>具体参数的含义如下：</p>
+<table>
+<thead>
+<tr>
+<th align="center">-y</th>
+<th align="center">取消交互模式。默认情况下，i2cdetect将等待用户的确认，当使用此标志时，它将直接执行操作。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">-a</td>
+<td align="center">强制扫描非规则地址。一般不推荐。</td>
+</tr>
+<tr>
+<td align="center">-q</td>
+<td align="center">使用SMBus“快速写入”命令进行探测。一般不推荐。</td>
+</tr>
+<tr>
+<td align="center">-r</td>
+<td align="center">使用SMBus“接收字节”命令进行探测。一般不推荐。</td>
+</tr>
+<tr>
+<td align="center">-F</td>
+<td align="center">显示适配器实现的功能列表并退出。</td>
+</tr>
+<tr>
+<td align="center">-V</td>
+<td align="center">显示I2C工具的版本并推出。</td>
+</tr>
+<tr>
+<td align="center">-l</td>
+<td align="center">显示已经在系统中使用的I2C总线。</td>
+</tr>
+<tr>
+<td align="center">i2cbus</td>
+<td align="center">表示要扫描的I2C总线的编号或名称。</td>
+</tr>
+<tr>
+<td align="center">first last</td>
+<td align="center">表示要扫描的从设备地址范围。</td>
+</tr>
+</tbody></table>
+<p>第一，先通过查看当前系统中的I2C的总线情况：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cdetect -l</span><br></pre></td></tr></table></figure>
+
+<p><img src="clip_image002.jpg" alt="img"></p>
+<p>第二，若总线上挂载I2C从设备，可通过i2cdetect扫描某个I2C总线上的所有设备。可通过控制台输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cdetect -y 1</span><br></pre></td></tr></table></figure>
+
+<p>（其中”–”表示地址被探测到了，但没有芯片应答； “UU”因为这个地址目前正在被一个驱动程序使用，探测被省略；而16进制的地址号60，1e和50则表示发现了一个外部片选从地址为0x60，0x1e（AP3216）和0x50(eeprom)的外设芯片。</p>
+<p><img src="clip_image004.jpg" alt="img"></p>
+<p><img src="clip_image006.jpg" alt="img"></p>
+<p>第三，查询I2C总线1 (I2C -1)的功能，命令为</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cdetect -F 1</span><br></pre></td></tr></table></figure>
+
+<p><img src="clip_image008.jpg" alt="img"></p>
+<h3 id="i2cget"><a href="#i2cget" class="headerlink" title="i2cget"></a>i2cget</h3><p>i2cget的主要功能是获取I2C外设某一寄存器的内容。该命令的常用格式为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cget [-f] [-y] [-a] i2cbus chip-address [data-address [mode]]</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>-f</th>
+<th>强制访问设备，即使它已经很忙。  默认情况下，i2cget将拒绝访问已经在内核驱动程序控制下的设备。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-y</td>
+<td>取消交互模式。默认情况下，i2cdetect将等待用户的确认，当使用此标志时，它将直接执行操作。</td>
+</tr>
+<tr>
+<td>-a</td>
+<td>允许在0x00 - 0x07和0x78 - 0x7f之间使用地址。一般不推荐。</td>
+</tr>
+<tr>
+<td>i2cbus</td>
+<td>表示要扫描的I2C总线的编号或名称。这个数字应该与i2cdetect  -l列出的总线之一相对应。</td>
+</tr>
+<tr>
+<td>chip-address</td>
+<td>要操作的外设从地址。</td>
+</tr>
+<tr>
+<td>data-address</td>
+<td>被查看外设的寄存器地址。</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>显示数据的方式：  b (read byte data, default)  w (read word data)  c (write byte&#x2F;read byte)</td>
+</tr>
+</tbody></table>
+<p>下面是完成读取0总线上从地址为0x50的外设的0x10寄存器的数据，命令为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cget -y -f 0 0x50 0x10</span><br></pre></td></tr></table></figure>
+
+<p><img src="clip_image002-172960558964324.jpg" alt="img"></p>
+<h3 id="i2cdump"><a href="#i2cdump" class="headerlink" title="i2cdump"></a>i2cdump</h3><p>i2cdump的主要功能查看I2C从设备器件所有寄存器的值。 该命令的常用格式为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cdump [-f] [-r first-last] [-y] [-a] i2cbus address [mode [bank [bankreg]]]</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>-f</th>
+<th>强制访问设备，即使它已经很忙。  默认情况下，i2cget将拒绝访问已经在内核驱动程序控制下的设备。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-r</td>
+<td>限制正在访问的寄存器范围。 此选项仅在模式b，w，c和W中可用。对于模式W，first必须是偶数，last必须是奇数。</td>
+</tr>
+<tr>
+<td>-y</td>
+<td>取消交互模式。默认情况下，i2cdetect将等待用户的确认，当使用此标志时，它将直接执行操作。即使从机没有发送 ACK，也继续读取。</td>
+</tr>
+<tr>
+<td>-V</td>
+<td>显示I2C工具的版本并推出。</td>
+</tr>
+<tr>
+<td>i2cbus</td>
+<td>表示要扫描的I2C总线的编号或名称。这个数字应该对应于i2cdetect -l列出的总线之一。</td>
+</tr>
+<tr>
+<td>first last</td>
+<td>表示要扫描的从设备地址范围。</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>b: 单个字节  w：16位字  s：SMBus模块  i：I2C模块的读取大小  c: 连续读取所有字节，对于具有地址自动递增功能的芯片（如EEPROM）非常有用。  W与 w类似，只是读命令只能在偶数寄存器地址上发出;这也是主要用于EEPROM的。</td>
+</tr>
+</tbody></table>
+<p>下面是完成读取0总线上从地址为0x50的eeprom的数据，命令为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cdump -f -y 0 0x50</span><br></pre></td></tr></table></figure>
+
+<p><img src="clip_image002-172960565916126.jpg" alt="img"></p>
+<p>分析：</p>
+<p><strong>左侧列（十六进制地址）</strong> </p>
+<ul>
+<li>每行的第一个数字表示当前读取的寄存器地址（以十六进制表示），步长为 16（即每行显示 16 字节）。</li>
+<li>例如，<code>0:</code> 表示从地址 <code>0x00</code> 开始，<code>10:</code> 表示从地址 <code>0x10</code> 开始，依此类推。</li>
+</ul>
+<p><strong>中间列（十六进制数据）</strong> ：</p>
+<ul>
+<li>每行显示 16 个字节的数据，每个字节用两个十六进制字符表示。</li>
+<li>例如，<code>ff ff ff ff ff ff ff ff</code> 表示连续 8 个字节，每个字节的值都是 <code>0xFF</code>。</li>
+</ul>
+<p><strong>侧列（ASCII 表示）</strong> ：</p>
+<ul>
+<li>将每个字节的值转换为 ASCII 字符表示。如果字节值无法转换为可打印的 ASCII 字符，则显示为点号 <code>.</code>。</li>
+<li>例如，<code>ff</code> 对应的 ASCII 值是不可打印字符，因此显示为 <code>.</code>。</li>
+</ul>
+<h3 id="i2cset"><a href="#i2cset" class="headerlink" title="i2cset"></a>i2cset</h3><p>i2cset的主要功能是通过I2C总线设置设备中某寄存器的值。该命令的常用格式为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cset [-f] [-y] [-m mask] [-r] i2cbus chip-address data-address [value] ...[mode]</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>-f</th>
+<th>强制访问设备，即使它已经很忙。  默认情况下，i2cget将拒绝访问已经在内核驱动程序控制下的设备。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-r</td>
+<td>在写入值之后立即读取它，并将结果与写入的值进行比较。</td>
+</tr>
+<tr>
+<td>-y</td>
+<td>取消交互模式。默认情况下，i2cdetect将等待用户的确认，当使用此标志时，它将直接执行操作。</td>
+</tr>
+<tr>
+<td>-V</td>
+<td>显示I2C工具的版本并推出。</td>
+</tr>
+<tr>
+<td>i2cbus</td>
+<td>表示要扫描的I2C总线的编号或名称。这个数字应该对应于i2cdetect -l列出的总线之一。</td>
+</tr>
+<tr>
+<td>-m mask</td>
+<td>如果指定mask参数，那么描述哪些value位将是实际写入data-addres的。掩码中设置为1的位将从值中取出，而设置为0的位将从数据地址中读取，从而由操作保存。</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>b: 单个字节  w：16位字  s：SMBus模块  i：I2C模块的读取大小  c: 连续读取所有字节，对于具有地址自动递增功能的芯片（如EEPROM）非常有用。  W与 w类似，只是读命令只能在偶数寄存器地址上发出;这也是主要用于EEPROM的。</td>
+</tr>
+</tbody></table>
+<p>下面是完成向0总线上从地址为0x50的eeprom的0x10寄存器写入0x55，命令为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cset -y -f 0 0x50 0x10 0x55</span><br></pre></td></tr></table></figure>
+
+<p>然后用i2cget读取0总线上从地址为0x50的eeprom的0x10寄存器的数据，命令为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2cget -y -f 0 0x50 0x10</span><br></pre></td></tr></table></figure>
+
+<p><img src="clip_image004-172960565916227.jpg" alt="img"></p>
+<h3 id="i2ctransfer"><a href="#i2ctransfer" class="headerlink" title="i2ctransfer"></a>i2ctransfer</h3><p>i2ctransfer的主要功能是在一次传输中发送用户定义的I2C消息。i2ctransfer是一个创建I2C消息并将其合并为一个传输发送的程序。对于读消息，接收缓冲区的内容被打印到stdout，每个读消息一行。</p>
+<p>该命令的常用格式为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2ctransfer [-f] [-y] [-v] [-a] i2cbus desc [data] [desc [data]] </span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>-f</th>
+<th>强制访问设备，即使它已经很忙。  默认情况下，i2cget将拒绝访问已经在内核驱动程序控制下的设备。</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-y</td>
+<td>取消交互模式。默认情况下，i2cdetect将等待用户的确认，当使用此标志时，它将直接执行操作。</td>
+</tr>
+<tr>
+<td>-v</td>
+<td>启用详细输出。它将打印所有信息发送，即不仅为读消息，也为写消息。</td>
+</tr>
+<tr>
+<td>-V</td>
+<td>显示I2C工具的版本并推出。</td>
+</tr>
+<tr>
+<td>-a</td>
+<td>允许在0x00 - 0x02和0x78 - 0x7f之间使用地址。一般不推荐。</td>
+</tr>
+<tr>
+<td>i2cbus</td>
+<td>表示要扫描的I2C总线的编号或名称。这个数字应该对应于i2cdetect -l列出的总线之一。</td>
+</tr>
+</tbody></table>
+<p>下面是完成向0总线上从地址为0x50的eeprom的0x20开始的4个寄存器写入0x01，0x02，0x03，0x04命令为：i2ctransfer -f -y 0 w5@0x50 0x20 0x01 0x02 0x03 0x04然后再通过命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i2ctransfer -f -y 0 w1@0x50 0x20 r4</span><br></pre></td></tr></table></figure>
+
+<p>将0x20地址的4个寄存器数据读出来，见下图：</p>
+<p><img src="image-20241022220511702.png" alt="image-20241022220511702"></p>
+<h1 id="I2C驱动开发"><a href="#I2C驱动开发" class="headerlink" title="I2C驱动开发"></a>I2C驱动开发</h1><img src="image-20250913221841441.png" alt="image-20250913221841441" style="zoom:50%;">
+
+<p>Linux内核将<strong>I2C驱动</strong>分为两部分：</p>
+<ul>
+<li><strong>I2C 总线驱动</strong>，I2C 总线驱动就是<strong>SOC的I2C控制器</strong>驱动，也叫做I2C 适配器驱动。</li>
+<li><strong>I2C 设备驱动</strong>，I2C 设备驱动就是针对<strong>具体的I2C设备</strong>而编写的驱动。</li>
+</ul>
+<h2 id="I2C-适配器"><a href="#I2C-适配器" class="headerlink" title="I2C 适配器"></a>I2C 适配器</h2><p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/linux/i2c.h#L695">i2c_adapter</a>  I2C总线适配器相当于一个I2C设备挂载点，处理器上的I2C控制器就是一个典型的I2C总线适配器</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">i2c_adapter</span> &#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> <span class="class"><span class="keyword">class</span>;</span>		  <span class="comment">/* classes to allow probing for */</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_algorithm</span> *<span class="title">algo</span>;</span> <span class="comment">/* 总线访问算法 */</span></span><br><span class="line">	<span class="type">void</span> *algo_data;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* data fields that are valid for all devices	*/</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">rt_mutex</span> <span class="title">bus_lock</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> timeout;			<span class="comment">/*超时时间，单位同 jiffies*/</span></span><br><span class="line">	<span class="type">int</span> retries;<span class="comment">//重试次数</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span>		<span class="comment">/*适配器设备*/</span></span><br><span class="line"></span><br><span class="line">	<span class="type">int</span> nr;<span class="comment">//总线号</span></span><br><span class="line">	<span class="type">char</span> name[<span class="number">48</span>];</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">completion</span> <span class="title">dev_released</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">userspace_clients_lock</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">userspace_clients</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_bus_recovery_info</span> *<span class="title">bus_recovery_info</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_adapter_quirks</span> *<span class="title">quirks</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">i2c_add_adapter</span><span class="params">(<span class="keyword">struct</span> i2c_adapter* adap)</span>:∥使用动态I2C总线号</span><br><span class="line"><span class="type">int</span> <span class="title function_">i2c_add_numbered_adapter</span><span class="params">(<span class="keyword">struct</span> i2c_adapter* adap)</span>/∥使用指定I2C总线号</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>adapter 或adap</strong>：要添加到Linux 内核中的i2c_adapter，也就是I2C 适配器。</p>
+</li>
+<li><p>**返回值：**0，成功；负值，失败。</p>
+</li>
+</ul>
+<p>上面两个函数会调用<code>i2c_register_adapter</code> 注册I2C 适配器，并在<code>/dev</code> 目录产生一个主设备号为<code>I2C_MAJOR</code>的I2C 设备节点。<code>i2c_del_adapter</code>函数从内核删除一个i2c_adapter：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">i2c_del_adapter</span><span class="params">(<span class="keyword">struct</span> i2c_adapter * adap)</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>**adap：**要删除的I2C 适配器。</p>
+</li>
+<li><p>**返回值：**无。</p>
+</li>
+</ul>
+<h2 id="I2C算法"><a href="#I2C算法" class="headerlink" title="I2C算法"></a>I2C算法</h2><p>I2C 算法（i2c_algorithm）表示一套通信方法。一个I2C 适配器需要一个通信规则（i2c_algorithm）来控制适配器产生特定的时序。对于一个I2C 适配器，肯定要对外提供读写API 函数，设备驱动程序可以使用这些API 函数来完成读写操作。i2c_algorithm 就是I2C 适配器与IIC 设备进行通信的方法。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">i2c_algorithm</span> &#123;</span></span><br><span class="line">    <span class="comment">//I2C 总线传输函数</span></span><br><span class="line">    <span class="type">int</span> （*master_xfer）（<span class="class"><span class="keyword">struct</span> <span class="title">i2c_adapter</span> *<span class="title">adap</span>， <span class="keyword">struct</span> <span class="title">i2c_msg</span> *<span class="title">msgs</span>，<span class="title">int</span> <span class="title">num</span>）；</span></span><br><span class="line"><span class="class">    //<span class="title">SMBUS</span> 总线传输函数</span></span><br><span class="line"><span class="class">    <span class="title">int</span> （*<span class="title">smbus_xfer</span>） （<span class="keyword">struct</span> <span class="title">i2c_adapter</span> *<span class="title">adap</span>， <span class="title">u16</span> <span class="title">addr</span>，<span class="title">unsigned</span> <span class="title">short</span> <span class="title">flags</span>， <span class="title">char</span> <span class="title">read_write</span>，</span></span><br><span class="line"><span class="class">    <span class="title">u8</span> <span class="title">command</span>， <span class="title">int</span> <span class="title">size</span>， <span class="title">union</span> <span class="title">i2c_smbus_data</span> *<span class="title">data</span>）；</span></span><br><span class="line"><span class="class">    <span class="title">u32</span> （*<span class="title">functionality</span>） （<span class="keyword">struct</span> <span class="title">i2c_adapter</span> *）；/*检测<span class="title">adapter</span> 支持的功能*/</span></span><br><span class="line"><span class="class">    #<span class="title">if</span> <span class="title">IS_ENABLED</span>（<span class="title">CONFIG_I2C_SLAVE</span>）</span></span><br><span class="line"><span class="class">    <span class="title">int</span> （*<span class="title">reg_slave</span>）（<span class="keyword">struct</span> <span class="title">i2c_client</span> *<span class="title">client</span>）；</span></span><br><span class="line"><span class="class">    <span class="title">int</span> （*<span class="title">unreg_slave</span>）（<span class="keyword">struct</span> <span class="title">i2c_client</span> *<span class="title">client</span>）；</span></span><br><span class="line"><span class="class">    #<span class="title">endif</span></span></span><br><span class="line"><span class="class">&#125;；</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>master_xfer</strong>就是<strong>I2C适配器的传输函数</strong>，可以通过此函数来完成与IIC 设备之间的通信。</p>
+</li>
+<li><p><strong>smbus_xfer</strong>就是<strong>SMBUS总线的传输函数</strong>。</p>
+</li>
+</ul>
+<h2 id="I2C从设备"><a href="#I2C从设备" class="headerlink" title="I2C从设备"></a>I2C从设备</h2><p>挂载在I2C 总线上的不能控制总线的设备称为I2C 从设备，通常是一个外围芯片。i2c_client 结构表示连接到I2C 总线上的从设备。每个从设备具有一个或者多个I2C 地址。处理器根据I2C 地址访问I2C 从设备，而I2C 从设备则根据地址决定是否对I2C命令进行响应。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">i2c_client</span> &#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> flags;		<span class="comment">/* 标志 */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> addr;		<span class="comment">/* 芯片地址，7 位，存在低7 位 */</span></span><br><span class="line">					<span class="comment">/* addresses are stored in the	*/</span></span><br><span class="line">					<span class="comment">/* _LOWER_ 7 bits		*/</span></span><br><span class="line">	<span class="type">char</span> name[I2C_NAME_SIZE]; <span class="comment">/* 名字 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_adapter</span> *<span class="title">adapter</span>;</span>	<span class="comment">/* 对应的I2C 适配器 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span>		<span class="comment">//* 设备结构体 */</span></span><br><span class="line">	<span class="type">int</span> irq;			<span class="comment">/* 中断 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">detected</span>;</span></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> IS_ENABLED(CONFIG_I2C_SLAVE)</span></span><br><span class="line">	<span class="type">i2c_slave_cb_t</span> slave_cb;	<span class="comment">/* callback for slave mode	*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>一个设备对应一个i2c_client</strong>，每检测到一个I2C 设备就会给这个I2C 设备分配一个i2c_client。</p>
+<p>这段代码定义了 <code>struct i2c_client</code>，它是Linux内核中用于表示I2C总线上连接的从设备（slave device）的数据结构。每个 <code>i2c_client</code> 实例代表一个通过I2C协议与系统通信的硬件芯片或设备。以下是该结构体各成员变量的解释：</p>
+<ul>
+<li><p><code>flags</code>: 这是一个标志位字段，用来标识设备的一些特性。例如，<code>I2C_CLIENT_TEN</code> 表示该设备使用10位地址，<code>I2C_CLIENT_PEC</code> 表示它支持SMBus包错误校验。</p>
+</li>
+<li><p><code>addr</code>: 设备在I2C总线上的地址。值得注意的是，7位地址存储在最低的7个位中。</p>
+</li>
+<li><p><code>name</code>: 一个字符串，用来标识设备类型，通常是通用的芯片名称，可以隐藏第二来源和兼容修订版本。</p>
+</li>
+<li><p><code>adapter</code>: 指向管理该I2C设备所在总线段的 <code>i2c_adapter</code> 结构的指针。每一个适配器代表一个独立的I2C总线控制器。</p>
+</li>
+<li><p><code>dev</code>: 一个 <code>device</code> 结构，是Linux驱动模型中的节点，代表这个从设备。</p>
+</li>
+<li><p><code>irq</code>: 如果设备产生中断请求（IRQ），则此值表示该IRQ的编号。</p>
+</li>
+<li><p><code>detected</code>: 一个链表项，当设备被检测到时，它会被添加到 <code>i2c_driver</code> 的 <code>clients</code> 列表或者 <code>i2c-core</code> 的 <code>userspace_devices</code> 列表中。</p>
+</li>
+<li><p><code>slave_cb</code>: 如果配置启用了I2C从模式（<code>CONFIG_I2C_SLAVE</code>），那么这是一个回调函数，当适配器处于从模式并且有事件发生时调用，以便将这些事件传递给从设备驱动程序。</p>
+</li>
+</ul>
+<p>这个结构体是构建Linux I2C子系统的基石之一，允许驱动程序与特定的I2C设备进行交互，并且为上层软件提供了必要的信息来正确地配置和操作这些设备。如果你正在编写一个I2C设备驱动程序，你通常需要填充或处理这个结构体以实现对特定硬件的支持。</p>
+<h2 id="I2C从设备驱动"><a href="#I2C从设备驱动" class="headerlink" title="I2C从设备驱动"></a>I2C从设备驱动</h2><p>i2c_driver 类似platform_driver，是我们编写I2C 设备驱动重点要处理的内容，i2c_driver 结构体定义在<code>include/linux/i2c.h</code> 文件中，内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">i2c_driver</span> &#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> <span class="class"><span class="keyword">class</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Notifies the driver that a new bus has appeared. You should avoid</span></span><br><span class="line"><span class="comment">	 * using this, it will be removed in a near future.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">int</span> (*attach_adapter)(<span class="keyword">struct</span> i2c_adapter *) __deprecated;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Standard driver model interfaces */</span></span><br><span class="line">	<span class="type">int</span> (*probe)(<span class="keyword">struct</span> i2c_client *, <span class="type">const</span> <span class="keyword">struct</span> i2c_device_id *);</span><br><span class="line">	<span class="type">int</span> (*remove)(<span class="keyword">struct</span> i2c_client *);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* driver model interfaces that don&#x27;t relate to enumeration  */</span></span><br><span class="line">	<span class="type">void</span> (*shutdown)(<span class="keyword">struct</span> i2c_client *);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Alert callback, for example for the SMBus alert protocol.</span></span><br><span class="line"><span class="comment">	 * The format and meaning of the data value depends on the protocol.</span></span><br><span class="line"><span class="comment">	 * For the SMBus alert protocol, there is a single bit of data passed</span></span><br><span class="line"><span class="comment">	 * as the alert response&#x27;s low bit (&quot;event flag&quot;).</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">void</span> (*alert)(<span class="keyword">struct</span> i2c_client *, <span class="type">unsigned</span> <span class="type">int</span> data);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* a ioctl like command that can be used to perform specific functions</span></span><br><span class="line"><span class="comment">	 * with the device.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">int</span> (*command)(<span class="keyword">struct</span> i2c_client *client, <span class="type">unsigned</span> <span class="type">int</span> cmd, <span class="type">void</span> *arg);</span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device_driver</span> <span class="title">driver</span>;</span></span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_device_id</span> *<span class="title">id_table</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Device detection callback for automatic device creation */</span></span><br><span class="line">	<span class="type">int</span> (*detect)(<span class="keyword">struct</span> i2c_client *, <span class="keyword">struct</span> i2c_board_info *);</span><br><span class="line">	<span class="type">const</span> <span class="type">unsigned</span> <span class="type">short</span> *address_list;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">clients</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这段注释详细描述了 <code>struct i2c_driver</code> 的各个成员及其用途，以及如何正确地实现和使用这个结构体来创建一个I2C设备驱动程序。以下是关键点的总结：</p>
+<ul>
+<li><strong>成员变量</strong>：<ul>
+<li><code>@class</code>: 指定实例化的I2C设备类型，用于检测时识别设备。</li>
+<li><code>@attach_adapter</code> (已废弃): 曾经是适配器添加时的回调函数，现已不再推荐使用。</li>
+<li><code>@probe</code>: 设备绑定时的回调函数，当发现新设备并与驱动匹配时调用。</li>
+<li><code>@remove</code>: 设备解绑时的回调函数，用于清理工作。</li>
+<li><code>@shutdown</code>: 系统关机时调用的回调函数。</li>
+<li><code>@alert</code>: SMBus警报协议的回调函数。</li>
+<li><code>@command</code>: 总线范围信令的可选回调函数。</li>
+<li><code>@driver</code>: 内核设备驱动模型中的驱动程序结构。</li>
+<li><code>@id_table</code>: 驱动程序支持的I2C设备列表。</li>
+<li><code>@detect</code>: 设备检测的回调函数。</li>
+<li><code>@address_list</code>: 探测的I2C地址列表。</li>
+<li><code>@clients</code>: 已检测到的客户端列表（仅限i2c-core内部使用）。</li>
+</ul>
+</li>
+</ul>
+<p><code>i2c_driver</code> 注册函数为</p>
+<ul>
+<li><p><code>int i2c_register_driver</code>，此函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">i2c_register_driver</span><span class="params">(<span class="keyword">struct</span> module *owner,<span class="keyword">struct</span> i2c_driver *driver)</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">owner：一般为THIS_MODULE。</span></span><br><span class="line"><span class="comment">driver：要注册的i2c_driver。</span></span><br><span class="line"><span class="comment">返回值：0，成功；负值，失败。</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>i2c_add_driver</code>也常常用于注册i2c_driver，i2c_add_driver 是一个宏，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> i2c_add_driver(driver) i2c_register_driver(THIS_MODULE, driver)</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><code>i2c_driver</code> 注销函数为<code>i2c_del_driver</code> 函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">i2c_del_driver</span><span class="params">(<span class="keyword">struct</span> i2c_driver *driver)</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">driver：要注销的i2c_driver。</span></span><br><span class="line"><span class="comment">返回值：无。</span></span><br><span class="line"><span class="comment">*/</span>*</span><br></pre></td></tr></table></figure>
+
+<h2 id="I2C从设备与驱动匹配"><a href="#I2C从设备与驱动匹配" class="headerlink" title="I2C从设备与驱动匹配"></a>I2C从设备与驱动匹配</h2><p>设备和驱动的匹配过程也是由I2C 总线完成的，I2C 总线的数据结构为i2c_bus_type</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bus_type</span> <span class="title">i2c_bus_type</span> =</span> &#123;</span><br><span class="line"> .name = <span class="string">&quot;i2c&quot;</span>,</span><br><span class="line"> .match = i2c_device_match,</span><br><span class="line"> .probe = i2c_device_probe,</span><br><span class="line"> .remove = i2c_device_remove,</span><br><span class="line"> .shutdown = i2c_device_shutdown,</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>.match就是I2C 总线的设备和驱动匹配函数，在这里就是<code>i2c_device_match</code> 这个函数。这个函数中<code>of_driver_match_device</code> 函数用于完成设备树设备和驱动匹配。比较I2C 设备节点的<code>compatible</code> 属性和<code>of_device_id</code> 中的<code>compatible</code> 属性是否相等，如果相当的话就表示I2C设备和驱动匹配。</p>
+<h2 id="I2C适配器驱动"><a href="#I2C适配器驱动" class="headerlink" title="I2C适配器驱动"></a>I2C适配器驱动</h2><p>I.MX6U的I2C 适配器驱动驱动文件为：<code>drivers/i2c/busses/</code>  </p>
+<p>I2C控制器节点：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">i2c1: i2c@<span class="number">021</span>a0000 &#123;</span><br><span class="line"><span class="meta">#address-cells = <span class="string">&lt;1&gt;</span>;</span></span><br><span class="line"><span class="meta">#size-cells = <span class="string">&lt;0&gt;</span>;</span></span><br><span class="line">compatible = <span class="string">&quot;fsl,imx6ul-i2c&quot;</span>, <span class="string">&quot;fsl,imx21-i2c&quot;</span>;</span><br><span class="line">reg = &lt;<span class="number">0x021a0000</span> <span class="number">0x4000</span>&gt;;</span><br><span class="line">interrupts = &lt;GIC_SPI <span class="number">36</span> IRQ_TYPE_LEVEL_HIGH&gt;;</span><br><span class="line">clocks = &lt;&amp;clks IMX6UL_CLK_I2C1&gt;;</span><br><span class="line">status = <span class="string">&quot;disabled&quot;</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/A/ident/i2c_adap_imx_exit">i2c-imx.c</a></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">i2c_imx_probe</span><span class="params">(<span class="keyword">struct</span> platform_device *pdev)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">of_device_id</span> *<span class="title">of_id</span> =</span> of_match_device(i2c_imx_dt_ids,</span><br><span class="line">							   &amp;pdev-&gt;dev);</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">imx_i2c_struct</span> *<span class="title">i2c_imx</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">resource</span> *<span class="title">res</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">imxi2c_platform_data</span> *<span class="title">pdata</span> =</span> dev_get_platdata(&amp;pdev-&gt;dev);</span><br><span class="line">	<span class="type">void</span> __iomem *base;</span><br><span class="line">	<span class="type">int</span> irq, ret;</span><br><span class="line">	<span class="type">dma_addr_t</span> phy_addr;</span><br><span class="line"></span><br><span class="line">	dev_dbg(&amp;pdev-&gt;dev, <span class="string">&quot;&lt;%s&gt;\n&quot;</span>, __func__);</span><br><span class="line">	<span class="comment">/*调用platform_get_irq 函数获取中断号。*/</span></span><br><span class="line">	irq = platform_get_irq(pdev, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">if</span> (irq &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		dev_err(&amp;pdev-&gt;dev, <span class="string">&quot;can&#x27;t get irq number\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> irq;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">/*调用platform_get_resource 函数从设备树中获取I2C1 控制器寄存器物理基</span></span><br><span class="line"><span class="comment">	地址，也就是0X021A0000。获取到寄存器基地址以后使用devm_ioremap_resource 函数对其进</span></span><br><span class="line"><span class="comment">	行内存映射，得到可以在Linux 内核中使用的虚拟地址。*/</span></span><br><span class="line">	res = platform_get_resource(pdev, IORESOURCE_MEM, <span class="number">0</span>);</span><br><span class="line">	base = devm_ioremap_resource(&amp;pdev-&gt;dev, res);    </span><br><span class="line">	<span class="keyword">if</span> (IS_ERR(base))</span><br><span class="line">		<span class="keyword">return</span> PTR_ERR(base);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*，NXP 使用imx_i2c_struct 结构体来表示I.MX 系列SOC 的I2C 控制器，这里使</span></span><br><span class="line"><span class="comment">    用devm_kzalloc 函数来申请内存。*/</span></span><br><span class="line">	i2c_imx = devm_kzalloc(&amp;pdev-&gt;dev, <span class="keyword">sizeof</span>(*i2c_imx), GFP_KERNEL);</span><br><span class="line">	<span class="keyword">if</span> (!i2c_imx)</span><br><span class="line">		<span class="keyword">return</span> -ENOMEM;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* mx_i2c_struct 结构体要有个叫做adapter 的成员变量，adapter 就是</span></span><br><span class="line"><span class="comment">    i2c_adapter，这里初始化i2c_adapter */</span></span><br><span class="line">	strlcpy(i2c_imx-&gt;adapter.name, pdev-&gt;name, <span class="keyword">sizeof</span>(i2c_imx-&gt;adapter.name));</span><br><span class="line">	i2c_imx-&gt;adapter.owner		= THIS_MODULE;</span><br><span class="line">	i2c_imx-&gt;adapter.algo		= &amp;i2c_imx_algo;</span><br><span class="line">	i2c_imx-&gt;adapter.dev.parent	= &amp;pdev-&gt;dev;</span><br><span class="line">	i2c_imx-&gt;adapter.nr		= pdev-&gt;id;</span><br><span class="line">	i2c_imx-&gt;adapter.dev.of_node	= pdev-&gt;dev.of_node;</span><br><span class="line">	i2c_imx-&gt;base			= base;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*注册I2C 控制器中断，中断服务函数为i2c_imx_isr。*/</span></span><br><span class="line">    ret = devm_request_irq(&amp;pdev-&gt;dev, irq, i2c_imx_isr,</span><br><span class="line">			       IRQF_NO_SUSPEND, pdev-&gt;name, i2c_imx);</span><br><span class="line">	<span class="keyword">if</span> (ret) &#123;</span><br><span class="line">		dev_err(&amp;pdev-&gt;dev, <span class="string">&quot;can&#x27;t claim irq %d\n&quot;</span>, irq);</span><br><span class="line">		<span class="keyword">goto</span> clk_disable;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">/*设置I2C 频率默认为IMX_I2C_BIT_RATE=100KHz，如果设备树节点设</span></span><br><span class="line"><span class="comment">    置了“clock-frequency”属性的话I2C 频率就使用clock-frequency 属性值。*/</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*调用i2c_add_numbered_adapter 函数向Linux 内核注册i2c_adapter。*/</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*，申请DMA，I.MX 的I2C 适配器驱动采用了DMA 方式。*/</span></span><br><span class="line">    </span><br><span class="line">     <span class="comment">/**/</span></span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<p>在porbe函数主要工作：</p>
+<p>①、初始化i2c_adapter，设置i2c_algorithm 为i2c_imx_algo，最后向Linux 内核注册i2c_adapter。</p>
+<p>②、初始化I2C1 控制器的相关寄存器。i2c_imx_algo 包含I2C1 适配器与I2C 设备的通信函数master_xfer，i2c_imx_algo 结构体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_algorithm</span> <span class="title">i2c_imx_algo</span> =</span> &#123;</span><br><span class="line"> .master_xfer = i2c_imx_xfer,<span class="comment">/*i2c_imx_xfer 函数，因为最终就是通过此函数来完成与I2C 设备通信*/</span></span><br><span class="line"> .functionality = i2c_imx_func,</span><br><span class="line"> &#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>i2c_imx_xfer函数：</strong></p>
+<ul>
+<li><p>调用i2c_imx_start 函数开启I2C 通信。</p>
+</li>
+<li><p>如果是从I2C 设备读数据的话就调用i2c_imx_read 函数。</p>
+</li>
+<li><p>向I2C 设备写数据，如果要用DMA 的话就使用i2c_imx_dma_write 函数来完成写数据。如果不使用DMA 的话就使用i2c_imx_write 函数完成写数据。</p>
+</li>
+<li><p>I2C 通信完成以后调用i2c_imx_stop 函数停止I2C 通信。</p>
+</li>
+</ul>
+<h2 id="I2C数据收发"><a href="#I2C数据收发" class="headerlink" title="I2C数据收发"></a>I2C数据收发</h2><p>I2C设备驱动首先要做的就是初始化i2c_driver并向Linux 内核注册。</p>
+<p>当设备和驱动匹配以后i2c_driver里面的probe函数就会执行，probe函数里面所做的就是字符设备驱动那一套了。</p>
+<p>一般需要在probe函数里面初始化I2C 设备要初始化I2C设备就必须能够对I2C设备寄存器进行读写操作，这里就要用到i2c_transfer函数了。</p>
+<p>i2c_transfer函数最终会调用I2C适配器中i2c_algorithm里面的master_xfer函数，对于I.MX6U而言就是i2c_imx_xfer这个函数</p>
+<ul>
+<li><p>i2c_transfer</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">i2c_transfer</span><span class="params">(<span class="keyword">struct</span> i2c_adapter *adap,<span class="keyword">struct</span> i2c_msg *msgs,<span class="type">int</span> num)</span></span><br></pre></td></tr></table></figure>
+
+<p>**adap：**所使用的I2C 适配器，i2c_client 会保存其对应的i2c_adapter。</p>
+<p>**msgs：**I2C 要发送的一个或多个消息。</p>
+<p>**num：**消息数量，也就是msgs 的数量。</p>
+<p>**返回值：**负值，失败，其他非负值，发送的msgs 数量。</p>
+</li>
+<li><p><strong>i2c_msg结构体</strong><a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v5.10.4/source/include/uapi/linux/i2c.h#L69">i2c.h</a></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * struct i2c_msg - I2C消息结构体，用于描述一次I2C传输的信息</span></span><br><span class="line"><span class="comment"> * @addr: 从设备地址（I2C从机地址）</span></span><br><span class="line"><span class="comment"> * @flags: 传输标志（控制I2C传输的行为）</span></span><br><span class="line"><span class="comment"> * @len: 消息长度（数据的字节数）</span></span><br><span class="line"><span class="comment"> * @buf: 消息数据指针（指向存储传输数据的缓冲区）</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">i2c_msg</span> &#123;</span></span><br><span class="line">	__u16 addr;	<span class="comment">/* 从设备地址			*/</span></span><br><span class="line">	__u16 flags;	<span class="comment">/* 传输标志			*/</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_RD		0x0001	<span class="comment">/* 读数据（从从机到主机） */</span></span></span><br><span class="line">					<span class="comment">/* 保证I2C_M_RD的值为0x0001 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_TEN		0x0010	<span class="comment">/* 这是一个10位芯片地址 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_DMA_SAFE		0x0200	<span class="comment">/* 此消息的缓冲区是DMA安全的 */</span></span></span><br><span class="line">					<span class="comment">/* 仅在内核空间有意义 */</span></span><br><span class="line">					<span class="comment">/* 用户空间缓冲区无论如何都会被复制 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_RECV_LEN		0x0400	<span class="comment">/* 长度将是第一个接收到的字节 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_NO_RD_ACK		0x0800	<span class="comment">/* 如果支持I2C_FUNC_PROTOCOL_MANGLING功能 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_IGNORE_NAK	0x1000	<span class="comment">/* 如果支持I2C_FUNC_PROTOCOL_MANGLING功能 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_REV_DIR_ADDR	0x2000	<span class="comment">/* 如果支持I2C_FUNC_PROTOCOL_MANGLING功能 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_NOSTART		0x4000	<span class="comment">/* 如果支持I2C_FUNC_NOSTART功能 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> I2C_M_STOP		0x8000	<span class="comment">/* 如果支持I2C_FUNC_PROTOCOL_MANGLING功能 */</span></span></span><br><span class="line">	__u16 len;		<span class="comment">/* 消息长度			*/</span></span><br><span class="line">	__u8 *buf;		<span class="comment">/* 消息数据指针			*/</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>i2c_transfer函数收发的示例代码：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*读取数据*/</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description	: 从ap3216c读取多个寄存器数据</span></span><br><span class="line"><span class="comment"> * @param - dev:  ap3216c设备</span></span><br><span class="line"><span class="comment"> * @param - reg:  要读取的寄存器首地址</span></span><br><span class="line"><span class="comment"> * @param - val:  读取到的数据</span></span><br><span class="line"><span class="comment"> * @param - len:  要读取的数据长度</span></span><br><span class="line"><span class="comment"> * @return 		: 操作结果</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_read_regs</span><span class="params">(<span class="keyword">struct</span> ap3216c_dev *dev, u8 reg, <span class="type">void</span> *val, <span class="type">int</span> len)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_msg</span> <span class="title">msg</span>[2];</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_client</span> *<span class="title">client</span> =</span> (<span class="keyword">struct</span> i2c_client *)dev-&gt;private_data;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* msg[0]为发送要读取的首地址 */</span></span><br><span class="line">	msg[<span class="number">0</span>].addr = client-&gt;addr;			<span class="comment">/* ap3216c地址 */</span></span><br><span class="line">	msg[<span class="number">0</span>].flags = <span class="number">0</span>;					<span class="comment">/* 标记为发送数据 */</span></span><br><span class="line">	msg[<span class="number">0</span>].buf = &amp;reg;					<span class="comment">/* 读取的首地址 */</span></span><br><span class="line">	msg[<span class="number">0</span>].len = <span class="number">1</span>;						<span class="comment">/* reg长度*/</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* msg[1]读取数据 */</span></span><br><span class="line">	msg[<span class="number">1</span>].addr = client-&gt;addr;			<span class="comment">/* ap3216c地址 */</span></span><br><span class="line">	msg[<span class="number">1</span>].flags = I2C_M_RD;			<span class="comment">/* 标记为读取数据*/</span></span><br><span class="line">	msg[<span class="number">1</span>].buf = val;					<span class="comment">/* 读取数据缓冲区 */</span></span><br><span class="line">	msg[<span class="number">1</span>].len = len;					<span class="comment">/* 要读取的数据长度*/</span></span><br><span class="line"></span><br><span class="line">	ret = i2c_transfer(client-&gt;adapter, msg, <span class="number">2</span>);</span><br><span class="line">	<span class="keyword">if</span>(ret == <span class="number">2</span>) &#123;</span><br><span class="line">		ret = <span class="number">0</span>;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		printk(<span class="string">&quot;i2c rd failed=%d reg=%06x len=%d\n&quot;</span>,ret, reg, len);</span><br><span class="line">		ret = -EREMOTEIO;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*写数据*/</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description	: 向ap3216c多个寄存器写入数据</span></span><br><span class="line"><span class="comment"> * @param - dev:  ap3216c设备</span></span><br><span class="line"><span class="comment"> * @param - reg:  要写入的寄存器首地址</span></span><br><span class="line"><span class="comment"> * @param - val:  要写入的数据缓冲区</span></span><br><span class="line"><span class="comment"> * @param - len:  要写入的数据长度</span></span><br><span class="line"><span class="comment"> * @return 	  :   操作结果</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> s32 <span class="title function_">ap3216c_write_regs</span><span class="params">(<span class="keyword">struct</span> ap3216c_dev *dev, u8 reg, u8 *buf, u8 len)</span></span><br><span class="line">&#123;</span><br><span class="line">	u8 b[<span class="number">256</span>];</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_msg</span> <span class="title">msg</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_client</span> *<span class="title">client</span> =</span> (<span class="keyword">struct</span> i2c_client *)dev-&gt;private_data;</span><br><span class="line">	</span><br><span class="line">	b[<span class="number">0</span>] = reg;					<span class="comment">/* 寄存器首地址 */</span></span><br><span class="line">	<span class="built_in">memcpy</span>(&amp;b[<span class="number">1</span>],buf,len);		<span class="comment">/* 将要写入的数据拷贝到数组b里面 */</span></span><br><span class="line">		</span><br><span class="line">	msg.addr = client-&gt;addr;	<span class="comment">/* ap3216c地址 */</span></span><br><span class="line">	msg.flags = <span class="number">0</span>;				<span class="comment">/* 标记为写数据 */</span></span><br><span class="line"></span><br><span class="line">	msg.buf = b;				<span class="comment">/* 要写入的数据缓冲区 */</span></span><br><span class="line">	msg.len = len + <span class="number">1</span>;			<span class="comment">/* 要写入的数据长度 */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> i2c_transfer(client-&gt;adapter, &amp;msg, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>封装好的SMBUS函数</strong></p>
+<table>
+<thead>
+<tr>
+<th align="left">函数名</th>
+<th align="left">函数原型</th>
+<th align="left">参数说明</th>
+<th align="left">功能描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>i2c_smbus_write_quick</strong></td>
+<td align="left"><code>s32 i2c_smbus_write_quick(struct i2c_client *client, u8 value)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>value</code>: 要发送的值</td>
+<td align="left">发送快速写入命令，SMBus最简短的写入操作</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_read_byte</strong></td>
+<td align="left"><code>s32 i2c_smbus_read_byte(struct i2c_client *client)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针</td>
+<td align="left">从设备读取一个字节（无指定命令字节）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_write_byte</strong></td>
+<td align="left"><code>s32 i2c_smbus_write_byte(struct i2c_client *client, u8 value)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>value</code>: 要写入的字节值</td>
+<td align="left">向设备写入一个字节（无指定命令字节）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_read_byte_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_read_byte_data(struct i2c_client *client, u8 command)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址</td>
+<td align="left">从指定命令&#x2F;寄存器读取一个字节</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_write_byte_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_write_byte_data(struct i2c_client *client, u8 command, u8 value)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>value</code>: 要写入的字节值</td>
+<td align="left">向指定命令&#x2F;寄存器写入一个字节</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_read_word_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_read_word_data(struct i2c_client *client, u8 command)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址</td>
+<td align="left">从指定命令&#x2F;寄存器读取一个字（16位）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_write_word_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_write_word_data(struct i2c_client *client, u8 command, u16 value)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>value</code>: 要写入的字值</td>
+<td align="left">向指定命令&#x2F;寄存器写入一个字（16位）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_process_call</strong></td>
+<td align="left"><code>s32 i2c_smbus_process_call(struct i2c_client *client, u8 command, u16 value)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>value</code>: 要写入的字值</td>
+<td align="left">写入一个字，然后读取一个字（命令-响应操作）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_read_block_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_read_block_data(struct i2c_client *client, u8 command, u8 *values)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>values</code>: 存储读取数据的缓冲区</td>
+<td align="left">从指定命令&#x2F;寄存器读取一个数据块</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_write_block_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_write_block_data(struct i2c_client *client, u8 command, u8 length, const u8 *values)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>length</code>: 数据长度 <code>values</code>: 要写入的数据缓冲区</td>
+<td align="left">向指定命令&#x2F;寄存器写入一个数据块</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_read_i2c_block_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_read_i2c_block_data(struct i2c_client *client, u8 command, u8 length, u8 *values)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>length</code>: 要读取的数据长度 <code>values</code>: 存储读取数据的缓冲区</td>
+<td align="left">从指定命令&#x2F;寄存器读取一个数据块（I2C块读取）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_write_i2c_block_data</strong></td>
+<td align="left"><code>s32 i2c_smbus_write_i2c_block_data(struct i2c_client *client, u8 command, u8 length, const u8 *values)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>length</code>: 要写入的数据长度 <code>values</code>: 要写入的数据缓冲区</td>
+<td align="left">向指定命令&#x2F;寄存器写入一个数据块（I2C块写入）</td>
+</tr>
+<tr>
+<td align="left"><strong>i2c_smbus_block_process_call</strong></td>
+<td align="left"><code>s32 i2c_smbus_block_process_call(struct i2c_client *client, u8 command, u8 length, u8 *values)</code></td>
+<td align="left"><code>client</code>: I2C客户端设备指针 <code>command</code>: 命令&#x2F;寄存器地址 <code>length</code>: 数据长度 <code>values</code>: 写入时包含数据，读取时存储数据</td>
+<td align="left">写入一个数据块，然后读取一个数据块（块命令-响应操作）</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<h1 id="AP3216C实验"><a href="#AP3216C实验" class="headerlink" title="AP3216C实验"></a>AP3216C实验</h1><h2 id="设备树节点编写："><a href="#设备树节点编写：" class="headerlink" title="设备树节点编写："></a><strong>设备树节点编写：</strong></h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*AP3216C 是连接到I2C1 上的，因此需要在i2c1 节点下添加ap3216c 的设备子节点，在i2c1节点下面添加设备节点*/</span></span><br><span class="line">&amp;i2c1 &#123;</span><br><span class="line">	clock-frequency = &lt;<span class="number">100000</span>&gt;;<span class="comment">//clock-frequency 属性为I2C 频率，这里设置为100KHz。</span></span><br><span class="line">	pinctrl-names = <span class="string">&quot;default&quot;</span>;</span><br><span class="line">	pinctrl<span class="number">-0</span> = &lt;&amp;pinctrl_i2c1&gt;;</span><br><span class="line">	status = <span class="string">&quot;okay&quot;</span>;</span><br><span class="line"></span><br><span class="line">	ap3216c@<span class="number">1</span>e &#123;</span><br><span class="line">		compatible = <span class="string">&quot;kevin,ap3216c&quot;</span>;<span class="comment">//设置compatible 值</span></span><br><span class="line">		reg = &lt; <span class="number">0x1e</span> &gt;;<span class="comment">//reg 属性也是设置ap3216c 器件地址的，因此reg 设置为0x1e。</span></span><br><span class="line">	&#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="基于master-xfer编写代码："><a href="#基于master-xfer编写代码：" class="headerlink" title="基于master_xfer编写代码："></a><strong>基于master_xfer编写代码：</strong></h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/cdev.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/device.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of_gpio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/semaphore.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/timer.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/i2c.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/mach/map.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/uaccess.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/io.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 1. 硬件基础信息定义 -------------------------</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_ADDR    	0X1E	<span class="comment">/* AP3216C I2C 从地址 */</span></span></span><br><span class="line"><span class="comment">// AP3216C 关键寄存器地址</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_SYSTEMCONG	0x00	<span class="comment">/* 系统配置寄存器（复位/功能使能） */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_IRDATALOW	0x0A	<span class="comment">/* IR 数据低字节 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_IRDATAHIGH	0x0B	<span class="comment">/* IR 数据高字节 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_ALSDATALOW	0x0C	<span class="comment">/* ALS 数据低字节 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_ALSDATAHIGH	0X0D	<span class="comment">/* ALS 数据高字节 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_PSDATALOW	0X0E	<span class="comment">/* PS 数据低字节 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_PSDATAHIGH	0X0F	<span class="comment">/* PS 数据高字节 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 2. 字符设备基础信息 ---------------------------</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_CNT		1		<span class="comment">/* 设备数量（单设备） */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> AP3216C_NAME	<span class="string">&quot;ap3216c&quot;</span><span class="comment">/* 设备名（/dev/ap3216c） */</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 3. 设备核心结构体 ---------------------------</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ap3216c_dev</span> &#123;</span></span><br><span class="line">	<span class="type">dev_t</span> devid;			<span class="comment">/* 字符设备ID（主+次设备号） */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> <span class="title">cdev</span>;</span>		<span class="comment">/* 字符设备对象 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> *<span class="keyword">class</span>;</span>	<span class="comment">/* 设备类（用于udev创建设备节点） */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">device</span>;</span>	<span class="comment">/* 设备实例 */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device_node</span> *<span class="title">nd</span>;</span>	<span class="comment">/* 设备树节点（预留） */</span></span><br><span class="line">	<span class="type">int</span> major;				<span class="comment">/* 主设备号 */</span></span><br><span class="line">	<span class="type">void</span> *private_data;		<span class="comment">/* 私有数据（指向I2C客户端） */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> ir;		<span class="comment">/* IR传感器数据 */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> als;		<span class="comment">/* ALS传感器数据 */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> ps;		<span class="comment">/* PS传感器数据 */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">ap3216c_dev</span> <span class="title">ap3216cdev</span>;</span>	<span class="comment">/* 全局设备实例 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 4. I2C 读写函数 ---------------------------</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 通用I2C读写函数：支持单寄存器/多寄存器读写</span></span><br><span class="line"><span class="comment"> * @param dev: 设备结构体指针</span></span><br><span class="line"><span class="comment"> * @param reg: 寄存器首地址</span></span><br><span class="line"><span class="comment"> * @param val: 数据缓冲区（读：存储结果；写：传入数据）</span></span><br><span class="line"><span class="comment"> * @param len: 读写长度（1=单寄存器，&gt;1=多寄存器）</span></span><br><span class="line"><span class="comment"> * @param is_read: 读写标志（1=读，0=写）</span></span><br><span class="line"><span class="comment"> * @return: 0=成功，-EREMOTEIO=I2C通信失败</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_i2c_rw</span><span class="params">(<span class="keyword">struct</span> ap3216c_dev *dev, u8 reg, <span class="type">void</span> *val, <span class="type">int</span> len, <span class="type">bool</span> is_read)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> ret;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_msg</span> <span class="title">msg</span>[2];</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">i2c_client</span> *<span class="title">client</span> =</span> (<span class="keyword">struct</span> i2c_client *)dev-&gt;private_data;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 第一步：发送寄存器首地址（读写操作都需要先传地址） */</span></span><br><span class="line">	msg[<span class="number">0</span>].addr = client-&gt;addr;	<span class="comment">/* I2C从地址 */</span></span><br><span class="line">	msg[<span class="number">0</span>].flags = <span class="number">0</span>;			<span class="comment">/* 写操作（发送地址） */</span></span><br><span class="line">	msg[<span class="number">0</span>].buf = &amp;reg;			<span class="comment">/* 寄存器地址 */</span></span><br><span class="line">	msg[<span class="number">0</span>].len = <span class="number">1</span>;				<span class="comment">/* 地址长度1字节 */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (is_read) &#123;</span><br><span class="line">		<span class="comment">/* 读操作：第二步读取数据 */</span></span><br><span class="line">		msg[<span class="number">1</span>].addr = client-&gt;addr;</span><br><span class="line">		msg[<span class="number">1</span>].flags = I2C_M_RD;	<span class="comment">/* 读操作标志 */</span></span><br><span class="line">		msg[<span class="number">1</span>].buf = val;			<span class="comment">/* 存储读取数据的缓冲区 */</span></span><br><span class="line">		msg[<span class="number">1</span>].len = len;			<span class="comment">/* 读取长度 */</span></span><br><span class="line">		ret = i2c_transfer(client-&gt;adapter, msg, <span class="number">2</span>);	<span class="comment">/* 2条消息（地址+读数据） */</span></span><br><span class="line">		<span class="keyword">if</span> (ret != <span class="number">2</span>) ret = -EREMOTEIO;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">/* 写操作：第二步发送数据（地址+数据合并为1条消息） */</span></span><br><span class="line">		u8 *write_buf = kmalloc(len + <span class="number">1</span>, GFP_KERNEL);	<span class="comment">/* 分配地址+数据缓冲区 */</span></span><br><span class="line">		<span class="keyword">if</span> (!write_buf) <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">		write_buf[<span class="number">0</span>] = reg;				<span class="comment">/* 首字节=寄存器地址 */</span></span><br><span class="line">		<span class="built_in">memcpy</span>(&amp;write_buf[<span class="number">1</span>], val, len);<span class="comment">/* 后续字节=要写入的数据 */</span></span><br><span class="line"></span><br><span class="line">		msg[<span class="number">0</span>].buf = write_buf;			<span class="comment">/* 地址+数据缓冲区 */</span></span><br><span class="line">		msg[<span class="number">0</span>].len = len + <span class="number">1</span>;			<span class="comment">/* 总长度=地址1字节+数据len字节 */</span></span><br><span class="line">		ret = i2c_transfer(client-&gt;adapter, msg, <span class="number">1</span>);	<span class="comment">/* 1条消息（地址+写数据） */</span></span><br><span class="line">		kfree(write_buf);				<span class="comment">/* 释放临时缓冲区 */</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (ret != <span class="number">1</span>) ret = -EREMOTEIO;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		printk(<span class="string">&quot;I2C %s failed: reg=0x%02x, len=%d, ret=%d\n&quot;</span>,</span><br><span class="line">		       is_read ? <span class="string">&quot;read&quot;</span> : <span class="string">&quot;write&quot;</span>, reg, len, ret);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ret &lt; <span class="number">0</span> ? ret : <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 5. 传感器数据读取与解析 ---------------------------</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 读取并解析IR/ALS/PS数据（直接调用合并后的I2C函数）</span></span><br><span class="line"><span class="comment"> * @param dev: 设备结构体指针</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">ap3216c_readdata</span><span class="params">(<span class="keyword">struct</span> ap3216c_dev *dev)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> buf[<span class="number">6</span>];	<span class="comment">/* 存储6个寄存器数据（IR/ALS/PS各2字节） */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 一次读取6个连续寄存器（0x0A~0x0F），替代原for循环单寄存器读取 */</span></span><br><span class="line">	ap3216c_i2c_rw(dev, AP3216C_IRDATALOW, buf, <span class="number">6</span>, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 解析IR数据（10位有效，IR_OF=buf[0]第7位） */</span></span><br><span class="line">	<span class="keyword">if</span> (buf[<span class="number">0</span>] &amp; <span class="number">0X80</span>) dev-&gt;ir = <span class="number">0</span>;	<span class="comment">/* 数据溢出，无效 */</span></span><br><span class="line">	<span class="keyword">else</span> dev-&gt;ir = ((<span class="type">unsigned</span> <span class="type">short</span>)buf[<span class="number">1</span>] &lt;&lt; <span class="number">2</span>) | (buf[<span class="number">0</span>] &amp; <span class="number">0X03</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 解析ALS数据（16位有效） */</span></span><br><span class="line">	dev-&gt;als = ((<span class="type">unsigned</span> <span class="type">short</span>)buf[<span class="number">3</span>] &lt;&lt; <span class="number">8</span>) | buf[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 解析PS数据（10位有效，PS_OF=buf[4]第6位） */</span></span><br><span class="line">	<span class="keyword">if</span> (buf[<span class="number">4</span>] &amp; <span class="number">0X40</span>) dev-&gt;ps = <span class="number">0</span>;	<span class="comment">/* 数据溢出，无效 */</span></span><br><span class="line">	<span class="keyword">else</span> dev-&gt;ps = ((<span class="type">unsigned</span> <span class="type">short</span>)(buf[<span class="number">5</span>] &amp; <span class="number">0X3F</span>) &lt;&lt; <span class="number">4</span>) | (buf[<span class="number">4</span>] &amp; <span class="number">0X0F</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 6. 字符设备操作函数 ---------------------------</span></span><br><span class="line"><span class="comment">/* 设备打开：初始化传感器（复位+使能功能） */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	u8 reset_val = <span class="number">0x04</span>;	<span class="comment">/* 复位命令 */</span></span><br><span class="line">	u8 en_val = <span class="number">0X03</span>;		<span class="comment">/* 使能IR+ALS+PS */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">ap3216c_dev</span> *<span class="title">dev</span> =</span> &amp;ap3216cdev;</span><br><span class="line"></span><br><span class="line">	filp-&gt;private_data = dev;	<span class="comment">/* 关联设备结构体 */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 复位传感器（调用合并后的写函数，单寄存器写入） */</span></span><br><span class="line">	ap3216c_i2c_rw(dev, AP3216C_SYSTEMCONG, &amp;reset_val, <span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">	mdelay(<span class="number">50</span>);	<span class="comment">/* 复位等待（手册要求≥10ms） */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 使能传感器功能（单寄存器写入） */</span></span><br><span class="line">	ap3216c_i2c_rw(dev, AP3216C_SYSTEMCONG, &amp;en_val, <span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 设备读：向用户空间返回传感器数据 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">ap3216c_read</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *off)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">short</span> data[<span class="number">3</span>];	<span class="comment">/* 存储IR/ALS/PS数据（各2字节） */</span></span><br><span class="line">	<span class="type">long</span> err;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">ap3216c_dev</span> *<span class="title">dev</span> =</span> filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 仅支持读取6字节（3个short），否则返回参数错误 */</span></span><br><span class="line">	<span class="keyword">if</span> (cnt != <span class="keyword">sizeof</span>(data)) <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	ap3216c_readdata(dev);	<span class="comment">/* 读取并解析传感器数据 */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 整理数据格式（IR→ALS→PS） */</span></span><br><span class="line">	data[<span class="number">0</span>] = dev-&gt;ir;</span><br><span class="line">	data[<span class="number">1</span>] = dev-&gt;als;</span><br><span class="line">	data[<span class="number">2</span>] = dev-&gt;ps;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 拷贝数据到用户空间 */</span></span><br><span class="line">	err = copy_to_user(buf, data, <span class="keyword">sizeof</span>(data));</span><br><span class="line">	<span class="keyword">return</span> err ? -EFAULT : <span class="keyword">sizeof</span>(data);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 设备关闭：无特殊操作 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_release</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 字符设备操作集 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">ap3216c_ops</span> =</span> &#123;</span><br><span class="line">	.owner = THIS_MODULE,</span><br><span class="line">	.open = ap3216c_open,</span><br><span class="line">	.read = ap3216c_read,</span><br><span class="line">	.release = ap3216c_release,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 7. I2C 驱动匹配与探针 ---------------------------</span></span><br><span class="line"><span class="comment">/* 传统I2C设备ID匹配表 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_device_id</span> <span class="title">ap3216c_id</span>[] =</span> &#123;</span><br><span class="line">	&#123;<span class="string">&quot;kevin,ap3216c&quot;</span>, <span class="number">0</span>&#125;,</span><br><span class="line">	&#123;&#125;	<span class="comment">/* 哨兵 */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 设备树匹配表 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">of_device_id</span> <span class="title">ap3216c_of_match</span>[] =</span> &#123;</span><br><span class="line">	&#123;.compatible = <span class="string">&quot;kevin,ap3216c&quot;</span>&#125;,</span><br><span class="line">	&#123;&#125;	<span class="comment">/* 哨兵 */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* I2C驱动探针：设备匹配成功后初始化 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_probe</span><span class="params">(<span class="keyword">struct</span> i2c_client *client, <span class="type">const</span> <span class="keyword">struct</span> i2c_device_id *id)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* 1. 分配设备号 */</span></span><br><span class="line">	<span class="keyword">if</span> (ap3216cdev.major) &#123;</span><br><span class="line">		ap3216cdev.devid = MKDEV(ap3216cdev.major, <span class="number">0</span>);</span><br><span class="line">		register_chrdev_region(ap3216cdev.devid, AP3216C_CNT, AP3216C_NAME);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		alloc_chrdev_region(&amp;ap3216cdev.devid, <span class="number">0</span>, AP3216C_CNT, AP3216C_NAME);</span><br><span class="line">		ap3216cdev.major = MAJOR(ap3216cdev.devid);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 2. 注册字符设备 */</span></span><br><span class="line">	cdev_init(&amp;ap3216cdev.cdev, &amp;ap3216c_ops);</span><br><span class="line">	cdev_add(&amp;ap3216cdev.cdev, ap3216cdev.devid, AP3216C_CNT);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 3. 创建设备类和设备节点 */</span></span><br><span class="line">	ap3216cdev.class = class_create(THIS_MODULE, AP3216C_NAME);</span><br><span class="line">	<span class="keyword">if</span> (IS_ERR(ap3216cdev.class)) <span class="keyword">return</span> PTR_ERR(ap3216cdev.class);</span><br><span class="line"></span><br><span class="line">	ap3216cdev.device = device_create(ap3216cdev.class, <span class="literal">NULL</span>, </span><br><span class="line">	                                  ap3216cdev.devid, <span class="literal">NULL</span>, AP3216C_NAME);</span><br><span class="line">	<span class="keyword">if</span> (IS_ERR(ap3216cdev.device)) <span class="keyword">return</span> PTR_ERR(ap3216cdev.device);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 4. 保存I2C客户端到私有数据 */</span></span><br><span class="line">	ap3216cdev.private_data = client;</span><br><span class="line">	printk(<span class="string">&quot;AP3216C probe success\n&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* I2C驱动移除：释放资源 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_remove</span><span class="params">(<span class="keyword">struct</span> i2c_client *client)</span></span><br><span class="line">&#123;</span><br><span class="line">	cdev_del(&amp;ap3216cdev.cdev);</span><br><span class="line">	unregister_chrdev_region(ap3216cdev.devid, AP3216C_CNT);</span><br><span class="line">	device_destroy(ap3216cdev.class, ap3216cdev.devid);</span><br><span class="line">	class_destroy(ap3216cdev.class);</span><br><span class="line">	printk(<span class="string">&quot;AP3216C remove success\n&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* I2C驱动结构体 */</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_driver</span> <span class="title">ap3216c_driver</span> =</span> &#123;</span><br><span class="line">	.probe = ap3216c_probe,</span><br><span class="line">	.remove = ap3216c_remove,</span><br><span class="line">	.driver = &#123;</span><br><span class="line">		.owner = THIS_MODULE,</span><br><span class="line">		.name = <span class="string">&quot;ap3216c&quot;</span>,</span><br><span class="line">		.of_match_table = ap3216c_of_match,</span><br><span class="line">	&#125;,</span><br><span class="line">	.id_table = ap3216c_id,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// --------------------------- 8. 驱动入口/出口 ---------------------------</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">ap3216c_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> i2c_add_driver(&amp;ap3216c_driver);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">ap3216c_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	i2c_del_driver(&amp;ap3216c_driver);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(ap3216c_init);</span><br><span class="line">module_exit(ap3216c_exit);</span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;KEVIN&quot;</span>);</span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;AP3216C I2C Driver&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="基于SMBUS编写代码："><a href="#基于SMBUS编写代码：" class="headerlink" title="基于SMBUS编写代码："></a><strong>基于SMBUS编写代码：</strong></h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of_device.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/slab.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/mutex.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/mod_devicetable.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/bitops.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/jiffies.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/property.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/acpi.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/i2c.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/nvmem-provider.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/regmap.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/pm_runtime.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio/consumer.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/uaccess.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/fs.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 全局变量定义</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> major = <span class="number">0</span>;                  <span class="comment">// 主设备号，0表示由内核动态分配</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> *<span class="title">ap3216c_class</span>;</span>    <span class="comment">// 设备类指针，用于创建sysfs节点</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_client</span> *<span class="title">ap3216c_client</span>;</span> <span class="comment">// I2C客户端指针，指向匹配的I2C设备</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description: 读取设备数据（用户空间read系统调用触发）</span></span><br><span class="line"><span class="comment"> * @param - file: 设备文件结构体</span></span><br><span class="line"><span class="comment"> * @param - buf: 用户空间缓冲区，用于存储读取的数据</span></span><br><span class="line"><span class="comment"> * @param - size: 要读取的字节数（必须为6字节，对应3个16位传感器数据）</span></span><br><span class="line"><span class="comment"> * @param - offset: 文件偏移量（字符设备忽略）</span></span><br><span class="line"><span class="comment"> * @return: 成功返回读取的字节数，失败返回错误码</span></span><br><span class="line"><span class="comment"> * 数据格式：6字节，依次为IR(2字节)、光强(2字节)、距离(2字节)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">ap3216c_read</span><span class="params">(<span class="keyword">struct</span> file *file, <span class="type">char</span> __user *buf, <span class="type">size_t</span> size, <span class="type">loff_t</span> *offset)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> err;</span><br><span class="line">    <span class="type">char</span> kernel_buf[<span class="number">6</span>];  <span class="comment">// 内核缓冲区，暂存传感器数据</span></span><br><span class="line">    <span class="type">int</span> val;             <span class="comment">// 临时存储16位传感器数据</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 检查读取长度是否为6字节（3个16位数据），不符合则返回参数错误</span></span><br><span class="line">    <span class="keyword">if</span> (size != <span class="number">6</span>)</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 读取IR传感器数据（寄存器地址0xA）</span></span><br><span class="line">    val = i2c_smbus_read_word_data(ap3216c_client, <span class="number">0xA</span>);</span><br><span class="line">    kernel_buf[<span class="number">0</span>] = val &amp; <span class="number">0xff</span>;        <span class="comment">// 低8位</span></span><br><span class="line">    kernel_buf[<span class="number">1</span>] = (val &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xff</span>; <span class="comment">// 高8位</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 读取环境光传感器数据（寄存器地址0xC）</span></span><br><span class="line">    val = i2c_smbus_read_word_data(ap3216c_client, <span class="number">0xC</span>);</span><br><span class="line">    kernel_buf[<span class="number">2</span>] = val &amp; <span class="number">0xff</span>;        <span class="comment">// 低8位</span></span><br><span class="line">    kernel_buf[<span class="number">3</span>] = (val &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xff</span>; <span class="comment">// 高8位</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 读取距离传感器数据（寄存器地址0xE）</span></span><br><span class="line">    val = i2c_smbus_read_word_data(ap3216c_client, <span class="number">0xE</span>);</span><br><span class="line">    kernel_buf[<span class="number">4</span>] = val &amp; <span class="number">0xff</span>;        <span class="comment">// 低8位</span></span><br><span class="line">    kernel_buf[<span class="number">5</span>] = (val &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xff</span>; <span class="comment">// 高8位</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 将内核缓冲区数据拷贝到用户空间</span></span><br><span class="line">    err = copy_to_user(buf, kernel_buf, size);</span><br><span class="line">    <span class="keyword">return</span> size; <span class="comment">// 返回实际读取的字节数</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description: 打开设备（用户空间open系统调用触发）</span></span><br><span class="line"><span class="comment"> * @param - node: 设备inode结构体</span></span><br><span class="line"><span class="comment"> * @param - file: 设备文件结构体</span></span><br><span class="line"><span class="comment"> * @return: 0表示成功，其他值表示失败</span></span><br><span class="line"><span class="comment"> * 功能：初始化传感器，执行复位并配置工作模式</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_open</span><span class="params">(<span class="keyword">struct</span> inode *node, <span class="keyword">struct</span> file *file)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 写入0x04到寄存器0，触发传感器复位</span></span><br><span class="line">    i2c_smbus_write_byte_data(ap3216c_client, <span class="number">0</span>, <span class="number">0x4</span>);</span><br><span class="line">    mdelay(<span class="number">20</span>); <span class="comment">// 等待复位完成（至少10ms，此处留有余量）</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 写入0x03到寄存器0，配置传感器工作模式（同时开启IR、光强、距离检测）</span></span><br><span class="line">    i2c_smbus_write_byte_data(ap3216c_client, <span class="number">0</span>, <span class="number">0x3</span>);</span><br><span class="line">    mdelay(<span class="number">250</span>); <span class="comment">// 等待传感器稳定工作</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 文件操作结构体，关联用户空间操作与驱动实现</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">ap3216c_ops</span> =</span> &#123;</span><br><span class="line">    .owner = THIS_MODULE,  <span class="comment">// 驱动所属模块，防止模块被意外卸载</span></span><br><span class="line">    .open  = ap3216c_open, <span class="comment">// 关联open操作</span></span><br><span class="line">    .read  = ap3216c_read, <span class="comment">// 关联read操作</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description: I2C驱动probe函数，当驱动与设备匹配时调用</span></span><br><span class="line"><span class="comment"> * @param - client: I2C客户端结构体，代表匹配的I2C设备</span></span><br><span class="line"><span class="comment"> * @param - id: 匹配的设备ID（传统匹配方式使用）</span></span><br><span class="line"><span class="comment"> * @return: 0表示成功，其他值表示失败</span></span><br><span class="line"><span class="comment"> * 功能：初始化字符设备，创建设备节点，完成驱动初始化</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_probe</span><span class="params">(<span class="keyword">struct</span> i2c_client *client, <span class="type">const</span> <span class="keyword">struct</span> i2c_device_id *id)</span></span><br><span class="line">&#123;</span><br><span class="line">    printk(<span class="string">&quot;%s %s %d\n&quot;</span>, __FILE__, __FUNCTION__, __LINE__); <span class="comment">// 调试信息：文件名、函数名、行号</span></span><br><span class="line">    </span><br><span class="line">    ap3216c_client = client; <span class="comment">// 保存I2C客户端指针</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 注册字符设备：主设备号为0（动态分配），设备名为&quot;ap3216c&quot;，关联文件操作结构体</span></span><br><span class="line">    major = register_chrdev(<span class="number">0</span>, <span class="string">&quot;ap3216c&quot;</span>, &amp;ap3216c_ops);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建设备类：类名为&quot;ap3216c_class&quot;，用于在/sys/class下创建类目录</span></span><br><span class="line">    ap3216c_class = class_create(THIS_MODULE, <span class="string">&quot;ap3216c_class&quot;</span>);</span><br><span class="line">    <span class="comment">// 创建设备节点：在/dev目录下创建&quot;ap3216c&quot;设备文件</span></span><br><span class="line">    device_create(ap3216c_class, <span class="literal">NULL</span>, MKDEV(major, <span class="number">0</span>), <span class="literal">NULL</span>, <span class="string">&quot;ap3216c&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description: I2C驱动remove函数，当驱动被卸载或设备移除时调用</span></span><br><span class="line"><span class="comment"> * @param - client: I2C客户端结构体</span></span><br><span class="line"><span class="comment"> * @return: 0表示成功</span></span><br><span class="line"><span class="comment"> * 功能：清理资源，删除设备节点和类，注销字符设备</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">ap3216c_remove</span><span class="params">(<span class="keyword">struct</span> i2c_client *client)</span></span><br><span class="line">&#123;    </span><br><span class="line">    <span class="comment">// 销毁设备节点</span></span><br><span class="line">    device_destroy(ap3216c_class, MKDEV(major, <span class="number">0</span>));</span><br><span class="line">    <span class="comment">// 销毁设备类</span></span><br><span class="line">    class_destroy(ap3216c_class);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 注销字符设备</span></span><br><span class="line">    unregister_chrdev(major, <span class="string">&quot;ap3216c&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 设备树匹配列表</span></span><br><span class="line"><span class="comment"> * 用于驱动与设备树中的AP3216C节点匹配，compatible属性需与设备树一致</span></span><br><span class="line"><span class="comment"> * 最后一个空结构体为哨兵，标记列表结束</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">of_device_id</span> <span class="title">of_match_ids_ap3216c</span>[] =</span> &#123;</span><br><span class="line">    &#123; .compatible = <span class="string">&quot;kevin,ap3216c&quot;</span> &#125;,</span><br><span class="line">    &#123;&#125;, <span class="comment">// 哨兵</span></span><br><span class="line">&#125;;</span><br><span class="line">MODULE_DEVICE_TABLE(of, of_match_ids_ap3216c); <span class="comment">// 向内核注册设备树匹配表</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 传统I2C设备ID列表</span></span><br><span class="line"><span class="comment"> * 用于无设备树系统中，通过设备名称匹配I2C设备</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_device_id</span> <span class="title">ap3216c_ids</span>[] =</span> &#123;</span><br><span class="line">    &#123; <span class="string">&quot;kevin,ap3216c&quot;</span>, <span class="number">0</span> &#125;,</span><br><span class="line">    &#123;&#125;, <span class="comment">// 哨兵</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// I2C驱动结构体，描述驱动的核心信息</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">i2c_driver</span> <span class="title">i2c_ap3216c_driver</span> =</span> &#123;</span><br><span class="line">    .driver = &#123;</span><br><span class="line">        .name = <span class="string">&quot;ap3216c&quot;</span>,                 <span class="comment">// 驱动名称，用于内核管理和调试</span></span><br><span class="line">        .of_match_table = of_match_ids_ap3216c, <span class="comment">// 设备树匹配表</span></span><br><span class="line">    &#125;,</span><br><span class="line">    .probe = ap3216c_probe,   <span class="comment">// 设备匹配成功时调用的函数</span></span><br><span class="line">    .remove = ap3216c_remove, <span class="comment">// 设备移除时调用的函数</span></span><br><span class="line">    .id_table = ap3216c_ids,  <span class="comment">// 传统设备ID匹配表</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description: 驱动初始化函数，模块加载时调用</span></span><br><span class="line"><span class="comment"> * @return: 0表示成功，其他值表示失败</span></span><br><span class="line"><span class="comment"> * 功能：注册I2C驱动到内核</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">i2c_driver_ap3216c_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> i2c_add_driver(&amp;i2c_ap3216c_driver); <span class="comment">// 注册I2C驱动</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description: 驱动退出函数，模块卸载时调用</span></span><br><span class="line"><span class="comment"> * 功能：从内核注销I2C驱动</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">i2c_driver_ap3216c_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    i2c_del_driver(&amp;i2c_ap3216c_driver); <span class="comment">// 注销I2C驱动</span></span><br><span class="line">&#125;</span><br><span class="line">module_init(i2c_driver_ap3216c_init); <span class="comment">// 声明模块入口函数</span></span><br><span class="line">module_exit(i2c_driver_ap3216c_exit); <span class="comment">// 声明模块出口函数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 模块元信息</span></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);              <span class="comment">// 模块许可证（GPL协议）</span></span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;KEVIN&quot;</span>);             <span class="comment">// 模块作者</span></span><br><span class="line">MODULE_DESCRIPTION(<span class="string">&quot;AP3216C I2C Driver&quot;</span>); <span class="comment">// 模块描述</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="应用层代码："><a href="#应用层代码：" class="headerlink" title="应用层代码："></a><strong>应用层代码：</strong></h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stdio.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;unistd.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;sys/types.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;sys/stat.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;sys/ioctl.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;fcntl.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stdlib.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;string.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;poll.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/select.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @description		: main主程序</span></span><br><span class="line"><span class="comment"> * @param - argc 	: argv数组元素个数</span></span><br><span class="line"><span class="comment"> * @param - argv 	: 具体参数</span></span><br><span class="line"><span class="comment"> * @return 			: 0 成功;其他 失败</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> fd;</span><br><span class="line">	<span class="type">char</span> *filename;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> databuf[<span class="number">3</span>];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> ir, als, ps;</span><br><span class="line">	<span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (argc != <span class="number">2</span>) &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;Error Usage!\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	filename = argv[<span class="number">1</span>];</span><br><span class="line">	fd = open(filename, O_RDWR);</span><br><span class="line">	<span class="keyword">if</span>(fd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;can&#x27;t open file %s\r\n&quot;</span>, filename);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">		ret = read(fd, databuf, <span class="keyword">sizeof</span>(databuf));</span><br><span class="line">		<span class="keyword">if</span>(ret == <span class="number">0</span>) &#123; 			<span class="comment">/* 数据读取成功 */</span></span><br><span class="line">			ir =  databuf[<span class="number">0</span>]; 	<span class="comment">/* ir传感器数据 */</span></span><br><span class="line">			als = databuf[<span class="number">1</span>]; 	<span class="comment">/* als传感器数据 */</span></span><br><span class="line">			ps =  databuf[<span class="number">2</span>]; 	<span class="comment">/* ps传感器数据 */</span></span><br><span class="line">			<span class="built_in">printf</span>(<span class="string">&quot;ir = %d, als = %d, ps = %d\r\n&quot;</span>, ir, als, ps);</span><br><span class="line">		&#125;</span><br><span class="line">		usleep(<span class="number">200000</span>); <span class="comment">/*100ms */</span></span><br><span class="line">	&#125;</span><br><span class="line">	close(fd);	<span class="comment">/* 关闭文件 */</span>	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h1><h2 id="1-参数不对"><a href="#1-参数不对" class="headerlink" title="1.参数不对"></a>1.参数不对</h2><p>代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="number">1</span>&gt;dev-&gt;psd = ((<span class="type">unsigned</span> <span class="type">short</span>)(buf[<span class="number">5</span>] &amp; <span class="number">0x3F</span>) &lt;&lt; <span class="number">4</span>) | (buf[<span class="number">4</span>] &amp; <span class="number">0x0F</span>);</span><br><span class="line"></span><br><span class="line">&lt;<span class="number">2</span>&gt;dev-&gt;psd = ((<span class="type">unsigned</span> <span class="type">short</span>)buf[<span class="number">5</span>] &amp; <span class="number">0x3F</span> &lt;&lt; <span class="number">4</span>) | (buf[<span class="number">4</span>] &amp; <span class="number">0x0F</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>原因：</strong></p>
+<p><strong>运算符优先级</strong> 和 <strong>括号的作用</strong> 在 C 语言中，&#x3D;&#x3D;<code>&lt;&lt;</code> 的优先级高于 <code>&amp;</code>&#x3D;&#x3D;，因此 <code>0x3F &lt;&lt; 4</code> 会先计算。在表达式 2 中，缺少括号导致了错误的计算顺序。<code>0x3F &lt;&lt; 4</code> 被错误地解释为一个常量掩码，而不是对 <code>buf[5]</code> 的结果进行位移。</p>
+<p><strong>表达式 1:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dev-&gt;psd = ((<span class="type">unsigned</span> <span class="type">short</span>)(buf[<span class="number">5</span>] &amp; <span class="number">0x3F</span>) &lt;&lt; <span class="number">4</span>) | (buf[<span class="number">4</span>] &amp; <span class="number">0x0F</span>);</span><br></pre></td></tr></table></figure>
+
+<p>分析：</p>
+<ul>
+<li><code>(buf[5] &amp; 0x3F)</code>：<code>buf[5]</code> 的高两位被屏蔽掉，只保留低 6 位（<code>0x3F</code> 表示二进制 <code>00111111</code>）。<ul>
+<li>最大值为 <code>0x3F</code>（即十进制 <code>63</code>）。</li>
+</ul>
+</li>
+<li><code>((unsigned short)(buf[5] &amp; 0x3F) &lt;&lt; 4)</code>：将结果左移 4 位。<ul>
+<li>左移 4 位相当于乘以 $2^4 &#x3D; 16$。</li>
+<li>最大值为 <code>63 * 16 = 1008</code>。</li>
+</ul>
+</li>
+<li><code>(buf[4] &amp; 0x0F)</code>：<code>buf[4]</code> 的高四位被屏蔽掉，只保留低 4 位（<code>0x0F</code> 表示二进制 <code>00001111</code>）。<ul>
+<li>最大值为 <code>0x0F</code>（即十进制 <code>15</code>）。</li>
+</ul>
+</li>
+<li><code>|</code> 操作：将上述两部分按位或（bitwise OR）组合。<ul>
+<li>最大值为 <code>1008 + 15 = 1023</code>。</li>
+</ul>
+</li>
+</ul>
+<p>结论：</p>
+<p>表达式 1 的最大值为 <strong>1023</strong>。</p>
+<hr>
+<p><strong>表达式 2:</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dev-&gt;psd = ((<span class="type">unsigned</span> <span class="type">short</span>)buf[<span class="number">5</span>] &amp; <span class="number">0x3F</span> &lt;&lt; <span class="number">4</span>) | (buf[<span class="number">4</span>] &amp; <span class="number">0x0F</span>);</span><br></pre></td></tr></table></figure>
+
+<p>分析：</p>
+<p>这里的关键问题是 <strong>运算符优先级</strong> 和 <strong>括号的作用</strong>。</p>
+<ul>
+<li>在 C 语言中，<code>&lt;&lt;</code> 的优先级高于 <code>&amp;</code>，因此 <code>0x3F &lt;&lt; 4</code> 会先计算。<ul>
+<li><code>0x3F &lt;&lt; 4</code>：将 <code>0x3F</code>（即二进制 <code>00111111</code>）左移 4 位。<ul>
+<li>结果为 <code>0x3F0</code>（即二进制 <code>001111110000</code>）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>((unsigned short)buf[5] &amp; 0x3F &lt;&lt; 4)</code> 等价于 <code>((unsigned short)buf[5] &amp; 0x3F0)</code>。<ul>
+<li>这里 <code>buf[5]</code> 只有 8 位，最高有效位为第 7 位。</li>
+<li><code>0x3F0</code> 的低 8 位是 <code>0000</code>，因此 <code>buf[5] &amp; 0x3F0</code> 的结果始终为 <code>0</code>。</li>
+</ul>
+</li>
+<li><code>(buf[4] &amp; 0x0F)</code>：这部分与表达式 1 相同，最大值为 <code>15</code>。</li>
+<li><code>|</code> 操作：由于第一部分的结果始终为 <code>0</code>，最终结果完全由第二部分决定。<ul>
+<li>最大值为 <code>15</code>。</li>
+</ul>
+</li>
+</ul>
+<h1 id="II2死锁"><a href="#II2死锁" class="headerlink" title="II2死锁"></a>II2死锁</h1><h2 id="SCL一直为低："><a href="#SCL一直为低：" class="headerlink" title="SCL一直为低："></a><strong>SCL一直为低</strong>：</h2><p>某个器件在“时钟拉伸”后没有释放 SCL，或控制器&#x2F;短路把 SCL拉住。例如：从设备一直在内部处理&#x2F;EEPROM写周期，一直拉低 SCL 却没超时保护。</p>
+<p><strong>解决方法：</strong> </p>
+<ul>
+<li><strong>复位该从机</strong>（硬件复位脚或掉电重上电）。</li>
+<li>使用具有超时（timeout）功能的从设备。</li>
+</ul>
+<h2 id="SDA-一直为低"><a href="#SDA-一直为低" class="headerlink" title="SDA 一直为低"></a><strong>SDA 一直为低</strong></h2><p><strong>情况：<strong>常见于</strong>主机重置</strong>或异常中断在半个字节时，从机还在等剩余时钟，持续拉住 SDA。读写调用<strong>永远不返回&#x2F;超时</strong>，逻辑分析仪上看不到新的 START&#x2F;STOP。</p>
+<p><strong>原因：</strong></p>
+<ul>
+<li><strong>发生异常：</strong><ul>
+<li>假设在发送第N个比特时，主机将SCL拉低，准备设置下一位数据。与此同时，从机可能需要在这一位做出响应（例如，它正在输出数据位的‘0’，因此<strong>正在驱动SDA线为低电平</strong>）。</li>
+<li><strong>就在SCL为低、SDA也为低的这个时刻，主机CPU突然复位了</strong>。</li>
+</ul>
+</li>
+<li><strong>总线状态冻结：</strong><ul>
+<li>主机复位后，其I2C控制器模块（硬件）通常会被重置，<strong>停止驱动SCL和SDA线</strong>。SCL和SDA线通过外部上拉电阻变为高电平是“默认的释放状态”。</li>
+<li><strong>但是</strong>，那个正在参与通信的<strong>从机没有复位</strong>！它仍然“记得”传输正在进行。因为它正在发送一个‘0’，所以它<strong>仍在紧紧地驱动SDA线为低电平</strong>，试图将这一位数据保持住。</li>
+<li>从机的这个行为<strong>覆盖了</strong>上拉电阻的效果，导致<strong>SDA线被强制拉低</strong>。</li>
+</ul>
+</li>
+<li><strong>死锁形成（关键步骤）</strong>：<ul>
+<li>主机复位完成后，软件试图重新初始化I2C控制器并开始新的传输。</li>
+<li>在开始任何传输之前，<strong>主机的I2C控制器硬件（或软件）会执行一个总线忙检查（Bus Busy Check）。<strong>它检查</strong>SDA</strong>和<strong>SCL</strong>线<strong>是否都为高电平</strong>，以<strong>判断总线是否空闲</strong>。</li>
+<li>此时，它检测到<strong>SDA线始终为低电平</strong>（被那个“固执”的从机拉着）。根据协议，总线被视为“忙”（BUSY）。</li>
+<li>因此，主机的I2C控制器<strong>拒绝产生起始条件（Start Condition）</strong>，因为它要求起始条件必须在总线空闲时（SDA和SCL都为高）才能产生。</li>
+<li><strong>矛盾就在这里</strong>：主机在等待SDA变高以启动传输，而从机在等待SCL线出现时钟脉冲（上升沿或下降沿）来完成它当前比特的传输并最终释放SDA。<strong>双方都在等待对方先行动，死锁就此发生。</strong></li>
+</ul>
+</li>
+</ul>
+<p><strong>解决方法：</strong></p>
+<ol>
+<li>将主机的SCL引脚配置为<strong>GPIO输出模式</strong>。</li>
+<li><strong>循环控制该GPIO输出高电平和低电平</strong>，人为产生时钟脉冲。</li>
+<li>同时监测SDA线。一旦<strong>发现SDA线被释放</strong>（变为高电平），立即发送一个<strong>停止条件（STOP）</strong>（先拉高SDA，再拉高SCL，然后先拉低SDA再拉高SDA）。</li>
+<li>将SCL引脚切换回I2C功能模式。</li>
+<li>重新初始化I2C总线。</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2025/06/15/DRIVER-CH3-IIC/">https://leonardo272.github.io/2025/06/15/DRIVER-CH3-IIC/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/linux/">linux</a><a class="post-meta__tags" href="/tags/%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91/">驱动开发</a></div><div class="post-share"><div class="social-share" data-image="/page_images/2.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/06/15/KERNEL-SYSFS-CH1/" title="kernel-sysfs文件系统介绍"><img class="cover" src="/page_images/7.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">kernel-sysfs文件系统介绍</div></div><div class="info-2"><div class="info-item-1">sysfs文件系统 sysfs 文件系统的目录  定义：sysfs是一个基于内存的虚拟文件系统（Virtual Filesystem）。它被挂载在 /sys 目录下，是Linux内核中内核对象（kobject）、属性（attribute）和关系（relationship） 的直观体现。 核心作用：sysfs的主要作用是在用户空间（Userspace） 和内核空间（Kernelspace） 之间搭建一座桥梁，提供一个标准化的接口，使得用户空间的程序能够安全、方便地查看和配置内核的运行参数、硬件设备信息、驱动程序状态、电源管理选项等。 具体作用包括：  展示设备层次结构：以目录树的形式清晰地展示系统中总线（bus）、设备（device）、驱动（driver）、类（class）等内核对象的层次关系。 导出对象属性：将内核对象的属性（通常是变量或状态）以普通文件的形式暴露出来。用户可以通过cat命令读取属性，通过echo命令修改属性（如果该属性可写）。 支持用户空间事件：通过poll或select系统调用，用户空间程序可以监听内核发出的事件通知（例如，设备的插拔）。  特点：  层次化结...</div></div></div></a><a class="pagination-related" href="/2025/06/05/DRIVER-CH1-DEVICE/" title="驱动开发-设备驱动模块"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">驱动开发-设备驱动模块</div></div><div class="info-2"><div class="info-item-1">LINUX设备驱动模块设备驱动程序，就是驱使设备按照用户的预期进行工作的软件，它是应用程序与设备沟通的桥梁。设备驱动程序主要负责硬件设备的参数配置、数据读写与中断处理。 Linux中的大部分驱动程序是以内核模块的形式编写的。内核模块是Linux 内核向外部提供的一个接口，其全称为动态可加载内核模块（Loadable Kernel Module，LKM）。 驱动程序的加载方式内核模式将新驱动程序编译进内核，需要修改内核代码和编译选项，这种方式将驱动程序代码直接编译到内核镜像（zImage或uImage等）中，成为内核的一部分。 特点：  集成度高：驱动随内核启动自动加载，无法卸载。 性能稍好：省去了模块加载和解析的开销。 安全性&#x2F;稳定性高：常用于系统最核心、必须的驱动（如根文件系统驱动）。 内核体积大：所有驱动都会被编译进去，导致内核镜像文件变大。  配置方法：通过内核的配置菜单（make menuconfig等）将对应的驱动选项配置为 y。 实验一本次实验是通过静态添加自己编写的驱动如：beep.c&#x2F;ap3216c.c&#x2F;icm20608.c等驱动。 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/06/05/00008/" title="驱动开发-pinctrl与gpio子系统"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-05</div><div class="info-item-2">驱动开发-pinctrl与gpio子系统</div></div><div class="info-2"><div class="info-item-1">pinctrl子系统i.MX 芯片（以及很多其他 SoC）面临的一个根本问题：芯片的引脚（PAD）数量有限，但内部功能模块（如 USDHC, UART, I2C, GPIO 等）非常多。为了解决这个矛盾，芯片设计引入了 IOMUX Controller (IOMUXC)。  IOMUXC (I&#x2F;O Multiplexer Controller)： 功能：它是一个硬件控制器，允许一个物理引脚（PAD）被复用到多个内部功能模块上。 工作方式：通过寄存器配置，为每个引脚选择 up to 8 种不同的工作模式（ALT modes，即 Alternate Function 复用功能）。例如，一个引脚可以被配置为 GPIO1_IO00、UART1_TXD 或 I2C1_SDA 等功能。 额外控制：除了选择功能，IOMUXC 还控制每个引脚的电气特性，如上拉&#x2F;下拉电阻、驱动强度、转换速率等。这被称为 Pad Settings。    我们需要在设备树中设置PIN的信息，在imx6ull.dtsi文件中，找到iomuxc的节点，iomuxc 节点就是I.MX6ULL的IOMU...</div></div></div></a><a class="pagination-related" href="/2025/02/07/0003/" title="驱动开发-并发与竞争01原理"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-02-07</div><div class="info-item-2">驱动开发-并发与竞争01原理</div></div><div class="info-2"><div class="info-item-1">竞争的概念什么是竞争Linux 系统是个多任务操作系统，会存在多个任务同时访问同一片内存区域，这些任务可能会相互覆盖这段内存中的数据，造成内存数据混乱。针对这个问题必须要做处理，严重的话可能会导致系统崩溃。 Linux 系统并发产生的原因有下面几个主要原因： ①多线程并发访问，Linux 是多任务(线程)的系统，所以多线程访问是最基本的原因。 ②抢占式并发访问，从 2.6 版本内核开始，Linux 内核支持抢占，也就是说调度程序可以在任意时刻抢占正在运行的线程，从而运行其他的线程。 ③中断程序并发访问 ④SMP(多核)核间并发访问，现在 ARM 架构的多核 SOC 很常见，多核 CPU 存在核间并发访问。 &#x3D;&#x3D;所谓的临界区就是共享数据段，对于临界区必须保证一次只有一个线程访问&#x3D;&#x3D;，也就是要保证临界区是原子访问的 什么是共享资源共享资源是指在同一时间内可以被多个执行单元（如进程、线程、中断处理程序、内核任务等）访问（读取或修改） 的任何数据、数据结构、硬件设备或状态信息。  关键特性：  并发访问可能性： 多个执行单元（几乎）同时或在时间上重...</div></div></div></a><a class="pagination-related" href="/2024/11/12/0002/" title="驱动开发-基于GPIO的LED"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-11-12</div><div class="info-item-2">驱动开发-基于GPIO的LED</div></div><div class="info-2"><div class="info-item-1">前言本次实验是基于正点原子开发板I.MX6ULL开发板来学习的 硬件原理分析本次实验我们使用的是正点原子开发板上的led灯，我们查看开发板原理图可以看到led灯连接在GPIO_3引脚上的  我们打开芯片核心原理图可以找到GPIO_3对应的是IMX6ULL芯片的GPIO1_IO03引脚  我们本次实验使用的就是I/O功能，因此我们打开arch/arm/boot/dts/imx6ul-pinfunc.h文件找到对应的宏MX6UL_PAD_GPIO1_IO03__GPIO1_IO03  设备树编写dtbs文件：  添加pinctrl节点 在 iomuxc 节点的 imx6ul-evk 子节点下创建一个名为pinctrl_led的子节点,将 GPIO1_IO03 这个 PIN 复用为 GPIO1_IO03，电气属性值为 0X10B0。 在imx6ull-alientek-emmc.dts文件中找到&amp;iomuxc 节点，添加对应的电气属性 格式： 123456pinctrl_自定义名字: 自定义名字&#123;	fsl,pins = &lt;	引脚复用宏定义PAD（引脚）属性	引脚...</div></div></div></a><a class="pagination-related" href="/2025/06/05/0001/" title="驱动开发-PWM"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-05</div><div class="info-item-2">驱动开发-PWM</div></div><div class="info-2"><div class="info-item-1">PWM(Pulse Width Modulation)基础概念与理论1.什么是 PWM？它的主要参数是什么？ PWM (Pulse Width Modulation) 即脉冲宽度调制，是一种通过控制数字信号在一个周期内高电平时间（脉宽）与周期时间之比（占空比）来模拟连续电平的技术。  主要参数： 周期 (Period) &#x2F; 频率 (Frequency)： 一个完整 PWM 波形的持续时间 (T)。频率 f = 1 / T。 占空比 (Duty Cycle)： 高电平时间 (Ton) 占整个周期 (T) 的百分比 (D = (Ton / T) * 100%)。 极性 (Polarity)： PWM 信号有效电平（Active Level）是高电平有效 (Normal) 还是低电平有效 (Inversed)。    2.应用场景 电机控制： 调节速度和方向（如直流电机、步进电机）。 LED 调光： 控制亮度（通过改变平均电流）。 电源管理： DCDC 转换器输出电压调节（通过控制开关管导通时间）。 音频： 简单的 D 类放大器。 伺服控制： 控制舵机角度（特定脉宽范围对应特...</div></div></div></a><a class="pagination-related" href="/2025/02/07/0004/" title="驱动开发-并发与竞争02原子操作"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-02-07</div><div class="info-item-2">驱动开发-并发与竞争02原子操作</div></div><div class="info-2"><div class="info-item-1">原子操作原子操作就是指不能再进一步分割的操作，一般原子操作用于变量或者位操作。 原子操作 API 函数Linux内核定义了叫做 atomic_t 的结构体来完成用于 32 位整数的原子操作。在使用中用原子变量来代替整形变量，此结构体定义在 include/linux/types.h 文件中，定义如下： 123typedef struct &#123;	int counter;&#125; atomic_t;  用于 64 位整数的原子操作 (在支持 64 位原子操作的体系结构上)。 123typedef struct &#123;    long long counter;&#125; atomic64_t;  初始化1234567//-------编译时初始化：-----ATOMIC_INIT(int i);// 静态初始化 atomic_t 变量为 iatomic_t v ATOMIC_INIT(0);// 示例atomic64_t v64 = ATOMIC64_INIT(0); // 64位初始化宏//------运行时初始化：-------atomic_t vatomic...</div></div></div></a><a class="pagination-related" href="/2025/05/13/0009/" title="驱动开发-图形化编译内核与系统自带驱动的添加"><img class="cover" src="/page_images/2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-13</div><div class="info-item-2">驱动开发-图形化编译内核与系统自带驱动的添加</div></div><div class="info-2"><div class="info-item-1">1.配置linux自带的驱动使能1.1图形化配置要使用 Linux内核自带的 LED灯驱动首先得先配置 Linux，输入如下命令打开 Linux配置菜单： 1make menuconfig  按照如下路径打开 LED驱动配置项：  按照上述路径，选择“ LED Support for GPIO connected LEDs”，将其编译进 Linux内核，也即是在此选项上按下“ Y”键，使此选项前面变为 “&lt;*&gt;”：   在“ LED Support for GPIO connected LEDs”上按下 可以打开此选项的帮助信息，   1make -j16    1.2.config文件查看配置 好 Linux内核以后退出配置界面，打开 .config文件，会找到“ CONFIG_LEDS_GPIO&#x3D;y这一行，如图 56.1.3所示：  1.3Makefile文件LED灯驱动文件为 /drivers/leds/leds-gpio.c，大家可以打开 /drivers/leds/Makefile这个文件，  如果定义了 CONFIG_LEDS_GPIO的话就会编...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">41</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Leonardo272"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">enjoy your life</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#I2C%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">I2C原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#I2c%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="toc-number">1.1.</span> <span class="toc-text">I2c基础知识</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#I2C%E4%BF%A1%E5%8F%B7"><span class="toc-number">1.1.1.</span> <span class="toc-text">I2C信号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E6%97%B6%E5%BA%8F"><span class="toc-number">1.1.2.</span> <span class="toc-text">读写时序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#I2C%E8%AE%BE%E5%A4%87%E5%9C%B0%E5%9D%80"><span class="toc-number">1.1.3.</span> <span class="toc-text">I2C设备地址</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E7%A1%AC%E4%BB%B6%E8%BF%9E%E6%8E%A5%E5%9B%BE"><span class="toc-number">1.2.</span> <span class="toc-text">I2C硬件连接图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I-MX6U-I2C-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.3.</span> <span class="toc-text">I.MX6U I2C 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#AP3216C-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.4.</span> <span class="toc-text">AP3216C 简介</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#I2C-tool"><span class="toc-number">2.</span> <span class="toc-text">I2C-tool</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#tool%E5%91%BD%E4%BB%A4"><span class="toc-number">2.1.</span> <span class="toc-text">tool命令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#i2cdetect"><span class="toc-number">2.1.1.</span> <span class="toc-text">i2cdetect</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#i2cget"><span class="toc-number">2.1.2.</span> <span class="toc-text">i2cget</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#i2cdump"><span class="toc-number">2.1.3.</span> <span class="toc-text">i2cdump</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#i2cset"><span class="toc-number">2.1.4.</span> <span class="toc-text">i2cset</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#i2ctransfer"><span class="toc-number">2.1.5.</span> <span class="toc-text">i2ctransfer</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#I2C%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91"><span class="toc-number">3.</span> <span class="toc-text">I2C驱动开发</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C-%E9%80%82%E9%85%8D%E5%99%A8"><span class="toc-number">3.1.</span> <span class="toc-text">I2C 适配器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E7%AE%97%E6%B3%95"><span class="toc-number">3.2.</span> <span class="toc-text">I2C算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E4%BB%8E%E8%AE%BE%E5%A4%87"><span class="toc-number">3.3.</span> <span class="toc-text">I2C从设备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E4%BB%8E%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8"><span class="toc-number">3.4.</span> <span class="toc-text">I2C从设备驱动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E4%BB%8E%E8%AE%BE%E5%A4%87%E4%B8%8E%E9%A9%B1%E5%8A%A8%E5%8C%B9%E9%85%8D"><span class="toc-number">3.5.</span> <span class="toc-text">I2C从设备与驱动匹配</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E9%80%82%E9%85%8D%E5%99%A8%E9%A9%B1%E5%8A%A8"><span class="toc-number">3.6.</span> <span class="toc-text">I2C适配器驱动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I2C%E6%95%B0%E6%8D%AE%E6%94%B6%E5%8F%91"><span class="toc-number">3.7.</span> <span class="toc-text">I2C数据收发</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#AP3216C%E5%AE%9E%E9%AA%8C"><span class="toc-number">4.</span> <span class="toc-text">AP3216C实验</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E5%A4%87%E6%A0%91%E8%8A%82%E7%82%B9%E7%BC%96%E5%86%99%EF%BC%9A"><span class="toc-number">4.1.</span> <span class="toc-text">设备树节点编写：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8Emaster-xfer%E7%BC%96%E5%86%99%E4%BB%A3%E7%A0%81%EF%BC%9A"><span class="toc-number">4.2.</span> <span class="toc-text">基于master_xfer编写代码：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8ESMBUS%E7%BC%96%E5%86%99%E4%BB%A3%E7%A0%81%EF%BC%9A"><span class="toc-number">4.3.</span> <span class="toc-text">基于SMBUS编写代码：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E5%B1%82%E4%BB%A3%E7%A0%81%EF%BC%9A"><span class="toc-number">4.4.</span> <span class="toc-text">应用层代码：</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">遇到的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%8F%82%E6%95%B0%E4%B8%8D%E5%AF%B9"><span class="toc-number">5.1.</span> <span class="toc-text">1.参数不对</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#II2%E6%AD%BB%E9%94%81"><span class="toc-number">6.</span> <span class="toc-text">II2死锁</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#SCL%E4%B8%80%E7%9B%B4%E4%B8%BA%E4%BD%8E%EF%BC%9A"><span class="toc-number">6.1.</span> <span class="toc-text">SCL一直为低：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SDA-%E4%B8%80%E7%9B%B4%E4%B8%BA%E4%BD%8E"><span class="toc-number">6.2.</span> <span class="toc-text">SDA 一直为低</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/07/20/conptition/" title="高危工作环境中人员安全装备佩戴检测系统"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="高危工作环境中人员安全装备佩戴检测系统"/></a><div class="content"><a class="title" href="/2025/07/20/conptition/" title="高危工作环境中人员安全装备佩戴检测系统">高危工作环境中人员安全装备佩戴检测系统</a><time datetime="2025-07-20T14:33:00.000Z" title="发表于 2025-07-20 22:33:00">2025-07-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/20/DRIVER-CH4-SPI/" title="驱动开发-SPI"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="驱动开发-SPI"/></a><div class="content"><a class="title" href="/2025/06/20/DRIVER-CH4-SPI/" title="驱动开发-SPI">驱动开发-SPI</a><time datetime="2025-06-20T13:12:00.000Z" title="发表于 2025-06-20 21:12:00">2025-06-20</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
