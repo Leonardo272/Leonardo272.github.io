@@ -1,0 +1,412 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>uboot | Kevin's blogs</title><meta name="author" content="Leonardo272"><meta name="copyright" content="Leonardo272"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="U-BootLinux系统要启动就必须需要一个bootloader程序，也就说芯片上电以后先运行一段bootloader 程序。这段bootloader程序会先初始化DDR 等外设，然后将Linux内核从flash(NAND，NOR FLASH，SD，MMC 等)拷贝到DDR中，最后启动Linux内核。它最主要的工作就是启动Linux内核 U-Boot的主要作用U-Boot在嵌入式系统中的核心作用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="uboot">
+<meta property="og:url" content="https://leonardo272.github.io/2025/06/15/kernel-uboot/index.html">
+<meta property="og:site_name" content="Kevin&#39;s blogs">
+<meta property="og:description" content="U-BootLinux系统要启动就必须需要一个bootloader程序，也就说芯片上电以后先运行一段bootloader 程序。这段bootloader程序会先初始化DDR 等外设，然后将Linux内核从flash(NAND，NOR FLASH，SD，MMC 等)拷贝到DDR中，最后启动Linux内核。它最主要的工作就是启动Linux内核 U-Boot的主要作用U-Boot在嵌入式系统中的核心作用">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://leonardo272.github.io/page_images/7.jpg">
+<meta property="article:published_time" content="2025-06-15T13:12:00.000Z">
+<meta property="article:modified_time" content="2025-09-16T03:23:59.365Z">
+<meta property="article:author" content="Leonardo272">
+<meta property="article:tag" content="linux内核">
+<meta property="article:tag" content="sysfs">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://leonardo272.github.io/page_images/7.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "uboot",
+  "url": "https://leonardo272.github.io/2025/06/15/kernel-uboot/",
+  "image": "https://leonardo272.github.io/page_images/7.jpg",
+  "datePublished": "2025-06-15T13:12:00.000Z",
+  "dateModified": "2025-09-16T03:23:59.365Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Leonardo272",
+      "url": "https://Leonardo272.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/%5Bobject%20Object%5D"><link rel="canonical" href="https://leonardo272.github.io/2025/06/15/kernel-uboot/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/site.webmanifest"/><meta name="msapplication-TileColor" content="#3b70fc"/><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'uboot',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/"><link rel="manifest" href="/site.webmanifest"><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load', preloader.endLoading)
+
+  if (false) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div id="web_bg" style="background-image: url(/image/ground.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">44</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/page_images/7.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/image/logo.png" alt="Logo"><span class="site-name">Kevin's blogs</span></a><a class="nav-page-title" href="/"><span class="site-name">uboot</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">uboot</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-15T13:12:00.000Z" title="发表于 2025-06-15 21:12:00">2025-06-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-16T03:23:59.365Z" title="更新于 2025-09-16 11:23:59">2025-09-16</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0/">内核学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="U-Boot"><a href="#U-Boot" class="headerlink" title="U-Boot"></a>U-Boot</h1><p>Linux系统要启动就必须需要一个bootloader程序，也就说芯片上电以后先运行一段bootloader 程序。这段bootloader程序会先初始化DDR 等外设，然后将Linux内核从flash(NAND，NOR FLASH，SD，MMC 等)拷贝到DDR中，最后启动Linux内核。<strong>它最主要的工作就是启动Linux内核</strong></p>
+<h2 id="U-Boot的主要作用"><a href="#U-Boot的主要作用" class="headerlink" title="U-Boot的主要作用"></a>U-Boot的主要作用</h2><p>U-Boot在嵌入式系统中的核心作用主要体现在以下几个方面：</p>
+<ol>
+<li><strong>硬件初始化与管理</strong>：U-Boot负责进行Soc级（内部外设）和板级（外部外设）的硬件管理，初始化系统运行所必需的硬件，如CPU、时钟、内存（SDRAM）、串口、网卡、存储设备（如NAND Flash）等。这是内核正确运行的基础。</li>
+<li><strong>镜像烧录（刷机）</strong>：U-Boot是系统更新的关键工具。它可以通过特定的命令配合PC端工具，完成包括U-Boot自身、内核、根文件系统等镜像的烧写。</li>
+<li><strong>加载并启动操作系统内核</strong>：这是U-Boot的终极使命。它会从存储设备（如Flash、SD卡）上读取操作系统内核镜像（如Linux的zImage或uImage）和可选的设备树 dtb（DTB），将其加载到内存中，并最终将控制权交给内核。</li>
+<li><strong>提供交互式命令行界面（CLI）</strong>：U-Boot提供了一个功能丰富的命令行接口，允许开发人员通过串口或网络进行调试、查看和修改内存、读写环境变量、测试硬件、更新系统等操作，极大地便利了开发和调试工作。</li>
+</ol>
+<h2 id="U-Boot的启动流程（两阶段）"><a href="#U-Boot的启动流程（两阶段）" class="headerlink" title="U-Boot的启动流程（两阶段）"></a>U-Boot的启动流程（两阶段）</h2><p>U-Boot的启动过程通常分为两个阶段</p>
+<h3 id="第一阶段：底层硬件初始化"><a href="#第一阶段：底层硬件初始化" class="headerlink" title="第一阶段：底层硬件初始化"></a>第一阶段：底层硬件初始化</h3><p>这个阶段通常用汇编语言编写，与CPU架构紧密相关，主要负责初始化最基础的硬件环境。芯片内部通常有一小块只读存储器（ROM），里面固化了最最基础的启动代码（ROM Code）。上电后，ROM Code会从预定的设备（如SD卡的第一个扇区、eMMC的boot分区等）加载一小段代码到内部SRAM中执行。</p>
+<ol>
+<li><strong>设置CPU模式</strong>：将处理器设置为<strong>管理模式（SVC Mode）</strong>，以便执行特权操作。</li>
+<li><strong>关闭中断和MMU</strong>：<strong>关闭中断</strong>（FIQ和IRQ），屏蔽所有中断请求；<strong>关闭MMU</strong>（内存管理单元）和<strong>Cache</strong>（缓存），因为此时内存尚未初始化，虚拟地址无法使用。</li>
+<li><strong>关闭看门狗</strong>：防止看门狗定时器溢出导致系统复位。</li>
+<li><strong>初始化时钟和内存控制器</strong>：配置<strong>系统时钟</strong>和<strong>内存控制器</strong>，为后续内存的使用做准备。初始化完DRAM后，就可以将完整的主U-Boot镜像从存储设备（如SD卡、eMMC、NOR Flash）复制到<strong>外部DRAM</strong>中的指定地址。</li>
+<li><strong>初始化串口</strong>：以便后续输出调试信息，方便开发者查看启动过程。</li>
+<li><strong>设置栈指针和代码重定位</strong>：<strong>设置栈指针</strong>，为后续调用C函数准备运行环境；进行<strong>代码重定位</strong>，将U-Boot自身从只读存储器（如NOR Flash）拷贝到SDRAM中运行，以加快执行速度。</li>
+<li><strong>清除BSS段</strong>：为未初始化的全局变量和静态变量分配空间并清零。</li>
+</ol>
+<h3 id="第二阶段：高级初始化与引导"><a href="#第二阶段：高级初始化与引导" class="headerlink" title="第二阶段：高级初始化与引导"></a>第二阶段：高级初始化与引导</h3><p>这个阶段主要用C语言编写，提供了更好的可读性和可移植性，负责完成更复杂的初始化并最终引导内核。</p>
+<ol>
+<li><strong>初始化本阶段硬件</strong>：初始化后续操作需要的硬件设备，如<strong>网卡</strong>、<strong>NAND Flash</strong>等。</li>
+<li><strong>检测系统内存映射</strong>：检测系统内存的容量和分布情况。</li>
+<li><strong>初始化环境变量</strong>：从非易失性存储器（如Flash的特定区域）中读取<strong>环境变量</strong>到内存中。环境变量包含了重要的系统配置参数，如启动参数、IP地址等。</li>
+<li><strong>解析启动参数和命令</strong>：提供命令行界面，等待用户输入（如有需要）。若在倒计时内无用户干预，则执行默认的<strong>启动命令</strong>（<code>bootcmd</code>）。</li>
+<li><strong>加载内核与设备树</strong>：根据环境变量或默认配置，从存储设备（如Flash、网络通过TFTP）将<strong>内核镜像</strong>（如<code>zImage</code>）和<strong>设备树文件（DTB）</strong> 加载到内存的指定地址。</li>
+<li><strong>传递参数并启动内核</strong>：为内核设置<strong>启动参数</strong>（如通过ATAGs或Device Tree），<strong>关闭Cache</strong>和<strong>中断</strong>，最后<strong>跳转到内核的入口点</strong>，将控制权彻底移交给操作系统内核。</li>
+</ol>
+<h2 id="U-Boot-如何将系统权限交给-Linux-内核"><a href="#U-Boot-如何将系统权限交给-Linux-内核" class="headerlink" title="U-Boot 如何将系统权限交给 Linux 内核"></a>U-Boot 如何将系统权限交给 Linux 内核</h2><h3 id="1-加载内核映像到内存"><a href="#1-加载内核映像到内存" class="headerlink" title="1. 加载内核映像到内存"></a>1. <strong>加载内核映像到内存</strong></h3><p>U-Boot 本身并不“执行”内核，它只是作为一个<strong>加载器（Loader）</strong>。它首先需要将内核映像（通常是 <code>zImage</code>, <code>uImage</code> 或 <code>Image</code>）从存储设备（eMMC, SD, NAND, NOR）或者通过网络（TFTP）加载到内存的某个指定地址。</p>
+<ul>
+<li><strong>例如</strong>：<code>load mmc 0:1 0x80008000 zImage</code> - 从MMC设备0的分区1加载<code>zImage</code>到内存地址<code>0x80008000</code>。</li>
+</ul>
+<h3 id="2-准备启动参数"><a href="#2-准备启动参数" class="headerlink" title="2. 准备启动参数"></a>2. <strong>准备启动参数</strong></h3><p>Linux 内核启动时需要一些关键信息，例如：</p>
+<ul>
+<li>根文件系统在哪里？（在哪个设备、哪个分区）</li>
+<li>控制台是哪个终端？（如 <code>console=ttyS0,115200</code>）</li>
+<li>其他内核参数（如调试信息、CPU频率等）</li>
+</ul>
+<p>这些信息通过 <strong>“启动参数”</strong> 传递给内核。传递方式主要有两种：</p>
+<ul>
+<li><strong>ATAGs（传统方式）</strong>：主要用于旧的ARM架构（ARMv7及之前）。U-Boot 在内存中创建一个数据结构列表（ATAG_LIST），其中包含了内存大小、根文件系统参数、命令行字符串等。然后通过寄存器 <code>r2</code> 告诉内核这个列表的起始地址。</li>
+<li><strong>设备树（Device Tree Blob - DTB，现代方式）</strong>：用于几乎所有新的ARM（ARMv8）、RISC-V、MIPS等架构。U-Boot 首先将 <code>.dtb</code> 文件加载到内存中的另一个地址（不能与内核映像地址重叠），然后通过寄存器 <code>r2</code>（ARM32）或 <code>x0</code>（ARM64）告诉内核设备树在内存中的地址。</li>
+</ul>
+<p><strong><code>bootargs</code> 环境变量</strong>就是用来设置传递给内核的命令行参数的。U-Boot 会将这些参数打包到ATAGs或设备树的 <code>chosen</code> 节点中。</p>
+<h3 id="3-跳转执行"><a href="#3-跳转执行" class="headerlink" title="3. 跳转执行"></a>3. <strong>跳转执行</strong></h3><p>这是最关键的一步。在一切都准备好之后，U-Boot 会执行一条指令，直接跳转到已加载到内存中的内核映像的入口点，并同时传递三个关键参数。此后，U-Boot 的生命周期就结束了，内存的控制权完全交给内核。</p>
+<h2 id="U-Boot的常用命令"><a href="#U-Boot的常用命令" class="headerlink" title="U-Boot的常用命令"></a>U-Boot的常用命令</h2><table>
+<thead>
+<tr>
+<th align="left">类别</th>
+<th align="left">命令示例</th>
+<th align="left">功能描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>信息查看</strong></td>
+<td align="left"><code>printenv</code></td>
+<td align="left">打印所有环境变量</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>bdinfo</code></td>
+<td align="left">打印板级信息</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>version</code></td>
+<td align="left">显示U-Boot版本</td>
+</tr>
+<tr>
+<td align="left"><strong>环境变量</strong></td>
+<td align="left"><code>setenv &lt;var&gt; &lt;value&gt;</code></td>
+<td align="left">设置环境变量</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>saveenv</code></td>
+<td align="left">保存环境变量到持久存储</td>
+</tr>
+<tr>
+<td align="left"><strong>内存操作</strong></td>
+<td align="left"><code>md[.b, .w, .l] &lt;addr&gt;</code></td>
+<td align="left">显示内存内容（字节、字、长字）</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>mm[.b, .w, .l] &lt;addr&gt;</code></td>
+<td align="left">修改内存内容（地址自动递增）</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>mw[.b, .w, .l] &lt;addr&gt; &lt;val&gt; [count]</code></td>
+<td align="left">向内存填充数据</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>cp[.b, .w, .l] &lt;src&gt; &lt;dst&gt; &lt;count&gt;</code></td>
+<td align="left">复制内存区域</td>
+</tr>
+<tr>
+<td align="left"><strong>存储操作</strong></td>
+<td align="left"><code>nand read &lt;addr&gt; &lt;off&gt; &lt;size&gt;</code></td>
+<td align="left">从NAND Flash偏移<code>off</code>读取<code>size</code>数据到<code>addr</code></td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>nand write &lt;addr&gt; &lt;off&gt; &lt;size&gt;</code></td>
+<td align="left">将<code>addr</code>处<code>size</code>数据写入NAND Flash偏移<code>off</code></td>
+</tr>
+<tr>
+<td align="left"><strong>网络操作</strong></td>
+<td align="left"><code>tftpboot &lt;addr&gt; &lt;filename&gt;</code></td>
+<td align="left">通过TFTP下载文件到内存<code>addr</code></td>
+</tr>
+<tr>
+<td align="left"><strong>启动命令</strong></td>
+<td align="left"><code>bootm [addr]</code></td>
+<td align="left">启动存储在地址<code>addr</code>的U-Boot格式镜像</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>boot</code></td>
+<td align="left">执行<code>bootcmd</code>环境变量中的命令</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left"><code>go &lt;addr&gt; [arg ...]</code></td>
+<td align="left">跳转到地址<code>addr</code>执行应用程序</td>
+</tr>
+</tbody></table>
+<h2 id="bootcmd-和-bootargs"><a href="#bootcmd-和-bootargs" class="headerlink" title="bootcmd 和 bootargs"></a>bootcmd 和 bootargs</h2><p> U-Boot 中的 <code>bootcmd</code> 和 <code>bootargs</code> 环境变量对理解系统启动过程很重要。它们一个负责指挥启动流程，另一个则负责告诉内核如何配置系统。</p>
+<h3 id="bootcmd"><a href="#bootcmd" class="headerlink" title="bootcmd"></a>bootcmd</h3><p><code>bootcmd</code> 是 U-Boot 的<strong>自动启动命令序列</strong>。它在 U-Boot 初始化完成后、等待用户输入的超时阶段自动执行，是系统<strong>自动启动的关键</strong>。</p>
+<p><code>bootcmd</code> 环境变量中定义的命令，其目的是<strong>加载内核镜像和设备树到内存中，并执行启动命令</strong>。例如，一个典型的 <code>bootcmd</code> 可能包含从 eMMC、SD 卡、NAND Flash 或通过网络（TFTP、NFS）加载内核和设备树文件（如 <code>zImage</code> 和 <code>.dtb</code>）的命令，然后使用 <code>bootm</code>、<code>bootz</code>（针对 ARM）或 <code>booti</code> 等命令来启动内核。</p>
+<h3 id="bootargs-的作用和操作"><a href="#bootargs-的作用和操作" class="headerlink" title="bootargs 的作用和操作"></a>bootargs 的作用和操作</h3><p><code>bootargs</code> 环境变量用于存储传递给 Linux <strong>内核的启动参数</strong>。这些参数决定了内核启动后的许多行为，例如控制台设备、根文件系统的位置和类型、网络配置等</p>
+<p><strong>常见的 <code>bootargs</code> 参数包括：</strong></p>
+<ul>
+<li><strong><code>console=</code></strong>：<strong>指定内核使用的终端</strong>（控制台）。例如 <code>console=ttyS0,115200</code> 表示使用第一个串口作为控制台，波特率为 115200。</li>
+<li><strong><code>root=</code></strong>：<strong>指定根文件系统的位置</strong>。例如：<ul>
+<li><code>root=/dev/mmcblk1p2</code>：表示根文件系统在 MMC 设备的第 2 分区。</li>
+<li><code>root=/dev/nfs</code>：表示根文件系统通过 NFS 网络挂载。</li>
+<li><code>root=/dev/mtdblock3</code>：表示根文件系统在 MTD 设备的第 3 个块分区上（常用于 Nor&#x2F;Nand Flash）。</li>
+</ul>
+</li>
+<li><strong><code>rootfstype=</code></strong>：指定根文件系统的类型，如 <code>rootfstype=ext4</code>、<code>rootfstype=jffs2</code>、<code>rootfstype=ubifs</code> 等。在内核无法自动检测文件系统类型时需要指定。</li>
+<li><strong><code>rootwait</code></strong>：<strong>要求内核等待根设备就绪</strong>后再尝试挂载，对于慢速初始化设备（如 USB、MMC）很有用。</li>
+<li><strong><code>rw</code></strong> 或 <strong><code>ro</code></strong>：以读写（read-write）或只读（read-only）模式挂载根文件系统。</li>
+<li><strong><code>init=</code></strong>：指定内核启动后执行的第一个程序，默认为 <code>/sbin/init</code>。例如 <code>init=/linuxrc</code>。</li>
+<li><strong><code>mtdparts=</code></strong>：<strong>定义 MTD 分区信息</strong>，传递给内核以便正确识别 Flash 上的分区布局。</li>
+<li><strong><code>ip=</code></strong>：<strong>配置网络接口的 IP 地址</strong>等，在 NFS 根文件系统时常用。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">bootcmd</th>
+<th align="left">bootargs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>主要作用</strong></td>
+<td align="left">定义<strong>自动启动的命令序列</strong></td>
+<td align="left">设置传递给<strong>Linux内核的启动参数</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>执行时机</strong></td>
+<td align="left">U-Boot<strong>倒计时结束</strong>后，若用户无输入则自动执行</td>
+<td align="left">在<code>bootcmd</code>或手动命令<strong>启动内核时</strong>传递给内核</td>
+</tr>
+<tr>
+<td align="left"><strong>内容性质</strong></td>
+<td align="left"><strong>可执行的命令</strong>（如加载文件、启动内核）</td>
+<td align="left"><strong>文本格式的参数</strong>（键值对）</td>
+</tr>
+<tr>
+<td align="left"><strong>典型操作</strong></td>
+<td align="left">从存储设备或网络加载内核镜像、设备树文件，并执行<code>bootm</code>&#x2F;<code>bootz</code>等命令启动内核</td>
+<td align="left">设置控制台、根文件系统位置及类型、网络参数等</td>
+</tr>
+<tr>
+<td align="left"><strong>是否必须</strong></td>
+<td align="left">非必须，但通常配置以实现自动启动</td>
+<td align="left">通常必须（除内核内置参数情况外），否则内核可能无法正确挂接根文件系统或启动</td>
+</tr>
+</tbody></table>
+<h1 id="U-Boot移植"><a href="#U-Boot移植" class="headerlink" title="U-Boot移植"></a>U-Boot移植</h1><p>uboot 移植的一般流程：</p>
+<ul>
+<li>在uboot 中找到参考的开发平台，一般是原厂的开发板。</li>
+<li>参考原厂开发板移植uboot 到我们所使用的开发板上。</li>
+</ul>
+<ol>
+<li><p><strong>先在configs 目录下创建默认配置文件</strong>，复制mx6ull_14x14_evk_emmc_defconfig，然后重<br>命名为mx6ull_alientek_emmc_defconfig，在修改内容：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_SYS_EXTRA_OPTIONS=<span class="string">&quot;IMX_CONFIG=board/freescale/mx6ull_alientek_</span></span><br><span class="line"><span class="string">emmc/imximage.cfg,MX6ULL_EVK_EMMC_REWORK&quot;</span></span><br><span class="line"> CONFIG_ARM=y</span><br><span class="line"> CONFIG_ARCH_MX6=y</span><br><span class="line"> CONFIG_TARGET_MX6ULL_ALIENTEK_EMMC=y</span><br><span class="line"> CONFIG_CMD_GPIO=y</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>添加开发板对应的头文件</strong></p>
+<p>在目录include&#x2F;configs 下添加I.MX6ULL-ALPHA 开发板对应的头文件， 复制<br>include&#x2F;configs&#x2F;mx6ullevk.h，并重命名为mx6ull_alientek_emmc.h，</p>
+</li>
+<li><p><strong>添加开发板对应的板级文件夹</strong></p>
+<p>uboot 中每个板子都有一个对应的文件夹来存放板级文件，比如开发板上外设驱动文件等等。进入mx6ull_alientek_emmc 目录中， 将其中的mx6ullevk.c 文件重命名为mx6ull_alientek_emmc.c</p>
+<ul>
+<li><p>修改mx6ull_alientek_emmc 目录下的Makefile 文件</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(C) Copyright <span class="number">2015</span> Freescale Semiconductor, Inc.</span><br><span class="line"> #</span><br><span class="line"> # SPDX-License-Identifier: GPL<span class="number">-2.0</span>+</span><br><span class="line"> <span class="meta">#</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta"> obj-y := mx6ull_alientek_emmc.o</span></span><br><span class="line"></span><br><span class="line"> extra-$(CONFIG_USE_PLUGIN) := plugin.bin</span><br><span class="line"> $(obj)/plugin.bin: $(obj)/plugin.o</span><br><span class="line"> $(OBJCOPY) -O binary --gap-fill <span class="number">0xff</span> $&lt; $@</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改mx6ull_alientek_emmc 目录下的MAINTAINERS 文件</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MX6ULL_ALIENTEK_EMMC BOARD</span><br><span class="line"> M: Peng Fan &lt;peng.fan@nxp.com&gt;</span><br><span class="line"> S: Maintained</span><br><span class="line"> F: board/freescale/mx6ull_alientek_emmc/</span><br><span class="line"> F: include/configs/mx6ull_alientek_emmc.h</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>修改U-Boot 图形界面配置文件</strong></p>
+<p>uboot 是支持图形界面配置，修改arch&#x2F;arm&#x2F;Kconfig 这个文件，在最后一行的endif 的前一行添加如下内容：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">config TARGET_MX6ULL_ALIENTEK_EMMC</span><br><span class="line"> <span class="type">bool</span> <span class="string">&quot;Support mx6ull_alientek_emmc&quot;</span></span><br><span class="line"> select MX6ULL</span><br><span class="line"> select DM</span><br><span class="line"> select DM_THERMAL</span><br><span class="line">source <span class="string">&quot;board/freescale/mx6ull_alientek_emmc/Kconfig&quot;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>使用新添加的板子配置编译uboot</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean</span><br><span class="line"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- mx6ull_alientek_emmc_defconfig</span><br><span class="line"> make V=<span class="number">1</span> ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j16</span><br></pre></td></tr></table></figure>
+
+<p>编译</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 777 mx6ull_alientek_emmc.sh //给予可执行权限，一次即可</span><br><span class="line">./mx6ull_alientek_emmc.sh //运行脚本编译uboot</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编译完成以后就使用imxdownload 将新编译出来的u-boot.bin 烧写到SD 卡中测试</p>
+</li>
+</ol>
+<h2 id="uboot-启动Linux-测试"><a href="#uboot-启动Linux-测试" class="headerlink" title="uboot 启动Linux 测试"></a>uboot 启动Linux 测试</h2><h3 id="从EMMC-启动Linux-系统"><a href="#从EMMC-启动Linux-系统" class="headerlink" title="从EMMC 启动Linux 系统"></a>从EMMC 启动Linux 系统</h3><p>从EMMC 启动也就是将编译出来的Linux 镜像文件zImage 和设备树文件保存在EMMC中，uboot 从EMMC 中读取这两个文件并启动，这个是我们项目最终的启动方式。</p>
+<p>设置bootargs 和bootcmd这两个环境变量，设置如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">setenv bootargs &#x27;console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw&#x27;</span><br><span class="line">setenv bootcmd &#x27;mmc dev 1; fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000</span><br><span class="line">imx6ull-alientek-emmc.dtb; bootz 80800000 - 83000000;&#x27;</span><br><span class="line"></span><br><span class="line">saveenv</span><br></pre></td></tr></table></figure>
+
+<p><img src="image-20250916112339396.png" alt="image-20250916112339396"></p>
+<h3 id="从网络启动Linux-系统"><a href="#从网络启动Linux-系统" class="headerlink" title="从网络启动Linux 系统"></a>从网络启动Linux 系统</h3><p>将linux 镜像文件和根文件系统都放到Ubuntu 下某个指定的文件夹中，这样每次重新编译linux 内核或者某个linux 驱动以后只需要使用cp 命令将其拷贝到这个指定的文件夹中即可，这样就不用需要频繁的烧写EMMC，这样就加快了开发速度。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">setenv bootargs <span class="string">&#x27;console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw&#x27;</span></span><br><span class="line">setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000 imx6ull-alientek-emmc.dtb; bootz</span></span><br><span class="line"><span class="string">80800000 - 83000000&#x27;</span></span><br><span class="line">saveenv</span><br></pre></td></tr></table></figure>
+
+<p>一开始是通过tftp 下载zImage 和imx6ull-alientek-emmc.dtb 这两个文件，过程如下图所示：</p>
+<p><img src="image-20250916112322670.png" alt="image-20250916112322670"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://Leonardo272.github.io">Leonardo272</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://leonardo272.github.io/2025/06/15/kernel-uboot/">https://leonardo272.github.io/2025/06/15/kernel-uboot/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://Leonardo272.github.io" target="_blank">Kevin's blogs</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/linux%E5%86%85%E6%A0%B8/">linux内核</a><a class="post-meta__tags" href="/tags/sysfs/">sysfs</a></div><div class="post-share"><div class="social-share" data-image="/page_images/7.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/06/20/DRIVER-CH4-SPI/" title="驱动开发-SPI"><img class="cover" src="/page_images/2.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">驱动开发-SPI</div></div><div class="info-2"><div class="info-item-1">SPI原理SPI（Serial Peripheral Interface）是一种高速、全双工、同步的串行通信协议。它广泛用于连接微控制器与外部设备，如传感器、存储器等。 SPI特点   特性维度 SPI (Serial Peripheral Interface)    信号线数量 至少4根线：MOSI（主出从入）、MISO（主入从出）、SCLK（时钟）、CS（片选，每个从机独享一根）   拓扑结构 点对点型：主设备与每个从设备都有独立的片选线连接。   通信模式 全双工：发送和接收可以同时进行。   数据传输 无应答机制：主设备产生时钟，从设备被动跟随，无法确认数据是否被成功接收。   速度 速度非常高（通常50Mbps以上），几乎只受限于硬件性能。   软件复杂度 软件简单：本质上是简单的移位寄存器，主要靠硬件实现。   硬件复杂度 硬件复杂：线多，尤其是从设备多时，需要大量片选线，占用大量IO口。   主要应用场景 高速器件（如我的项目中的ICM20608陀螺仪）、Flash存储器、显示屏、ADC&#x2F;DAC等。   四种工作模式 通过串行时钟极性(CPOL)和**相位...</div></div></div></a><a class="pagination-related" href="/2025/06/15/kernel-start/" title="linux内核启动"><img class="cover" src="/page_images/7.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">linux内核启动</div></div><div class="info-2"><div class="info-item-1">linux内核启动流程start_kernelstart_kernel是所有 Linux 平台进入系统内核初始化后的入口函数，它主要完成剩余的与 硬件平台相关的初始化工作，在进行一系列与内核相关的初始化后，调用第一个用户进程 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162163164...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/06/15/KERNEL-SYSFS-CH1/" title="kernel-sysfs文件系统介绍"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-15</div><div class="info-item-2">kernel-sysfs文件系统介绍</div></div><div class="info-2"><div class="info-item-1">sysfs文件系统 sysfs 文件系统的目录  定义：sysfs是一个基于内存的虚拟文件系统（Virtual Filesystem）。它被挂载在 /sys 目录下，是Linux内核中内核对象（kobject）、属性（attribute）和关系（relationship） 的直观体现。 核心作用：sysfs的主要作用是在用户空间（Userspace） 和内核空间（Kernelspace） 之间搭建一座桥梁，提供一个标准化的接口，使得用户空间的程序能够安全、方便地查看和配置内核的运行参数、硬件设备信息、驱动程序状态、电源管理选项等。 具体作用包括：  展示设备层次结构：以目录树的形式清晰地展示系统中总线（bus）、设备（device）、驱动（driver）、类（class）等内核对象的层次关系。 导出对象属性：将内核对象的属性（通常是变量或状态）以普通文件的形式暴露出来。用户可以通过cat命令读取属性，通过echo命令修改属性（如果该属性可写）。 支持用户空间事件：通过poll或select系统调用，用户空间程序可以监听内核发出的事件通知（例如，设备的插拔）。  特点：  层次化结...</div></div></div></a><a class="pagination-related" href="/2025/06/15/kernel-start/" title="linux内核启动"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-06-15</div><div class="info-item-2">linux内核启动</div></div><div class="info-2"><div class="info-item-1">linux内核启动流程start_kernelstart_kernel是所有 Linux 平台进入系统内核初始化后的入口函数，它主要完成剩余的与 硬件平台相关的初始化工作，在进行一系列与内核相关的初始化后，调用第一个用户进程 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162163164...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc-ch2/" title="CH2-中断处理流程分析"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH2-中断处理流程分析</div></div><div class="info-2"><div class="info-item-1">linux中断处理的流程linux-5.10.4版本：interrupt.h   linux系统启动的流程irq_domainirq_domain 是一个中间翻译层，它负责将硬件的中断号（Hardware Interrupt Number）映射到 Linux 内核的虚拟中断号（Virtual IRQ Number），并管理中断控制器的相关操作。 你可以把它想象成一个翻译官或接线总机：  硬件中断号 (HW IRQ)：是中断控制器自己识别的编号。例如，对于 ARM GIC，SGIs 是 0-15，PPIs 是 16-31，SPIs 从 32 开始。这是硬件固定的，不同控制器完全不同。 虚拟中断号 (VIRQ)：是 Linux 内核内部使用的、统一的软件中断编号。驱动开发者请求和使用的就是这个号。  它的作用：  抽象硬件差异 世界上有无数种中断控制器（GIC, APIC, IO-APIC, GPIO 控制器等），每种都有自己的编号方案和编程模型。内核无法为每种控制器都写一套独立的中断处理流程。irq_domain 提供了一个统一的抽象接口，让内核核心代码只需与 irq_domain...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc-ch3/" title="CH3-中断程序的编写"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH3-中断程序的编写</div></div><div class="info-2"><div class="info-item-1">linux中断程序编写中断的API函数request_irq1int request_irq(unsigned int irq,irq_handler_t handler,unsigned long flags,const char *name,void *dev)  **irq：**要申请中断的中断号。 **handler：**中断处理函数，当中断发生以后就会执行此中断处理函数。 **flags：**中断标志，可以在文件include/linux/interrupt.h 里面查看所有的中断标志    标志 描述    IRQF_SHARED 多个设备共享一个中断线，共享的所有中断都必须指定此标志。如果使用共享中断的话，request_irq 函数的dev参数就是唯一区分他们的标志。   IRQF_ONESHOT 单次中断，中断执行一次就结束。   IRQF_TRIGGER_NONE 无触发。   IRQF_TRIGGER_RISING 上升沿触发。   IRQF_TRIGGER_FALLING 下降沿触发。   IRQF_TRIGGER_HIGH 高电平触发。   IRQF_T...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc-ch4/" title="CH4-中断的上半部与下半部"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH4-中断的上半部与下半部</div></div><div class="info-2"><div class="info-item-1">中断的上半部与下半部Linux内核将中断分为上半部和下半部的主要目的就是实现中断处理函数的快进快出，我们在使用request_irq申请中断的时候注册的中断服务函数属于中断处理的上半部，只要中断触发，那么中断处理函数就会执行。 上半部：上半部就是中断处理函数，那些处理过程比较快，不会占用很长时间的处理就可以放在上半部完成。 下半部：如果中断处理过程比较耗时，那么就将这些比较耗时的代码提出来，交给下半部去执行，这样中断处理函数就会快进快出。 可以参考：  如果要处理的内容不希望被其他中断打断，那么可以放到上半部。 如果要处理的任务对时间敏感，可以放到上半部。 如果要处理的任务与硬件有关，可以放到上半部 除了上述三点以外的其他任务，优先考虑放到下半部  软中断Linux 内核使用结构体softirq_action 表示软中断， softirq_action结构体定义在文include&#x2F;linux&#x2F;interrupt.h中softirq_action 1234struct softirq_action&#123;	void	(*action)(struct soft...</div></div></div></a><a class="pagination-related" href="/2025/05/10/kernel-intc/" title="CH1-中断子系统介绍"><img class="cover" src="/page_images/7.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-10</div><div class="info-item-2">CH1-中断子系统介绍</div></div><div class="info-2"><div class="info-item-1">中断子系统中断Linux中断是指在CPU正常运行期间，由于内外部事件或由程序预先安排的事件引起的CPU暂时停止正在运行的程序，转而为该内部或外部事件或预先安排的事件服务的程序中去，服务完毕后再返回去继续运行被暂时中断的程序。 中断子系统框架  CPU  中断控制器  外设  中断向量表  中断号  Linux内核中断子系统  中断编程接口（request_irq接口函数）  具体的外设驱动   中断控制器  GIC 是ARM 公司给Cortex-A&#x2F;R 内核提供的一个中断控制器，类似Cortex-M 内核中的NVIC。GIC 接收众多的外部中断，然后对其进行处理，最终就只通过四个信号报给ARM 内核，这四个信号的含义如下：  VFIQ:虚拟快速FIQ。 VIRQ:虚拟外部IRQ。 FIQ:快速中断IRQ。 IRQ:外部中断IRQ。    单核      上图中我们可以看到所有的中断都发送给了GIC控制器，它负责处理各种中断，判断优先级、屏蔽、使能等工作。在GIC控制器中有Distributor、Interface **Distributor(分发器端)：**块负责处理各...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/image/head.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Leonardo272</div><div class="author-info-description">keep on going!</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">44</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">15</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Leonardo272"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/Leonardo272" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:2079232659@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">enjoy your life</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#U-Boot"><span class="toc-number">1.</span> <span class="toc-text">U-Boot</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#U-Boot%E7%9A%84%E4%B8%BB%E8%A6%81%E4%BD%9C%E7%94%A8"><span class="toc-number">1.1.</span> <span class="toc-text">U-Boot的主要作用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#U-Boot%E7%9A%84%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%EF%BC%88%E4%B8%A4%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">U-Boot的启动流程（两阶段）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%EF%BC%9A%E5%BA%95%E5%B1%82%E7%A1%AC%E4%BB%B6%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.2.1.</span> <span class="toc-text">第一阶段：底层硬件初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%EF%BC%9A%E9%AB%98%E7%BA%A7%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%8E%E5%BC%95%E5%AF%BC"><span class="toc-number">1.2.2.</span> <span class="toc-text">第二阶段：高级初始化与引导</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#U-Boot-%E5%A6%82%E4%BD%95%E5%B0%86%E7%B3%BB%E7%BB%9F%E6%9D%83%E9%99%90%E4%BA%A4%E7%BB%99-Linux-%E5%86%85%E6%A0%B8"><span class="toc-number">1.3.</span> <span class="toc-text">U-Boot 如何将系统权限交给 Linux 内核</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8A%A0%E8%BD%BD%E5%86%85%E6%A0%B8%E6%98%A0%E5%83%8F%E5%88%B0%E5%86%85%E5%AD%98"><span class="toc-number">1.3.1.</span> <span class="toc-text">1. 加载内核映像到内存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%87%86%E5%A4%87%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0"><span class="toc-number">1.3.2.</span> <span class="toc-text">2. 准备启动参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E8%B7%B3%E8%BD%AC%E6%89%A7%E8%A1%8C"><span class="toc-number">1.3.3.</span> <span class="toc-text">3. 跳转执行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#U-Boot%E7%9A%84%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.4.</span> <span class="toc-text">U-Boot的常用命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#bootcmd-%E5%92%8C-bootargs"><span class="toc-number">1.5.</span> <span class="toc-text">bootcmd 和 bootargs</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#bootcmd"><span class="toc-number">1.5.1.</span> <span class="toc-text">bootcmd</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#bootargs-%E7%9A%84%E4%BD%9C%E7%94%A8%E5%92%8C%E6%93%8D%E4%BD%9C"><span class="toc-number">1.5.2.</span> <span class="toc-text">bootargs 的作用和操作</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#U-Boot%E7%A7%BB%E6%A4%8D"><span class="toc-number">2.</span> <span class="toc-text">U-Boot移植</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#uboot-%E5%90%AF%E5%8A%A8Linux-%E6%B5%8B%E8%AF%95"><span class="toc-number">2.1.</span> <span class="toc-text">uboot 启动Linux 测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8EEMMC-%E5%90%AF%E5%8A%A8Linux-%E7%B3%BB%E7%BB%9F"><span class="toc-number">2.1.1.</span> <span class="toc-text">从EMMC 启动Linux 系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E7%BD%91%E7%BB%9C%E5%90%AF%E5%8A%A8Linux-%E7%B3%BB%E7%BB%9F"><span class="toc-number">2.1.2.</span> <span class="toc-text">从网络启动Linux 系统</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/07/20/conptition/" title="高危工作环境中人员安全装备佩戴检测系统"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="高危工作环境中人员安全装备佩戴检测系统"/></a><div class="content"><a class="title" href="/2025/07/20/conptition/" title="高危工作环境中人员安全装备佩戴检测系统">高危工作环境中人员安全装备佩戴检测系统</a><time datetime="2025-07-20T14:33:00.000Z" title="发表于 2025-07-20 22:33:00">2025-07-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="镜像烧录+ssh远程登录"/></a><div class="content"><a class="title" href="/2025/07/17/1/" title="镜像烧录+ssh远程登录">镜像烧录+ssh远程登录</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/2/" title="常见问题"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="常见问题"/></a><div class="content"><a class="title" href="/2025/07/17/2/" title="常见问题">常见问题</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/07/17/3/" title="开发环境配置"><img src="/page_images/1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="开发环境配置"/></a><div class="content"><a class="title" href="/2025/07/17/3/" title="开发环境配置">开发环境配置</a><time datetime="2025-07-17T14:33:00.000Z" title="发表于 2025-07-17 22:33:00">2025-07-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/06/20/DRIVER-CH4-SPI/" title="驱动开发-SPI"><img src="/page_images/2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="驱动开发-SPI"/></a><div class="content"><a class="title" href="/2025/06/20/DRIVER-CH4-SPI/" title="驱动开发-SPI">驱动开发-SPI</a><time datetime="2025-06-20T13:12:00.000Z" title="发表于 2025-06-20 21:12:00">2025-06-20</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/image/foot.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Leonardo272</span></div><div class="footer_custom_text">Hi, welcome to my blog!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/click-show-text.min.js" data-mobile="false" data-text="keep,on,going" data-fontsize="15px" data-random="false" async="async"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
